@@ -3,16 +3,15 @@ package com.example.mindwell.app.presentation.screens.metrics
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mindwell.app.domain.entities.WellbeingMetrics
-import com.example.mindwell.app.domain.usecases.wellbeing.GetWellbeingMetricsForPeriodUseCase
-import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
-import javax.inject.Inject
 
 /**
  * Períodos de tempo para análise das métricas
@@ -32,15 +31,51 @@ data class MetricsUiState(
 )
 
 /**
+ * Implementação mock para obter métricas de bem-estar para um período específico.
+ */
+class MockWellbeingMetricsRepository {
+    /**
+     * Gera métricas de bem-estar fictícias para um período específico.
+     */
+    fun getMetricsForPeriod(startDate: LocalDate, endDate: LocalDate): Flow<Result<List<WellbeingMetrics>>> = flow {
+        // Simulando um atraso na rede
+        kotlinx.coroutines.delay(500)
+        
+        // Gerar dados fictícios para o período
+        val metrics = mutableListOf<WellbeingMetrics>()
+        var currentDate = startDate
+        
+        while (!currentDate.isAfter(endDate)) {
+            // Apenas para dias aleatórios para não sobrecarregar a UI
+            if (currentDate.dayOfMonth % 2 == 0) {
+                metrics.add(
+                    WellbeingMetrics(
+                        date = currentDate,
+                        averageMood = (2.5f + Math.random() * 2.5f).toFloat(),
+                        averageStress = (1.5f + Math.random() * 3.5f).toFloat(),
+                        workloadScore = (40 + (Math.random() * 40).toInt()),
+                        environmentScore = (50 + (Math.random() * 30).toInt()),
+                        wellbeingScore = (30f + Math.random() * 60f).toFloat()
+                    )
+                )
+            }
+            currentDate = currentDate.plusDays(1)
+        }
+        
+        emit(Result.success(metrics))
+    }
+}
+
+/**
  * ViewModel para a tela de métricas de bem-estar
  */
-@HiltViewModel
-class MetricsViewModel @Inject constructor(
-    private val getWellbeingMetricsForPeriodUseCase: GetWellbeingMetricsForPeriodUseCase
-) : ViewModel() {
+class MetricsViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(MetricsUiState(isLoading = true))
     val uiState: StateFlow<MetricsUiState> = _uiState.asStateFlow()
+    
+    // Implementação mock do repositório
+    private val mockRepository = MockWellbeingMetricsRepository()
 
     init {
         loadMetrics()
@@ -70,26 +105,35 @@ class MetricsViewModel @Inject constructor(
                 MetricPeriod.YEAR -> today.minusYears(1) to today
             }
             
-            getWellbeingMetricsForPeriodUseCase(startDate, endDate).collect { result ->
-                result.fold(
-                    onSuccess = { metrics ->
-                        _uiState.update { 
-                            it.copy(
-                                wellbeingMetrics = metrics,
-                                isLoading = false,
-                                error = null
-                            )
+            try {
+                mockRepository.getMetricsForPeriod(startDate, endDate).collect { result ->
+                    result.fold(
+                        onSuccess = { metrics ->
+                            _uiState.update { 
+                                it.copy(
+                                    wellbeingMetrics = metrics,
+                                    isLoading = false,
+                                    error = null
+                                )
+                            }
+                        },
+                        onFailure = { error ->
+                            _uiState.update { 
+                                it.copy(
+                                    isLoading = false,
+                                    error = error.message ?: "Erro ao carregar métricas de bem-estar"
+                                )
+                            }
                         }
-                    },
-                    onFailure = { error ->
-                        _uiState.update { 
-                            it.copy(
-                                isLoading = false,
-                                error = error.message ?: "Erro ao carregar métricas de bem-estar"
-                            )
-                        }
-                    }
-                )
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { 
+                    it.copy(
+                        isLoading = false,
+                        error = e.message ?: "Erro ao carregar métricas de bem-estar"
+                    )
+                }
             }
         }
     }

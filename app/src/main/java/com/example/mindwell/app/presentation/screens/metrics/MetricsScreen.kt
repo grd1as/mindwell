@@ -50,7 +50,7 @@ import kotlin.math.roundToInt
 @Composable
 fun MetricsScreen(
     navController: NavController,
-    viewModel: MetricsViewModel = viewModel()
+    viewModel: MetricsViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     
@@ -441,7 +441,7 @@ fun MetricItem(metric: WellbeingMetrics) {
             MetricProgressBar(
                 label = "Bem-estar",
                 value = metric.wellbeingScore,
-                maxValue = WellbeingMetrics.MAX_SCORE,
+                maxValue = 100f,
                 isInverted = false
             )
             
