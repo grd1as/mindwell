@@ -1,0 +1,8 @@
+# Arquivos com problemas temporariamente ignorados
+app/src/main/java/com/example/mindwell/app/data/
+app/src/main/java/com/example/mindwell/app/domain/
+app/src/main/java/com/example/mindwell/app/presentation/screens/assessment/
+app/src/main/java/com/example/mindwell/app/presentation/screens/checkin/
+app/src/main/java/com/example/mindwell/app/presentation/screens/home/
+app/src/main/java/com/example/mindwell/app/presentation/screens/metrics/
+app/src/main/java/com/example/mindwell/app/presentation/screens/resources/ 

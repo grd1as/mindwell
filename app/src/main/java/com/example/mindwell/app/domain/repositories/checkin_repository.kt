@@ -34,4 +34,12 @@ interface CheckInRepository {
      * @return true se o check-in foi excluído com sucesso
      */
     suspend fun deleteCheckIn(id: Long): Boolean
+    
+    /**
+     * Obtém check-ins para um período específico.
+     * @param startDate Data inicial do período
+     * @param endDate Data final do período
+     * @return Flow com os check-ins do período
+     */
+    fun getCheckInsForPeriod(startDate: LocalDate, endDate: LocalDate): Flow<List<CheckIn>>
 }

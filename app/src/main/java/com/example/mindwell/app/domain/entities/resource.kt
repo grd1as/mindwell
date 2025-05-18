@@ -22,7 +22,19 @@ data class Resource(
  * Tipos de recursos disponíveis no sistema.
  */
 enum class ResourceType {
-    MINDFULNESS, // Exercícios de mindfulness
-    EDUCATION,   // Conteúdo educativo
-    EXERCISE     // Exercícios práticos
+    // Tipos de formato
+    ARTICLE,
+    VIDEO,
+    AUDIO,
+    
+    // Tipos de conteúdo
+    EXERCISE,
+    MEDITATION,
+    MINDFULNESS,
+    BREATHING,
+    
+    // Tipos de fonte
+    EDUCATION,
+    COMMUNITY,
+    PROFESSIONAL
 }

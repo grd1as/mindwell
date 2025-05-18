@@ -1,3 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">MindWell</string>
+    
+    <!-- Navegação -->
+    <string name="home">Início</string>
+    <string name="check_in">Check-in</string>
+    <string name="assessment">Avaliação</string>
+    <string name="resources">Recursos</string>
+    <string name="metrics">Métricas</string>
+    
+    <!-- Tela Home -->
+    <string name="welcome_title">Bem-vindo ao MindWell</string>
+    <string name="recent_checkins">Check-ins Recentes</string>
+    <string name="pending_assessments">Avaliações Pendentes</string>
+    <string name="daily_tip">Dica do Dia</string>
+    <string name="new_checkin">Novo Check-in</string>
+    
+    <!-- Tela Check-in -->
+    <string name="mood_question">Como você está se sentindo hoje?</string>
+    <string name="stress_level">Nível de estresse</string>
+    <string name="mood_very_bad">Muito Mal</string>
+    <string name="mood_bad">Mal</string>
+    <string name="mood_neutral">Normal</string>
+    <string name="mood_good">Bem</string>
+    <string name="mood_very_good">Muito Bem</string>
+    <string name="notes">Anotações (opcional)</string>
+    <string name="save">Salvar</string>
+    
+    <!-- Tela Avaliação -->
+    <string name="assessment_instructions">Responda às perguntas abaixo para avaliar os riscos psicossociais</string>
+    <string name="submit_assessment">Enviar Avaliação</string>
+    
+    <!-- Tela Recursos -->
+    <string name="available_resources">Recursos Disponíveis</string>
+    <string name="search_resources">Buscar recursos</string>
 </resources>

@@ -1,38 +1,67 @@
 package com.example.mindwell.app.domain.entities
 
-import java.time.LocalDateTime
+import java.time.LocalDate
 
 /**
- * Representa uma avaliação de risco psicossocial completa.
+ * Entidade que representa uma avaliação de saúde mental
  */
 data class Assessment(
     val id: Long = 0,
-    val type: AssessmentType,
-    val timestamp: LocalDateTime,
-    val responses: Map<String, Int>, // questão -> resposta (1-5)
-    val score: Int // pontuação calculada
-) {
-    companion object {
-        const val MIN_RESPONSE = 1
-        const val MAX_RESPONSE = 5
-        const val MIN_SCORE = 0
-        const val MAX_SCORE = 100
-    }
-    
-    init {
-        require(responses.isNotEmpty()) { "Assessment must have at least one response" }
-        require(responses.all { it.value in MIN_RESPONSE..MAX_RESPONSE }) { 
-            "All responses must be between $MIN_RESPONSE and $MAX_RESPONSE" 
-        }
-        require(score in MIN_SCORE..MAX_SCORE) { "Score must be between $MIN_SCORE and $MAX_SCORE" }
-    }
+    val date: LocalDate,
+    val questions: List<AssessmentQuestion>,
+    val completed: Boolean = false,
+    val result: AssessmentResult? = null
+)
+
+/**
+ * Entidade que representa uma pergunta de avaliação
+ */
+data class AssessmentQuestion(
+    val id: String,
+    val text: String,
+    val type: QuestionType,
+    val category: QuestionCategory,
+    val required: Boolean = true,
+    val answer: Any? = null
+)
+
+/**
+ * Tipos de perguntas disponíveis
+ */
+enum class QuestionType {
+    SCALE,
+    YES_NO,
+    TEXT,
+    MULTIPLE_CHOICE
 }
 
 /**
- * Tipos de avaliação disponíveis no sistema.
+ * Categorias de perguntas
  */
-enum class AssessmentType {
-    WORK_ENVIRONMENT, // Ambiente de trabalho
-    WORKLOAD,         // Carga de trabalho
-    STRESS            // Estresse
+enum class QuestionCategory {
+    WORKLOAD,
+    AUTONOMY,
+    RELATIONSHIPS,
+    ROLE_CLARITY,
+    CHANGE,
+    SUPPORT,
+    WORK_LIFE_BALANCE
+}
+
+/**
+ * Resultado de uma avaliação
+ */
+data class AssessmentResult(
+    val score: Int,
+    val riskLevel: RiskLevel,
+    val recommendations: List<String>
+)
+
+/**
+ * Níveis de risco para saúde mental
+ */
+enum class RiskLevel {
+    LOW,
+    MEDIUM,
+    HIGH
 }

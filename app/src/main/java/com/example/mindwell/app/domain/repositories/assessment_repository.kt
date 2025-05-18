@@ -6,32 +6,42 @@ import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
 /**
- * Interface para acesso a operações de avaliações psicossociais.
+ * Interface para operações no repositório de avaliações
  */
 interface AssessmentRepository {
     /**
-     * Salva uma nova avaliação.
-     * @return ID da avaliação salva
+     * Salva uma avaliação
+     * @return id da avaliação salva
      */
     suspend fun saveAssessment(assessment: Assessment): Long
     
     /**
-     * Obtém uma avaliação específica pelo ID.
+     * Obtém uma avaliação pelo id
      */
     suspend fun getAssessmentById(id: Long): Assessment?
     
     /**
-     * Obtém avaliações de um tipo específico.
+     * Obtém todas as avaliações
+     */
+    fun getAllAssessments(): Flow<List<Assessment>>
+    
+    /**
+     * Obtém avaliações por tipo
      */
     fun getAssessmentsByType(type: AssessmentType): Flow<List<Assessment>>
     
     /**
-     * Obtém a avaliação mais recente de um tipo específico.
+     * Obtém avaliações para um período específico
+     */
+    fun getAssessmentsForPeriod(startDate: LocalDate, endDate: LocalDate): Flow<List<Assessment>>
+    
+    /**
+     * Obtém a avaliação mais recente por tipo
      */
     suspend fun getLatestAssessmentByType(type: AssessmentType): Assessment?
     
     /**
-     * Obtém avaliações para um período específico.
+     * Exclui uma avaliação
      */
-    fun getAssessmentsForPeriod(startDate: LocalDate, endDate: LocalDate): Flow<List<Assessment>>
+    suspend fun deleteAssessment(id: Long): Boolean
 }

@@ -7,7 +7,7 @@ import java.time.LocalDateTime
 /**
  * Caso de uso para criar um novo check-in.
  */
-class CreateCheckInUseCase(private val repository: CheckInRepository) {
+interface CreateCheckInUseCase {
     /**
      * Cria um novo check-in com os níveis de humor e estresse especificados.
      * 
@@ -16,7 +16,22 @@ class CreateCheckInUseCase(private val repository: CheckInRepository) {
      * @param notes Notas opcionais do usuário
      * @return Result contendo o ID do check-in criado ou erro
      */
-    suspend operator fun invoke(moodLevel: Int, stressLevel: Int, notes: String? = null): Result<Long> {
+    suspend operator fun invoke(moodLevel: Int, stressLevel: Int, notes: String? = null): Result<Long>
+}
+
+/**
+ * Implementação do caso de uso para criar um novo check-in.
+ */
+class CreateCheckInUseCaseImpl(private val repository: CheckInRepository) : CreateCheckInUseCase {
+    /**
+     * Cria um novo check-in com os níveis de humor e estresse especificados.
+     * 
+     * @param moodLevel Nível de humor (1-5)
+     * @param stressLevel Nível de estresse (1-5)
+     * @param notes Notas opcionais do usuário
+     * @return Result contendo o ID do check-in criado ou erro
+     */
+    override suspend operator fun invoke(moodLevel: Int, stressLevel: Int, notes: String?): Result<Long> {
         return try {
             val checkIn = CheckIn(
                 timestamp = LocalDateTime.now(),
