@@ -5,12 +5,15 @@ package com.example.mindwell.app.common.navigation
  */
 object AppDestinations {
     const val ONBOARDING = "onboarding"
+    const val LOGIN = "login"
     const val HOME = "home"
+    const val SETTINGS   = "settings"
     const val CHECK_IN = "check-in"
     const val ASSESSMENT = "assessment"
     const val RESOURCES = "resources"
     const val METRICS = "metrics"
-    
+
+
     // Destinos com parâmetros
     const val CHECK_IN_DETAIL = "check-in/{checkInId}"
     const val ASSESSMENT_DETAIL = "assessment/{assessmentId}"

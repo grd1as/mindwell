@@ -9,22 +9,26 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.mindwell.app.data.network.TokenStore
 import com.example.mindwell.app.domain.entities.AppTheme
 import com.example.mindwell.app.domain.usecases.userpreferences.HasCompletedOnboardingUseCase
 import com.example.mindwell.app.domain.usecases.userpreferences.MockHasCompletedOnboardingUseCase
 import com.example.mindwell.app.presentation.screens.assessment.AssessmentScreen
 import com.example.mindwell.app.presentation.screens.checkin.CheckInScreen
 import com.example.mindwell.app.presentation.screens.home.HomeScreen
+import com.example.mindwell.app.presentation.screens.login.LoginScreen
 import com.example.mindwell.app.presentation.screens.metrics.MetricsScreen
 import com.example.mindwell.app.presentation.screens.onboarding.OnboardingScreen
 import com.example.mindwell.app.presentation.screens.resources.ResourceDetailScreen
 import com.example.mindwell.app.presentation.screens.resources.ResourcesScreen
+import com.example.mindwell.app.presentation.screens.settings.SettingsScreen
 import kotlinx.coroutines.flow.firstOrNull
 
 /**
@@ -32,68 +36,39 @@ import kotlinx.coroutines.flow.firstOrNull
  */
 @Composable
 fun AppNavigation() {
-    val navController = rememberNavController()
-    
-    // Verifica se o usuário já completou o onboarding usando o caso de uso
-    val hasCompletedOnboardingUseCase: HasCompletedOnboardingUseCase = MockHasCompletedOnboardingUseCase()
-    
-    var startDestination by remember { mutableStateOf(AppDestinations.ONBOARDING) }
-    var isInitialized by remember { mutableStateOf(false) }
-    
-    // Verificar se o onboarding já foi concluído
+    val nav = rememberNavController()
+    val ctx = LocalContext.current
+
+    var start by remember { mutableStateOf(AppDestinations.LOGIN) }
+    var ready by remember { mutableStateOf(false) }
+
     LaunchedEffect(Unit) {
-        val hasCompleted = hasCompletedOnboardingUseCase().firstOrNull() ?: false
-        if (hasCompleted) {
-            startDestination = AppDestinations.HOME
-        }
-        isInitialized = true
+        start = if (TokenStore.load(ctx) == null)
+            AppDestinations.LOGIN
+        else
+            AppDestinations.ONBOARDING
+        ready = true
     }
-    
-    if (!isInitialized) {
-        // Mostrar uma tela de carregamento ou deixar em branco enquanto verifica
-        return
-    }
-    
-    NavHost(
-        navController = navController,
-        startDestination = startDestination
-    ) {
-        composable(AppDestinations.ONBOARDING) {
-            OnboardingScreen(navController = navController)
-        }
-        
-        composable(AppDestinations.HOME) {
-            HomeScreen(navController = navController)
-        }
-        
-        composable(AppDestinations.CHECK_IN) {
-            CheckInScreen(navController = navController)
-        }
-        
-        composable(AppDestinations.ASSESSMENT) {
-            AssessmentScreen(navController = navController)
-        }
-        
-        composable(AppDestinations.RESOURCES) {
-            ResourcesScreen(navController = navController)
-        }
-        
-        composable(AppDestinations.METRICS) {
-            MetricsScreen(navController = navController)
-        }
-        
-        // Rotas detalhadas
+    if (!ready) return
+
+    NavHost(navController = nav, startDestination = start) {
+
+        composable(AppDestinations.LOGIN)      { LoginScreen(nav) }
+        composable(AppDestinations.ONBOARDING) { OnboardingScreen(navController = nav) }
+        composable(AppDestinations.HOME)       { HomeScreen(navController = nav) }
+        composable(AppDestinations.SETTINGS)   { SettingsScreen(navController = nav) }
+        composable(AppDestinations.CHECK_IN)   { CheckInScreen(navController = nav) }
+        composable(AppDestinations.ASSESSMENT) { AssessmentScreen(navController = nav) }
+        composable(AppDestinations.RESOURCES)  { ResourcesScreen(navController = nav) }
+        composable(AppDestinations.METRICS)    { MetricsScreen(navController = nav) }
+
         composable(
             route = AppDestinations.RESOURCE_DETAIL,
-            arguments = listOf(
-                navArgument("resourceId") { type = NavType.LongType }
-            )
+            arguments = listOf(navArgument("resourceId") { type = NavType.LongType })
         ) { backStackEntry ->
-            val resourceId = backStackEntry.arguments?.getLong("resourceId") ?: 0L
-            ResourceDetailScreen(
-                navController = navController,
-                resourceId = resourceId
-            )
+            val resId = backStackEntry.arguments?.getLong("resourceId") ?: 0L
+            ResourceDetailScreen(navController = nav, resourceId = resId)
         }
     }
-} 
+}
+
