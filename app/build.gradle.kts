@@ -50,6 +50,17 @@ ksp {
 }
 
 dependencies {
+    // -- Google Sign-In
+    implementation(libs.play.services.auth)
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
+
+    // -- Retrofit / OkHttp
+    implementation(libs.retrofit.core)
+    implementation(libs.retrofit.converter.gson)
+    implementation(libs.okhttp.logging)
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -79,10 +90,10 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     
     // Gson para serialização JSON
-    implementation("com.google.code.gson:gson:2.10.1")
+    implementation(libs.gson)
     
     // Date/Time support for lower API levels
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
     
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -92,3 +103,4 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
+

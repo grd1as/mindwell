@@ -9,10 +9,12 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.example.mindwell.app.common.design_system.theme.MindWellTheme
 import com.example.mindwell.app.common.navigation.AppNavigation
+import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * Activity principal do aplicativo.
  */
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,4 +29,5 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
 }

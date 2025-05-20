@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">MindWell</string>
-    
+
+    <string name="web_client_id">326016549814-0ra7e82555s4fis8l3u16u1h0u9vsp89.apps.googleusercontent.com</string>
+
     <!-- Navegação -->
     <string name="home">Início</string>
     <string name="check_in">Check-in</string>
@@ -15,7 +17,9 @@
     <string name="pending_assessments">Avaliações Pendentes</string>
     <string name="daily_tip">Dica do Dia</string>
     <string name="new_checkin">Novo Check-in</string>
-    
+    <string name="settings">Configurações</string>
+    <string name="logout">Sair</string>
+
     <!-- Tela Check-in -->
     <string name="mood_question">Como você está se sentindo hoje?</string>
     <string name="stress_level">Nível de estresse</string>
