@@ -53,6 +53,17 @@ fun LoginScreen(
             ) {
                 Text("Entrar com Google")
             }
+
+            Button(
+                modifier = Modifier
+                    .padding(top = 16.dp)
+                    .height(50.dp),
+                onClick = {
+                    nav.navigate(AppDestinations.HOME) { popUpTo(0) }
+                }
+            ) {
+                Text("Pular")
+            }
         }
     }
 }
