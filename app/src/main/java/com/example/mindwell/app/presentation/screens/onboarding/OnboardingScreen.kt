@@ -105,11 +105,15 @@ fun OnboardingScreen(
                     onNext = { viewModel.nextPage() },
                     onSkip = { viewModel.skipOnboarding() }
                 )
-                1 -> PrivacyExplanationPage(
+                1 -> FeaturesPage(
                     onNext = { viewModel.nextPage() },
                     onBack = { viewModel.previousPage() }
                 )
-                2 -> DataConsentPage(
+                2 -> PrivacyExplanationPage(
+                    onNext = { viewModel.nextPage() },
+                    onBack = { viewModel.previousPage() }
+                )
+                3 -> DataConsentPage(
                     hasAcceptedConsent = uiState.hasAcceptedConsent,
                     onConsentChanged = { viewModel.updateConsent(it) },
                     onComplete = { viewModel.completeOnboarding() },
@@ -210,6 +214,133 @@ fun WelcomePage(
             }
             
             Spacer(modifier = Modifier.height(48.dp))
+        }
+    }
+}
+
+@Composable
+fun FeaturesPage(
+    onNext: () -> Unit,
+    onBack: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceBetween
+    ) {
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = "Principais Funcionalidades",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    FeatureItem(
+                        title = "Check-in Diário",
+                        description = "Registre seu humor e nível de estresse para acompanhar seu bem-estar"
+                    )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    FeatureItem(
+                        title = "Avaliações",
+                        description = "Realize avaliações periódicas para entender melhor sua saúde mental"
+                    )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    FeatureItem(
+                        title = "Métricas",
+                        description = "Acompanhe seu progresso através de métricas e visualizações"
+                    )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    FeatureItem(
+                        title = "Recursos",
+                        description = "Acesse materiais e recursos para cuidar da sua saúde mental"
+                    )
+                }
+            }
+        }
+        
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 24.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            OutlinedButton(
+                onClick = onBack
+            ) {
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowLeft,
+                    contentDescription = "Voltar"
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Voltar")
+            }
+            
+            Button(
+                onClick = onNext
+            ) {
+                Text("Continuar")
+                Spacer(modifier = Modifier.width(4.dp))
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowRight,
+                    contentDescription = "Avançar"
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun FeatureItem(
+    title: String,
+    description: String
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Default.CheckCircle,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary
+        )
+        
+        Spacer(modifier = Modifier.width(12.dp))
+        
+        Column {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
     }
 }

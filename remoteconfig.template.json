@@ -1,0 +1,52 @@
+{
+  "parameters": {
+    "app_theme": {
+      "defaultValue": {
+        "value": "light"
+      },
+      "conditionalValues": {
+        "dark_mode_users": {
+          "value": "dark"
+        }
+      },
+      "description": "App theme (light/dark)",
+      "valueType": "STRING"
+    },
+    "welcome_message": {
+      "defaultValue": {
+        "value": "Bem-vindo ao MindWell! Cuide da sua saúde mental."
+      },
+      "description": "Welcome message displayed on the home screen",
+      "valueType": "STRING"
+    },
+    "feature_metrics_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "description": "Toggle for metrics feature visibility",
+      "valueType": "BOOLEAN"
+    },
+    "assessment_frequency_days": {
+      "defaultValue": {
+        "value": "7"
+      },
+      "description": "Number of days between wellbeing assessments",
+      "valueType": "NUMBER"
+    }
+  },
+  "version": {
+    "versionNumber": "1",
+    "updateTime": "2023-08-07T17:00:00.00Z",
+    "updateUser": {
+      "email": "admin@example.com"
+    },
+    "description": "Initial configuration"
+  },
+  "conditions": [
+    {
+      "name": "dark_mode_users",
+      "expression": "device.platform == 'android' && user.userProperty('prefers_dark_mode') == 'true'",
+      "tagColor": "BLUE"
+    }
+  ]
+} 

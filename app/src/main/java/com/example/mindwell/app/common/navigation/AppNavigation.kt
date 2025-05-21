@@ -38,15 +38,22 @@ import kotlinx.coroutines.flow.firstOrNull
 fun AppNavigation() {
     val nav = rememberNavController()
     val ctx = LocalContext.current
+    val hasCompletedOnboardingUseCase: HasCompletedOnboardingUseCase = MockHasCompletedOnboardingUseCase()
 
     var start by remember { mutableStateOf(AppDestinations.LOGIN) }
     var ready by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        start = if (TokenStore.load(ctx) == null)
-            AppDestinations.LOGIN
-        else
-            AppDestinations.ONBOARDING
+        // Verifica se o usuário está autenticado
+        val token = TokenStore.load(ctx)
+        val hasCompletedOnboarding = hasCompletedOnboardingUseCase().firstOrNull() ?: false
+        
+        start = when {
+            token == null -> AppDestinations.LOGIN
+            !hasCompletedOnboarding -> AppDestinations.ONBOARDING
+            else -> AppDestinations.HOME
+        }
+        
         ready = true
     }
     if (!ready) return

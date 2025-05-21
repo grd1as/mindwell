@@ -5,6 +5,7 @@ import android.content.Intent
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mindwell.app.R
+import com.example.mindwell.app.common.navigation.AppDestinations
 import com.example.mindwell.app.data.network.AuthApi
 import com.example.mindwell.app.data.network.LoginRequest
 import com.example.mindwell.app.data.network.TokenStore
@@ -42,6 +43,8 @@ class LoginViewModel @Inject constructor(
                 try {
                     val jwt = api.login(LoginRequest(idToken)).jwt
                     TokenStore.save(jwt, app)
+                    
+                    // Após o login bem-sucedido, sempre redirecionar para o onboarding
                     onSuccess()
                 } catch (e: Exception) {
                     onError(e.message ?: "Erro login")

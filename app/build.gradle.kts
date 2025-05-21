@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt.android)
+    alias(libs.plugins.google.services)
+    alias(libs.plugins.firebase.crashlytics)
 }
 
 android {
@@ -50,6 +52,17 @@ ksp {
 }
 
 dependencies {
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.database)
+    implementation(libs.firebase.storage)
+    implementation(libs.firebase.config)
+    implementation(libs.firebase.messaging)
+    implementation(libs.firebase.crashlytics)
+
     // -- Google Sign-In
     implementation(libs.play.services.auth)
     implementation(libs.hilt.android)

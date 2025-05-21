@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
  */
 data class OnboardingUiState(
     val currentPage: Int = 0,
-    val totalPages: Int = 3,
+    val totalPages: Int = 4,
     val anonymousUser: AnonymousUser? = null,
     val hasCompletedOnboarding: Boolean = false,
     val hasAcceptedConsent: Boolean = false,
