@@ -17,7 +17,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
     
-    private const val BASE_URL = "https://api.mindwell.com/" // URL base a ser atualizada
+    private const val BASE_URL = "http://10.0.2.2:8080/" // URL local para emulador Android
     private const val TIMEOUT = 30L
     
     @Provides
