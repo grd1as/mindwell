@@ -12,15 +12,15 @@ import javax.inject.Singleton
  */
 @Singleton
 class ReminderRepositoryImpl @Inject constructor(
-    private val remoteDataSource: ReminderRemoteDataSource
+    private val remote_data_source: ReminderRemoteDataSource
 ) : ReminderRepository {
     /**
      * Obtém os lembretes ativos.
      * @param due Se true, retorna apenas lembretes pendentes
      * @return Lista de lembretes
      */
-    override suspend fun getReminders(due: Boolean): List<Reminder> {
-        val remindersDto = remoteDataSource.getReminders(due)
-        return ReminderMapper.mapToDomain(remindersDto)
+    override suspend fun get_reminders(due: Boolean): List<Reminder> {
+        val reminders_dto = remote_data_source.get_reminders(due)
+        return ReminderMapper.mapToDomain(reminders_dto)
     }
 } 

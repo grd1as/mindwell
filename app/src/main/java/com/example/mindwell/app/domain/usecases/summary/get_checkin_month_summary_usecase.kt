@@ -23,11 +23,11 @@ interface GetCheckinMonthSummaryUseCase {
  * Implementação do caso de uso para obter resumo mensal de check-ins.
  */
 class GetCheckinMonthSummaryUseCaseImpl @Inject constructor(
-    private val summaryRepository: SummaryRepository
+    private val summary_repository: SummaryRepository
 ) : GetCheckinMonthSummaryUseCase {
     override operator fun invoke(month: YearMonth): Flow<Result<Summary>> = flow {
         try {
-            val summary = summaryRepository.getCheckinMonthSummary(month)
+            val summary = summary_repository.get_checkin_month_summary(month)
             emit(Result.success(summary))
         } catch (e: Exception) {
             emit(Result.failure(e))

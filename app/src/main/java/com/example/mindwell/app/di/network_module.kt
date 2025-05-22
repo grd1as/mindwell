@@ -22,13 +22,13 @@ object NetworkModule {
     
     @Provides
     @Singleton
-    fun provideOkHttpClient(
-        authInterceptor: AuthInterceptor,
-        loggingInterceptorFactory: LoggingInterceptorFactory
+    fun provide_okhttp_client(
+        auth_interceptor: AuthInterceptor,
+        logging_interceptor_factory: LoggingInterceptorFactory
     ): OkHttpClient {
         return OkHttpClient.Builder()
-            .addInterceptor(authInterceptor)
-            .addInterceptor(loggingInterceptorFactory.create(true)) // true para modo debug
+            .addInterceptor(auth_interceptor)
+            .addInterceptor(logging_interceptor_factory.create(true)) // true para modo debug
             .connectTimeout(TIMEOUT, TimeUnit.SECONDS)
             .readTimeout(TIMEOUT, TimeUnit.SECONDS)
             .writeTimeout(TIMEOUT, TimeUnit.SECONDS)
@@ -37,17 +37,17 @@ object NetworkModule {
     
     @Provides
     @Singleton
-    fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
+    fun provide_retrofit(okhttp_client: OkHttpClient): Retrofit {
         return Retrofit.Builder()
             .baseUrl(BASE_URL)
-            .client(okHttpClient)
+            .client(okhttp_client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
     
     @Provides
     @Singleton
-    fun provideApiService(retrofit: Retrofit): ApiService {
+    fun provide_api_service(retrofit: Retrofit): ApiService {
         return retrofit.create(ApiService::class.java)
     }
 } 

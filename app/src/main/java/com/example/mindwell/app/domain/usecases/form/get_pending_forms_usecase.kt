@@ -21,14 +21,14 @@ interface GetPendingFormsUseCase {
  * Implementação do caso de uso para obter formulários pendentes.
  */
 class GetPendingFormsUseCaseImpl @Inject constructor(
-    private val formRepository: FormRepository
+    private val form_repository: FormRepository
 ) : GetPendingFormsUseCase {
     override operator fun invoke(): Flow<Result<List<Form>>> = flow {
         try {
             // Buscar todos os formulários e filtrar os pendentes
             // Utilizamos o parâmetro "pending" para indicar que queremos apenas formulários pendentes
-            val pendingForms = formRepository.getForms(type = "pending")
-            emit(Result.success(pendingForms))
+            val pending_forms = form_repository.get_forms(type = "pending")
+            emit(Result.success(pending_forms))
         } catch (e: Exception) {
             emit(Result.failure(e))
         }

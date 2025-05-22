@@ -83,8 +83,8 @@ object FormMapper {
      */
     fun mapToDto(domain: Answer): AnswerDTO {
         return AnswerDTO(
-            questionId = domain.questionId,
-            optionId = domain.optionId
+            question_id = domain.question_id,
+            option_id = domain.option_id
         )
     }
     

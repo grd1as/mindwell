@@ -10,15 +10,15 @@ import javax.inject.Singleton
  */
 @Singleton
 class ReportRemoteDataSource @Inject constructor(
-    private val apiService: ApiService
+    private val api_service: ApiService
 ) {
     /**
      * Envia um report.
      * @param report Dados do report
      * @return ID do report criado
      */
-    suspend fun submitReport(report: ReportDTO): Int {
-        val response = apiService.submitReport(report)
+    suspend fun submit_report(report: ReportDTO): Int {
+        val response = api_service.submit_report(report)
         // Extrai o ID do report a partir da URL retornada (exemplo: /reports/42)
         val locationPath = response.location ?: ""
         return locationPath.substringAfterLast("/").toIntOrNull() ?: -1

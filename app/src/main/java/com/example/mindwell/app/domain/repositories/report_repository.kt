@@ -11,5 +11,5 @@ interface ReportRepository {
      * @param report Dados do report
      * @return ID do report criado
      */
-    suspend fun submitReport(report: Report): Int
+    suspend fun submit_report(report: Report): Int
 } 

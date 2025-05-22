@@ -13,20 +13,20 @@ interface FormRepository {
      * @param type Tipo opcional de formulário para filtrar
      * @return Lista de formulários
      */
-    suspend fun getForms(type: String? = null): List<Form>
+    suspend fun get_forms(type: String? = null): List<Form>
     
     /**
      * Obtém os detalhes de um formulário específico.
-     * @param formId ID do formulário
+     * @param form_id ID do formulário
      * @return Detalhes do formulário com perguntas
      */
-    suspend fun getFormDetail(formId: Int): FormDetail
+    suspend fun get_form_detail(form_id: Int): FormDetail
     
     /**
      * Envia respostas para um formulário.
-     * @param formId ID do formulário
+     * @param form_id ID do formulário
      * @param answers Lista de respostas
      * @return ID da resposta enviada
      */
-    suspend fun submitFormResponses(formId: Int, answers: List<Answer>): Int
+    suspend fun submit_form_responses(form_id: Int, answers: List<Answer>): Int
 } 

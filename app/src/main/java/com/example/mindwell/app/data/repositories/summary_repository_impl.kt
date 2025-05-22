@@ -13,26 +13,26 @@ import javax.inject.Singleton
  */
 @Singleton
 class SummaryRepositoryImpl @Inject constructor(
-    private val remoteDataSource: SummaryRemoteDataSource
+    private val remote_data_source: SummaryRemoteDataSource
 ) : SummaryRepository {
     /**
      * Obtém o resumo mensal dos check-ins.
      * @param month Mês para o qual obter o resumo
      * @return Resumo com estatísticas consolidadas
      */
-    override suspend fun getCheckinMonthSummary(month: YearMonth): Summary {
-        val summaryDto = remoteDataSource.getCheckinMonthSummary(month)
-        return SummaryMapper.mapToDomain(summaryDto)
+    override suspend fun get_checkin_month_summary(month: YearMonth): Summary {
+        val summary_dto = remote_data_source.get_checkin_month_summary(month)
+        return SummaryMapper.mapToDomain(summary_dto)
     }
     
     /**
      * Obtém o resumo semanal dos check-ins.
      * @param year Ano da semana
-     * @param weekNumber Número da semana no ano
+     * @param week_number Número da semana no ano
      * @return Resumo com estatísticas consolidadas
      */
-    override suspend fun getCheckinWeekSummary(year: Int, weekNumber: Int): Summary {
-        val summaryDto = remoteDataSource.getCheckinWeekSummary(year, weekNumber)
-        return SummaryMapper.mapToDomain(summaryDto)
+    override suspend fun get_checkin_week_summary(year: Int, week_number: Int): Summary {
+        val summary_dto = remote_data_source.get_checkin_week_summary(year, week_number)
+        return SummaryMapper.mapToDomain(summary_dto)
     }
 } 

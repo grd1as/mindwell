@@ -28,7 +28,7 @@ interface SubmitReportUseCase {
  * Implementação do caso de uso para enviar uma denúncia/report.
  */
 class SubmitReportUseCaseImpl @Inject constructor(
-    private val reportRepository: ReportRepository
+    private val report_repository: ReportRepository
 ) : SubmitReportUseCase {
     override operator fun invoke(
         category: String,
@@ -37,8 +37,8 @@ class SubmitReportUseCaseImpl @Inject constructor(
     ): Flow<Result<Int>> = flow {
         try {
             val report = Report(category, description, tags)
-            val reportId = reportRepository.submitReport(report)
-            emit(Result.success(reportId))
+            val report_id = report_repository.submit_report(report)
+            emit(Result.success(report_id))
         } catch (e: Exception) {
             emit(Result.failure(e))
         }

@@ -15,37 +15,37 @@ import javax.inject.Singleton
  */
 @Singleton
 class FormRepositoryImpl @Inject constructor(
-    private val remoteDataSource: FormRemoteDataSource
+    private val remote_data_source: FormRemoteDataSource
 ) : FormRepository {
     /**
      * Obtém a lista de formulários disponíveis.
      * @param type Tipo opcional de formulário para filtrar
      * @return Lista de formulários
      */
-    override suspend fun getForms(type: String?): List<Form> {
-        val formDtos = remoteDataSource.getForms(type)
-        return FormMapper.mapToDomain(formDtos)
+    override suspend fun get_forms(type: String?): List<Form> {
+        val form_dtos = remote_data_source.get_forms(type)
+        return FormMapper.mapToDomain(form_dtos)
     }
     
     /**
      * Obtém os detalhes de um formulário específico.
-     * @param formId ID do formulário
+     * @param form_id ID do formulário
      * @return Detalhes do formulário com perguntas
      */
-    override suspend fun getFormDetail(formId: Int): FormDetail {
-        val formDetailDto = remoteDataSource.getFormDetail(formId)
-        return FormMapper.mapToDomain(formDetailDto)
+    override suspend fun get_form_detail(form_id: Int): FormDetail {
+        val form_detail_dto = remote_data_source.get_form_detail(form_id)
+        return FormMapper.mapToDomain(form_detail_dto)
     }
     
     /**
      * Envia respostas para um formulário.
-     * @param formId ID do formulário
+     * @param form_id ID do formulário
      * @param answers Lista de respostas
      * @return ID da resposta enviada
      */
-    override suspend fun submitFormResponses(formId: Int, answers: List<Answer>): Int {
-        val answerDtos = FormMapper.mapToDto(answers)
-        val request = FormResponseRequest(answerDtos)
-        return remoteDataSource.submitFormResponses(formId, request)
+    override suspend fun submit_form_responses(form_id: Int, answers: List<Answer>): Int {
+        val answer_dtos = FormMapper.mapToDto(answers)
+        val request = FormResponseRequest(answer_dtos)
+        return remote_data_source.submit_form_responses(form_id, request)
     }
 } 

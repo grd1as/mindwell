@@ -319,8 +319,8 @@ class FormDetailViewModel @Inject constructor(
      */
     fun answerQuestion(question: Question, selectedOptionId: Int) {
         val answer = Answer(
-            questionId = question.id,
-            optionId = selectedOptionId
+            question_id = question.id,
+            option_id = selectedOptionId
         )
         
         val updatedAnswers = state.answers.toMutableMap().apply {

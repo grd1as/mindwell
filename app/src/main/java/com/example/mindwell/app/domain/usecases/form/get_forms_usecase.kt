@@ -22,11 +22,11 @@ interface GetFormsUseCase {
  * Implementação do caso de uso para obter lista de formulários.
  */
 class GetFormsUseCaseImpl @Inject constructor(
-    private val formRepository: FormRepository
+    private val form_repository: FormRepository
 ) : GetFormsUseCase {
     override operator fun invoke(type: String?): Flow<Result<List<Form>>> = flow {
         try {
-            val forms = formRepository.getForms(type)
+            val forms = form_repository.get_forms(type)
             emit(Result.success(forms))
         } catch (e: Exception) {
             emit(Result.failure(e))

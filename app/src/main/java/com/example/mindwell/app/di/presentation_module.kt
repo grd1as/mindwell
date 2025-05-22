@@ -19,7 +19,7 @@ object PresentationModule {
     
     @Provides
     @Singleton
-    fun provideGoogleSignInClient(
+    fun provide_google_sign_in_client(
         factory: GoogleSignInClientFactory
     ): GoogleSignInClient {
         return factory.create(SERVER_CLIENT_ID)

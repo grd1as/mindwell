@@ -10,21 +10,21 @@ import javax.inject.Singleton
  */
 @Singleton
 class PreferenceRemoteDataSource @Inject constructor(
-    private val apiService: ApiService
+    private val api_service: ApiService
 ) {
     /**
      * Obtém as preferências do usuário.
      * @return Preferências atuais
      */
-    suspend fun getPreferences(): PreferenceDTO {
-        return apiService.getPreferences()
+    suspend fun get_preferences(): PreferenceDTO {
+        return api_service.get_preferences()
     }
     
     /**
      * Atualiza as preferências do usuário.
      * @param preferences Novas preferências
      */
-    suspend fun updatePreferences(preferences: PreferenceDTO) {
-        apiService.updatePreferences(preferences)
+    suspend fun update_preferences(preferences: PreferenceDTO) {
+        api_service.update_preferences(preferences)
     }
 } 

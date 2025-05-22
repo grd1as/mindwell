@@ -15,18 +15,18 @@ import javax.inject.Singleton
  */
 @Singleton
 class SummaryRemoteDataSource @Inject constructor(
-    private val apiService: ApiService
+    private val api_service: ApiService
 ) {
-    private val monthFormatter = DateTimeFormatter.ofPattern("yyyy-MM")
+    private val month_formatter = DateTimeFormatter.ofPattern("yyyy-MM")
     
     /**
      * Obtém o resumo mensal dos check-ins.
      * @param month Mês para o qual obter o resumo
      * @return Resumo com estatísticas consolidadas
      */
-    suspend fun getCheckinMonthSummary(month: YearMonth): SummaryDTO {
-        val monthString = month.format(monthFormatter)
-        return apiService.getSummary(monthString)
+    suspend fun get_checkin_month_summary(month: YearMonth): SummaryDTO {
+        val month_string = month.format(month_formatter)
+        return api_service.get_summary(month_string)
     }
     
     /**
@@ -36,18 +36,18 @@ class SummaryRemoteDataSource @Inject constructor(
      * @param weekNumber Número da semana no ano
      * @return Resumo com estatísticas consolidadas
      */
-    suspend fun getCheckinWeekSummary(year: Int, weekNumber: Int): SummaryDTO {
+    suspend fun get_checkin_week_summary(year: Int, weekNumber: Int): SummaryDTO {
         // Obtém o primeiro dia da semana especificada
-        val weekFields = WeekFields.of(Locale.getDefault())
-        val firstDayOfWeek = LocalDate.ofYearDay(year, 1)
-            .with(weekFields.weekOfYear(), weekNumber.toLong())
-            .with(weekFields.dayOfWeek(), 1)
+        val week_fields = WeekFields.of(Locale.getDefault())
+        val first_day_of_week = LocalDate.ofYearDay(year, 1)
+            .with(week_fields.weekOfYear(), weekNumber.toLong())
+            .with(week_fields.dayOfWeek(), 1)
         
         // Converte para YearMonth
-        val month = YearMonth.of(firstDayOfWeek.year, firstDayOfWeek.month)
-        val monthString = month.format(monthFormatter)
+        val month = YearMonth.of(first_day_of_week.year, first_day_of_week.month)
+        val month_string = month.format(month_formatter)
         
         // Usa o mês para obter o resumo
-        return apiService.getSummary(monthString)
+        return api_service.get_summary(month_string)
     }
 } 

@@ -12,9 +12,9 @@ import javax.inject.Singleton
  */
 @Singleton
 class CheckinRemoteDataSource @Inject constructor(
-    private val apiService: ApiService
+    private val api_service: ApiService
 ) {
-    private val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    private val date_formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     
     /**
      * Obtém os check-ins do usuário com paginação e filtro.
@@ -24,20 +24,20 @@ class CheckinRemoteDataSource @Inject constructor(
      * @param to Data final para filtro
      * @return Página de check-ins
      */
-    suspend fun getCheckins(
+    suspend fun get_checkins(
         page: Int? = null,
         size: Int? = null,
         from: LocalDate? = null,
         to: LocalDate? = null
     ): CheckinPageDTO {
-        val fromString = from?.format(dateFormatter)
-        val toString = to?.format(dateFormatter)
+        val from_string = from?.format(date_formatter)
+        val to_string = to?.format(date_formatter)
         
-        return apiService.getCheckins(
+        return api_service.get_checkins(
             page ?: 0,
             size ?: 20,
-            fromString,
-            toString
+            from_string,
+            to_string
         )
     }
 } 

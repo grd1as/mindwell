@@ -219,7 +219,7 @@ class HomeViewModel @Inject constructor(
                     tags = listOf("APP_MOBILE")
                 )
                 
-                val response = apiService.submitReport(report)
+                val response = apiService.submit_report(report)
                 
                 state = state.copy(
                     isSubmittingFeedback = false,

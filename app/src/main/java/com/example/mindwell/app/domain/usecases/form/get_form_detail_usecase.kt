@@ -12,22 +12,22 @@ import javax.inject.Inject
 interface GetFormDetailUseCase {
     /**
      * Obtém detalhes de um formulário específico.
-     * @param formId ID do formulário
+     * @param form_id ID do formulário
      * @return Flow com o resultado contendo os detalhes do formulário
      */
-    operator fun invoke(formId: Int): Flow<Result<FormDetail>>
+    operator fun invoke(form_id: Int): Flow<Result<FormDetail>>
 }
 
 /**
  * Implementação do caso de uso para obter detalhes de um formulário.
  */
 class GetFormDetailUseCaseImpl @Inject constructor(
-    private val formRepository: FormRepository
+    private val form_repository: FormRepository
 ) : GetFormDetailUseCase {
-    override operator fun invoke(formId: Int): Flow<Result<FormDetail>> = flow {
+    override operator fun invoke(form_id: Int): Flow<Result<FormDetail>> = flow {
         try {
-            val formDetail = formRepository.getFormDetail(formId)
-            emit(Result.success(formDetail))
+            val form_detail = form_repository.get_form_detail(form_id)
+            emit(Result.success(form_detail))
         } catch (e: Exception) {
             emit(Result.failure(e))
         }

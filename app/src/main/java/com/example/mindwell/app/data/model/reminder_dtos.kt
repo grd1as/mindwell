@@ -7,7 +7,7 @@ import com.google.gson.annotations.SerializedName
  */
 data class ReminderDTO(
     @SerializedName("formId")
-    val formId: Int,
+    val form_id: Int,
     
     @SerializedName("title")
     val title: String,

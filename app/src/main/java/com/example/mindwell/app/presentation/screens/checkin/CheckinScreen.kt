@@ -52,18 +52,18 @@ fun CheckinScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (state.isLoading) {
+            if (state.is_loading) {
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
-            } else if (state.errorMessage != null) {
+            } else if (state.error_message != null) {
                 Text(
-                    text = state.errorMessage,
+                    text = state.error_message,
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(16.dp)
                 )
-                Button(onClick = { vm.loadCheckins() }) {
+                Button(onClick = { vm.load_checkins() }) {
                     Text("Tentar novamente")
                 }
             } else if (state.checkins.isEmpty()) {

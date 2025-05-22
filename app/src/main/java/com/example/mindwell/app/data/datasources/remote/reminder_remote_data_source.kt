@@ -10,14 +10,14 @@ import javax.inject.Singleton
  */
 @Singleton
 class ReminderRemoteDataSource @Inject constructor(
-    private val apiService: ApiService
+    private val api_service: ApiService
 ) {
     /**
      * Obtém os lembretes ativos.
      * @param due Se true, retorna apenas lembretes pendentes
      * @return Lista de lembretes
      */
-    suspend fun getReminders(due: Boolean? = null): List<ReminderDTO> {
-        return apiService.getReminders(due)
+    suspend fun get_reminders(due: Boolean? = null): List<ReminderDTO> {
+        return api_service.get_reminders(due)
     }
 } 

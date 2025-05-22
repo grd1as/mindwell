@@ -13,21 +13,21 @@ interface GetCheckinWeekSummaryUseCase {
     /**
      * Obtém resumo semanal de check-ins.
      * @param year Ano da semana
-     * @param weekNumber Número da semana no ano
+     * @param week_number Número da semana no ano
      * @return Flow com o resultado contendo o resumo semanal
      */
-    operator fun invoke(year: Int, weekNumber: Int): Flow<Result<Summary>>
+    operator fun invoke(year: Int, week_number: Int): Flow<Result<Summary>>
 }
 
 /**
  * Implementação do caso de uso para obter resumo semanal de check-ins.
  */
 class GetCheckinWeekSummaryUseCaseImpl @Inject constructor(
-    private val summaryRepository: SummaryRepository
+    private val summary_repository: SummaryRepository
 ) : GetCheckinWeekSummaryUseCase {
-    override operator fun invoke(year: Int, weekNumber: Int): Flow<Result<Summary>> = flow {
+    override operator fun invoke(year: Int, week_number: Int): Flow<Result<Summary>> = flow {
         try {
-            val summary = summaryRepository.getCheckinWeekSummary(year, weekNumber)
+            val summary = summary_repository.get_checkin_week_summary(year, week_number)
             emit(Result.success(summary))
         } catch (e: Exception) {
             emit(Result.failure(e))

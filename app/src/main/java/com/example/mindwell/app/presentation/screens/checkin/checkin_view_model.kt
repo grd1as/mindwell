@@ -32,17 +32,17 @@ data class CheckinHistoryItem(
  */
 @HiltViewModel
 class CheckinViewModel @Inject constructor(
-    private val getCheckinsUseCase: GetCheckinsUseCase
+    private val get_checkins_use_case: GetCheckinsUseCase
 ) : ViewModel() {
     // Estado da tela de histórico de check-ins
     data class CheckinHistoryState(
         val checkins: List<CheckinHistoryItem> = emptyList(),
-        val isLoading: Boolean = false,
-        val errorMessage: String? = null
+        val is_loading: Boolean = false,
+        val error_message: String? = null
     )
     
     // Mapeamento de emojis para níveis de humor
-    private val moodEmojis = mapOf(
+    private val mood_emojis = mapOf(
         0 to Pair("❤️", "Muito Mal"),
         1 to Pair("🧡", "Mal"),
         2 to Pair("💛", "Normal"),
@@ -51,15 +51,15 @@ class CheckinViewModel @Inject constructor(
     )
     
     // Estado atual da tela
-    var state by mutableStateOf(CheckinHistoryState(isLoading = true))
+    var state by mutableStateOf(CheckinHistoryState(is_loading = true))
         private set
     
     // Formatador de data para exibição
-    private val dateFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+    private val date_formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
         .withLocale(Locale("pt", "BR"))
     
     // Mock data para teste de layout
-    private val mockCheckins = listOf(
+    private val mock_checkins = listOf(
         CheckinHistoryItem(
             id = 1,
             date = "15 de junho de 2023",
@@ -119,24 +119,24 @@ class CheckinViewModel @Inject constructor(
     )
     
     init {
-        loadCheckins(useMockData = true) // Use mock data for layout testing
+        load_checkins(use_mock_data = true) // Use mock data for layout testing
     }
     
     /**
      * Carrega o histórico de check-ins.
-     * @param useMockData Se true, usa dados mockados para teste de layout
+     * @param use_mock_data Se true, usa dados mockados para teste de layout
      */
-    fun loadCheckins(useMockData: Boolean = true) {
-        state = state.copy(isLoading = true, errorMessage = null)
+    fun load_checkins(use_mock_data: Boolean = true) {
+        state = state.copy(is_loading = true, error_message = null)
         
-        if (useMockData) {
+        if (use_mock_data) {
             // Use mock data for testing
             viewModelScope.launch {
                 // Simulate network delay
                 delay(800)
                 state = state.copy(
-                    checkins = mockCheckins,
-                    isLoading = false
+                    checkins = mock_checkins,
+                    is_loading = false
                 )
             }
             return
@@ -144,44 +144,41 @@ class CheckinViewModel @Inject constructor(
         
         // Real implementation with API
         viewModelScope.launch {
-            getCheckinsUseCase()
+            get_checkins_use_case()
                 .catch { e ->
                     state = state.copy(
-                        isLoading = false,
-                        errorMessage = e.message ?: "Erro ao carregar histórico"
+                        is_loading = false,
+                        error_message = e.message ?: "Erro ao carregar histórico"
                     )
                 }
                 .collect { result ->
-                    result.onSuccess { checkinPage ->
+                    result.onSuccess { checkin_page ->
                         // Mapear os check-ins do domínio para o modelo de UI
-                        val checkinItems = checkinPage.items.map { checkin ->
-                            // Obter o valor da emoção a partir das respostas
-                            val emotionValue = checkin.answers.find { it.questionId == 1 }?.value?.toIntOrNull() ?: 2
-                            val moodPair = moodEmojis[emotionValue] ?: Pair("😐", "Normal")
-                            
-                            // Obter a nota do check-in
-                            val note = checkin.answers.find { it.questionId == 2 }?.value ?: ""
+                        val checkin_items = checkin_page.items.map { checkin ->
+                            // Obter o valor da emoção
+                            val emotion_value = checkin.emotion.value
+                            val mood_pair = mood_emojis[emotion_value] ?: Pair("😐", "Normal")
                             
                             CheckinHistoryItem(
-                                id = checkin.checkinId,
-                                date = checkin.timestamp.format(dateFormatter),
-                                emoji = moodPair.first,
-                                mood = moodPair.second,
-                                note = note,
+                                id = checkin.id.toInt(),
+                                date = checkin.date,
+                                emoji = mood_pair.first,
+                                mood = mood_pair.second,
+                                note = checkin.note ?: "",
                                 streak = checkin.streak ?: 0
                             )
                         }
                         
                         state = state.copy(
-                            checkins = checkinItems,
-                            isLoading = false
+                            checkins = checkin_items,
+                            is_loading = false
                         )
                     }
                     
                     result.onFailure { e ->
                         state = state.copy(
-                            isLoading = false,
-                            errorMessage = e.message ?: "Erro ao carregar histórico"
+                            is_loading = false,
+                            error_message = e.message ?: "Erro ao carregar histórico"
                         )
                     }
                 }

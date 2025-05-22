@@ -13,10 +13,10 @@ data class CheckinPageDTO(
     val size: Int,
     
     @SerializedName("totalPages")
-    val totalPages: Int,
+    val total_pages: Int,
     
     @SerializedName("totalItems")
-    val totalItems: Int,
+    val total_items: Int,
     
     @SerializedName("items")
     val items: List<CheckinDTO>
@@ -27,7 +27,7 @@ data class CheckinPageDTO(
  */
 data class CheckinDTO(
     @SerializedName("checkinId")
-    val checkinId: Int,
+    val checkin_id: Int,
     
     @SerializedName("timestamp")
     val timestamp: String,
@@ -44,10 +44,10 @@ data class CheckinDTO(
  */
 data class CheckinAnswerDTO(
     @SerializedName("questionId")
-    val questionId: Int,
+    val question_id: Int,
     
     @SerializedName("optionId")
-    val optionId: Int,
+    val option_id: Int,
     
     @SerializedName("value")
     val value: String

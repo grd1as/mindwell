@@ -13,13 +13,13 @@ interface SummaryRepository {
      * @param month Mês para o qual obter o resumo
      * @return Resumo com estatísticas consolidadas
      */
-    suspend fun getCheckinMonthSummary(month: YearMonth): Summary
+    suspend fun get_checkin_month_summary(month: YearMonth): Summary
     
     /**
      * Obtém o resumo semanal dos check-ins.
      * @param year Ano da semana
-     * @param weekNumber Número da semana no ano
+     * @param week_number Número da semana no ano
      * @return Resumo com estatísticas consolidadas
      */
-    suspend fun getCheckinWeekSummary(year: Int, weekNumber: Int): Summary
+    suspend fun get_checkin_week_summary(year: Int, week_number: Int): Summary
 } 

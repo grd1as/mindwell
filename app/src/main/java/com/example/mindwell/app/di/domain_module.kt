@@ -21,84 +21,84 @@ abstract class DomainModule {
     // Auth
     @Binds
     @Singleton
-    abstract fun bindLoginUseCase(impl: LoginUseCaseImpl): LoginUseCase
+    abstract fun bind_login_use_case(impl: LoginUseCaseImpl): LoginUseCase
     
     @Binds
     @Singleton
-    abstract fun bindCheckAuthStatusUseCase(impl: CheckAuthStatusUseCaseImpl): CheckAuthStatusUseCase
+    abstract fun bind_check_auth_status_use_case(impl: CheckAuthStatusUseCaseImpl): CheckAuthStatusUseCase
     
     @Binds
     @Singleton
-    abstract fun bindLogoutUseCase(impl: LogoutUseCaseImpl): LogoutUseCase
+    abstract fun bind_logout_use_case(impl: LogoutUseCaseImpl): LogoutUseCase
     
     // Form
     @Binds
     @Singleton
-    abstract fun bindGetFormsUseCase(impl: GetFormsUseCaseImpl): GetFormsUseCase
+    abstract fun bind_get_forms_use_case(impl: GetFormsUseCaseImpl): GetFormsUseCase
     
     @Binds
     @Singleton
-    abstract fun bindGetFormDetailUseCase(impl: GetFormDetailUseCaseImpl): GetFormDetailUseCase
+    abstract fun bind_get_form_detail_use_case(impl: GetFormDetailUseCaseImpl): GetFormDetailUseCase
     
     @Binds
     @Singleton
-    abstract fun bindSubmitFormResponsesUseCase(impl: SubmitFormResponsesUseCaseImpl): SubmitFormResponsesUseCase
+    abstract fun bind_submit_form_responses_use_case(impl: SubmitFormResponsesUseCaseImpl): SubmitFormResponsesUseCase
     
     @Binds
     @Singleton
-    abstract fun bindGetPendingFormsUseCase(impl: GetPendingFormsUseCaseImpl): GetPendingFormsUseCase
+    abstract fun bind_get_pending_forms_use_case(impl: GetPendingFormsUseCaseImpl): GetPendingFormsUseCase
     
     // Checkin
     @Binds
     @Singleton
-    abstract fun bindGetCheckinsUseCase(impl: GetCheckinsUseCaseImpl): GetCheckinsUseCase
+    abstract fun bind_get_checkins_use_case(impl: GetCheckinsUseCaseImpl): GetCheckinsUseCase
     
     @Binds
     @Singleton
-    abstract fun bindGetLastCheckinUseCase(impl: GetLastCheckinUseCaseImpl): GetLastCheckinUseCase
+    abstract fun bind_get_last_checkin_use_case(impl: GetLastCheckinUseCaseImpl): GetLastCheckinUseCase
     
     // Summary
     @Binds
     @Singleton
-    abstract fun bindGetMonthlySummaryUseCase(impl: GetMonthlySummaryUseCaseImpl): GetMonthlySummaryUseCase
+    abstract fun bind_get_monthly_summary_use_case(impl: GetMonthlySummaryUseCaseImpl): GetMonthlySummaryUseCase
     
     @Binds
     @Singleton
-    abstract fun bindGetWeeklySummaryUseCase(impl: GetWeeklySummaryUseCaseImpl): GetWeeklySummaryUseCase
+    abstract fun bind_get_weekly_summary_use_case(impl: GetWeeklySummaryUseCaseImpl): GetWeeklySummaryUseCase
     
     // Preference
     @Binds
     @Singleton
-    abstract fun bindGetUserPreferencesUseCase(impl: GetUserPreferencesUseCaseImpl): GetUserPreferencesUseCase
+    abstract fun bind_get_user_preferences_use_case(impl: GetUserPreferencesUseCaseImpl): GetUserPreferencesUseCase
     
     @Binds
     @Singleton
-    abstract fun bindGetPreferencesUseCase(impl: GetPreferencesUseCaseImpl): GetPreferencesUseCase
+    abstract fun bind_get_preferences_use_case(impl: GetPreferencesUseCaseImpl): GetPreferencesUseCase
     
     @Binds
     @Singleton
-    abstract fun bindUpdatePreferencesUseCase(impl: UpdatePreferencesUseCaseImpl): UpdatePreferencesUseCase
+    abstract fun bind_update_preferences_use_case(impl: UpdatePreferencesUseCaseImpl): UpdatePreferencesUseCase
     
     // Onboarding
     @Binds
     @Singleton
-    abstract fun bindGetOnboardingPagesUseCase(impl: GetOnboardingPagesUseCaseImpl): GetOnboardingPagesUseCase
+    abstract fun bind_get_onboarding_pages_use_case(impl: GetOnboardingPagesUseCaseImpl): GetOnboardingPagesUseCase
     
     @Binds
     @Singleton
-    abstract fun bindGetOnboardingStateUseCase(impl: GetOnboardingStateUseCaseImpl): GetOnboardingStateUseCase
+    abstract fun bind_get_onboarding_state_use_case(impl: GetOnboardingStateUseCaseImpl): GetOnboardingStateUseCase
     
     @Binds
     @Singleton
-    abstract fun bindCompleteOnboardingUseCase(impl: CompleteOnboardingUseCaseImpl): CompleteOnboardingUseCase
+    abstract fun bind_complete_onboarding_use_case(impl: CompleteOnboardingUseCaseImpl): CompleteOnboardingUseCase
     
     // Reminder
     @Binds
     @Singleton
-    abstract fun bindGetRemindersUseCase(impl: GetRemindersUseCaseImpl): GetRemindersUseCase
+    abstract fun bind_get_reminders_use_case(impl: GetRemindersUseCaseImpl): GetRemindersUseCase
     
     // Report
     @Binds
     @Singleton
-    abstract fun bindSubmitReportUseCase(impl: SubmitReportUseCaseImpl): SubmitReportUseCase
+    abstract fun bind_submit_report_use_case(impl: SubmitReportUseCaseImpl): SubmitReportUseCase
 } 

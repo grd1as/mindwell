@@ -15,7 +15,7 @@ object ReminderMapper {
      */
     fun mapToDomain(dto: ReminderDTO): Reminder {
         return Reminder(
-            formId = dto.formId,
+            form_id = dto.form_id,
             title = dto.title,
             scheduled = ZonedDateTime.parse(dto.scheduled)
         )

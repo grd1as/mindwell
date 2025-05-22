@@ -31,7 +31,7 @@ interface GetCheckinsUseCase {
  * Implementação do caso de uso para obter histórico de check-ins.
  */
 class GetCheckinsUseCaseImpl @Inject constructor(
-    private val checkinRepository: CheckinRepository
+    private val checkin_repository: CheckinRepository
 ) : GetCheckinsUseCase {
     override operator fun invoke(
         page: Int,
@@ -40,7 +40,7 @@ class GetCheckinsUseCaseImpl @Inject constructor(
         to: LocalDate?
     ): Flow<Result<CheckinPage>> = flow {
         try {
-            val checkins = checkinRepository.getCheckins(page, size, from, to)
+            val checkins = checkin_repository.get_checkins(page, size, from, to)
             emit(Result.success(checkins))
         } catch (e: Exception) {
             emit(Result.failure(e))

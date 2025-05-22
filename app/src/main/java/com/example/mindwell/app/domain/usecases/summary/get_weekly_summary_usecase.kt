@@ -25,15 +25,15 @@ interface GetWeeklySummaryUseCase {
  * Implementação do caso de uso para obter resumo semanal dos check-ins.
  */
 class GetWeeklySummaryUseCaseImpl @Inject constructor(
-    private val summaryRepository: SummaryRepository
+    private val summary_repository: SummaryRepository
 ) : GetWeeklySummaryUseCase {
     override operator fun invoke(date: LocalDate): Flow<Result<Summary>> = flow {
         try {
-            val weekFields = WeekFields.of(Locale.getDefault())
+            val week_fields = WeekFields.of(Locale.getDefault())
             val year = date.year
-            val weekNumber = date.get(weekFields.weekOfWeekBasedYear())
+            val week_number = date.get(week_fields.weekOfWeekBasedYear())
             
-            val summary = summaryRepository.getCheckinWeekSummary(year, weekNumber)
+            val summary = summary_repository.get_checkin_week_summary(year, week_number)
             emit(Result.success(summary))
         } catch (e: Exception) {
             emit(Result.failure(e))

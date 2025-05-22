@@ -27,7 +27,7 @@ interface ApiService {
      * @return Lista de formulários
      */
     @GET("forms")
-    suspend fun getForms(@Query("type") type: String? = null): List<FormDTO>
+    suspend fun get_forms(@Query("type") type: String? = null): List<FormDTO>
     
     /**
      * Obtém os detalhes de um formulário específico.
@@ -35,7 +35,7 @@ interface ApiService {
      * @return Detalhes do formulário com perguntas
      */
     @GET("forms/{formId}")
-    suspend fun getFormDetail(@Path("formId") formId: Int): FormDetailDTO
+    suspend fun get_form_detail(@Path("formId") form_id: Int): FormDetailDTO
     
     /**
      * Envia respostas para um formulário.
@@ -44,8 +44,8 @@ interface ApiService {
      * @return Resposta da API (Created 201)
      */
     @POST("forms/{formId}/responses")
-    suspend fun submitFormResponses(
-        @Path("formId") formId: Int,
+    suspend fun submit_form_responses(
+        @Path("formId") form_id: Int,
         @Body request: FormResponseRequest
     ): ResponseWithLocation
     
@@ -55,7 +55,7 @@ interface ApiService {
      * @return Resumo consolidado
      */
     @GET("summary/checkin")
-    suspend fun getSummary(
+    suspend fun get_summary(
         @Query("month") month: String
     ): SummaryDTO
     
@@ -68,7 +68,7 @@ interface ApiService {
      * @return Página de check-ins
      */
     @GET("checkins")
-    suspend fun getCheckins(
+    suspend fun get_checkins(
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 20,
         @Query("from") from: String? = null,
@@ -80,14 +80,14 @@ interface ApiService {
      * @return Preferências atuais
      */
     @GET("preferences")
-    suspend fun getPreferences(): PreferenceDTO
+    suspend fun get_preferences(): PreferenceDTO
     
     /**
      * Atualiza as preferências do usuário.
      * @param preference Novas preferências
      */
     @PUT("preferences")
-    suspend fun updatePreferences(@Body preference: PreferenceDTO)
+    suspend fun update_preferences(@Body preference: PreferenceDTO)
     
     /**
      * Obtém os lembretes ativos.
@@ -95,7 +95,7 @@ interface ApiService {
      * @return Lista de lembretes
      */
     @GET("reminders")
-    suspend fun getReminders(@Query("due") due: Boolean? = null): List<ReminderDTO>
+    suspend fun get_reminders(@Query("due") due: Boolean? = null): List<ReminderDTO>
     
     /**
      * Envia uma nova denúncia/report.
@@ -103,5 +103,5 @@ interface ApiService {
      * @return Resposta da API (Created 201)
      */
     @POST("reports")
-    suspend fun submitReport(@Body report: ReportDTO): ResponseWithLocation
+    suspend fun submit_report(@Body report: ReportDTO): ResponseWithLocation
 } 

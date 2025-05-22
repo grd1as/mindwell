@@ -11,5 +11,5 @@ interface ReminderRepository {
      * @param due Se true, retorna apenas lembretes pendentes
      * @return Lista de lembretes
      */
-    suspend fun getReminders(due: Boolean = false): List<Reminder>
+    suspend fun get_reminders(due: Boolean = false): List<Reminder>
 } 

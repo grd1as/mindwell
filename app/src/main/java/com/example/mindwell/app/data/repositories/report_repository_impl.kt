@@ -12,15 +12,15 @@ import javax.inject.Singleton
  */
 @Singleton
 class ReportRepositoryImpl @Inject constructor(
-    private val remoteDataSource: ReportRemoteDataSource
+    private val remote_data_source: ReportRemoteDataSource
 ) : ReportRepository {
     /**
      * Envia um report.
      * @param report Dados do report
      * @return ID do report criado
      */
-    override suspend fun submitReport(report: Report): Int {
-        val reportDto = ReportMapper.mapToDto(report)
-        return remoteDataSource.submitReport(reportDto)
+    override suspend fun submit_report(report: Report): Int {
+        val report_dto = ReportMapper.mapToDto(report)
+        return remote_data_source.submit_report(report_dto)
     }
 } 

@@ -17,7 +17,7 @@ object DataSourceModule {
     
     @Provides
     @Singleton
-    fun provideTokenStorage(
+    fun provide_token_storage(
         @ApplicationContext context: Context
     ): TokenStorage {
         return TokenStorage(context)
@@ -25,57 +25,57 @@ object DataSourceModule {
     
     @Provides
     @Singleton
-    fun provideAuthRemoteDataSource(
-        apiService: ApiService
+    fun provide_auth_remote_data_source(
+        api_service: ApiService
     ): AuthRemoteDataSource {
-        return AuthRemoteDataSource(apiService)
+        return AuthRemoteDataSource(api_service)
     }
     
     @Provides
     @Singleton
-    fun provideFormRemoteDataSource(
-        apiService: ApiService
+    fun provide_form_remote_data_source(
+        api_service: ApiService
     ): FormRemoteDataSource {
-        return FormRemoteDataSource(apiService)
+        return FormRemoteDataSource(api_service)
     }
     
     @Provides
     @Singleton
-    fun provideCheckinRemoteDataSource(
-        apiService: ApiService
+    fun provide_checkin_remote_data_source(
+        api_service: ApiService
     ): CheckinRemoteDataSource {
-        return CheckinRemoteDataSource(apiService)
+        return CheckinRemoteDataSource(api_service)
     }
     
     @Provides
     @Singleton
-    fun provideSummaryRemoteDataSource(
-        apiService: ApiService
+    fun provide_summary_remote_data_source(
+        api_service: ApiService
     ): SummaryRemoteDataSource {
-        return SummaryRemoteDataSource(apiService)
+        return SummaryRemoteDataSource(api_service)
     }
     
     @Provides
     @Singleton
-    fun providePreferenceRemoteDataSource(
-        apiService: ApiService
+    fun provide_preference_remote_data_source(
+        api_service: ApiService
     ): PreferenceRemoteDataSource {
-        return PreferenceRemoteDataSource(apiService)
+        return PreferenceRemoteDataSource(api_service)
     }
     
     @Provides
     @Singleton
-    fun provideReminderRemoteDataSource(
-        apiService: ApiService
+    fun provide_reminder_remote_data_source(
+        api_service: ApiService
     ): ReminderRemoteDataSource {
-        return ReminderRemoteDataSource(apiService)
+        return ReminderRemoteDataSource(api_service)
     }
     
     @Provides
     @Singleton
-    fun provideReportRemoteDataSource(
-        apiService: ApiService
+    fun provide_report_remote_data_source(
+        api_service: ApiService
     ): ReportRemoteDataSource {
-        return ReportRemoteDataSource(apiService)
+        return ReportRemoteDataSource(api_service)
     }
 } 

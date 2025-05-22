@@ -108,7 +108,7 @@ fun FormDetailScreen(
                 // Pergunta atual
                 QuestionContent(
                     question = currentQuestion,
-                    selectedOptionId = state.answers[currentQuestion.id]?.optionId,
+                    selectedOptionId = state.answers[currentQuestion.id]?.option_id,
                     onOptionSelected = { optionId ->
                         vm.answerQuestion(currentQuestion, optionId)
                     },

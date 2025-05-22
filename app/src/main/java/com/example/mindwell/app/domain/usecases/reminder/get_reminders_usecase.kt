@@ -22,11 +22,11 @@ interface GetRemindersUseCase {
  * Implementação do caso de uso para obter lembretes ativos.
  */
 class GetRemindersUseCaseImpl @Inject constructor(
-    private val reminderRepository: ReminderRepository
+    private val reminder_repository: ReminderRepository
 ) : GetRemindersUseCase {
     override operator fun invoke(due: Boolean): Flow<Result<List<Reminder>>> = flow {
         try {
-            val reminders = reminderRepository.getReminders(due)
+            val reminders = reminder_repository.get_reminders(due)
             emit(Result.success(reminders))
         } catch (e: Exception) {
             emit(Result.failure(e))

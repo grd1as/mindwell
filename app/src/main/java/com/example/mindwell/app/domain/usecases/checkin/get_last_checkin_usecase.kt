@@ -21,14 +21,14 @@ interface GetLastCheckinUseCase {
  * Implementação do caso de uso para obter o último check-in do usuário.
  */
 class GetLastCheckinUseCaseImpl @Inject constructor(
-    private val checkinRepository: CheckinRepository
+    private val checkin_repository: CheckinRepository
 ) : GetLastCheckinUseCase {
     override operator fun invoke(): Flow<Result<Checkin>> = flow {
         try {
             // Obtém a primeira página com apenas 1 check-in
-            val checkinPage = checkinRepository.getCheckins(page = 0, size = 1)
-            val lastCheckin = checkinPage.items.firstOrNull() ?: throw NoSuchElementException("Nenhum check-in encontrado")
-            emit(Result.success(lastCheckin))
+            val checkin_page = checkin_repository.get_checkins(page = 0, size = 1)
+            val last_checkin = checkin_page.items.firstOrNull() ?: throw NoSuchElementException("Nenhum check-in encontrado")
+            emit(Result.success(last_checkin))
         } catch (e: Exception) {
             emit(Result.failure(e))
         }

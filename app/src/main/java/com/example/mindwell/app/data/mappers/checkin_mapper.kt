@@ -6,6 +6,7 @@ import com.example.mindwell.app.data.model.CheckinPageDTO
 import com.example.mindwell.app.domain.entities.Checkin
 import com.example.mindwell.app.domain.entities.CheckinAnswer
 import com.example.mindwell.app.domain.entities.CheckinPage
+import com.example.mindwell.app.domain.entities.Emotion
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -14,7 +15,7 @@ import java.util.Locale
  * Mapper para conversão entre DTOs e entidades de check-in.
  */
 object CheckinMapper {
-    private val dateDisplayFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale("pt", "BR"))
+    private val date_display_formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale("pt", "BR"))
     
     /**
      * Converte DTO de página de check-ins para entidade de domínio CheckinPage.
@@ -25,8 +26,8 @@ object CheckinMapper {
         return CheckinPage(
             page = dto.page,
             size = dto.size,
-            totalPages = dto.totalPages,
-            totalItems = dto.totalItems,
+            total_pages = dto.total_pages,
+            total_items = dto.total_items,
             items = dto.items.map { mapToDomain(it) }
         )
     }
@@ -38,12 +39,22 @@ object CheckinMapper {
      */
     fun mapToDomain(dto: CheckinDTO): Checkin {
         val timestamp = ZonedDateTime.parse(dto.timestamp)
+        
+        // Criar uma emoção mock apenas para satisfazer o construtor
+        // Idealmente, esta informação deveria vir das respostas ou de outro mapeamento
+        val mock_emotion = Emotion(
+            id = 1,
+            name = "Normal",
+            emoji = "😐",
+            value = 2
+        )
+        
         return Checkin(
-            checkinId = dto.checkinId,
-            timestamp = timestamp,
-            answers = dto.answers.map { mapToDomain(it) },
+            id = dto.checkin_id.toLong(),
+            date = timestamp.format(date_display_formatter),
+            emotion = mock_emotion,
             streak = dto.streak,
-            date = timestamp.format(dateDisplayFormatter)
+            note = null // Não temos esta informação no DTO
         )
     }
     
@@ -54,8 +65,8 @@ object CheckinMapper {
      */
     fun mapToDomain(dto: CheckinAnswerDTO): CheckinAnswer {
         return CheckinAnswer(
-            questionId = dto.questionId,
-            optionId = dto.optionId,
+            question_id = dto.question_id,
+            option_id = dto.option_id,
             value = dto.value
         )
     }
