@@ -3,6 +3,7 @@ package com.example.mindwell.app.di
 import com.example.mindwell.app.domain.usecases.auth.*
 import com.example.mindwell.app.domain.usecases.checkin.*
 import com.example.mindwell.app.domain.usecases.form.*
+import com.example.mindwell.app.domain.usecases.onboarding.*
 import com.example.mindwell.app.domain.usecases.preference.*
 import com.example.mindwell.app.domain.usecases.reminder.*
 import com.example.mindwell.app.domain.usecases.report.*
@@ -77,6 +78,19 @@ abstract class DomainModule {
     @Binds
     @Singleton
     abstract fun bindUpdatePreferencesUseCase(impl: UpdatePreferencesUseCaseImpl): UpdatePreferencesUseCase
+    
+    // Onboarding
+    @Binds
+    @Singleton
+    abstract fun bindGetOnboardingPagesUseCase(impl: GetOnboardingPagesUseCaseImpl): GetOnboardingPagesUseCase
+    
+    @Binds
+    @Singleton
+    abstract fun bindGetOnboardingStateUseCase(impl: GetOnboardingStateUseCaseImpl): GetOnboardingStateUseCase
+    
+    @Binds
+    @Singleton
+    abstract fun bindCompleteOnboardingUseCase(impl: CompleteOnboardingUseCaseImpl): CompleteOnboardingUseCase
     
     // Reminder
     @Binds

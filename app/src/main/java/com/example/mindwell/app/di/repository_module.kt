@@ -50,6 +50,12 @@ abstract class RepositoryModule {
     
     @Binds
     @Singleton
+    abstract fun bindOnboardingRepository(
+        impl: OnboardingRepositoryImpl
+    ): OnboardingRepository
+    
+    @Binds
+    @Singleton
     abstract fun bindReminderRepository(
         impl: ReminderRepositoryImpl
     ): ReminderRepository

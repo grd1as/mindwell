@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.mindwell.app.common.navigation.AppDestinations
@@ -32,6 +33,22 @@ fun HomeScreen(
 ) {
     val state = vm.state
     var selectedEmotion by remember { mutableStateOf(-1) }
+    
+    // Mostrar o diálogo de feedback se necessário
+    if (state.showFeedbackDialog) {
+        FeedbackDialog(
+            categories = vm.feedbackCategories,
+            selectedCategory = state.feedbackCategory,
+            description = state.feedbackDescription,
+            isSubmitting = state.isSubmittingFeedback,
+            success = state.feedbackSuccess,
+            errorMessage = state.feedbackError,
+            onCategorySelected = { vm.updateFeedbackCategory(it) },
+            onDescriptionChanged = { vm.updateFeedbackDescription(it) },
+            onSubmit = { vm.submitFeedback() },
+            onDismiss = { vm.hideFeedbackDialog() }
+        )
+    }
     
     Scaffold(
         bottomBar = {
@@ -319,7 +336,7 @@ fun HomeScreen(
                 
                 // Feedback channel
                 Button(
-                    onClick = { nav.navigate(AppDestinations.REPORT) },
+                    onClick = { vm.showFeedbackDialog() },  // Atualizado para abrir o diálogo
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.White,
@@ -334,6 +351,175 @@ fun HomeScreen(
                 }
                 
                 Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+    }
+}
+
+/**
+ * Diálogo para envio de feedback/report
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FeedbackDialog(
+    categories: List<String>,
+    selectedCategory: String,
+    description: String,
+    isSubmitting: Boolean,
+    success: Boolean,
+    errorMessage: String?,
+    onCategorySelected: (String) -> Unit,
+    onDescriptionChanged: (String) -> Unit,
+    onSubmit: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    val categoryLabels = mapOf(
+        "ASSÉDIO_MORAL" to "Assédio Moral",
+        "ASSÉDIO_SEXUAL" to "Assédio Sexual",
+        "DISCRIMINAÇÃO_RACIAL" to "Discriminação Racial",
+        "DISCRIMINAÇÃO_DE_GÊNERO" to "Discriminação de Gênero",
+        "VIOLÊNCIA_FÍSICA" to "Violência Física",
+        "VIOLÊNCIA_VERBAL" to "Violência Verbal",
+        "CONFLITO_INTERPESSOAL" to "Conflito Interpessoal",
+        "SAÚDE_E_SEGURANÇA" to "Assuntos de Saúde e Segurança",
+        "INFRAESTRUTURA_INADEQUADA" to "Infraestrutura Inadequada",
+        "EQUIPAMENTO_QUEBRADO" to "Equipamento Quebrado",
+        "ERGONOMIA_INADEQUADA" to "Ergonomia Inadequada",
+        "OUTRO" to "Outro"
+    )
+    
+    var expanded by remember { mutableStateOf(false) }
+    
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = "Canal de Escuta",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                
+                if (success) {
+                    // Mensagem de sucesso
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = "Sucesso",
+                                tint = Color.Green,
+                                modifier = Modifier.size(48.dp)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Feedback enviado com sucesso!",
+                                style = MaterialTheme.typography.bodyLarge,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                } else {
+                    // Seleção de categoria
+                    ExposedDropdownMenuBox(
+                        expanded = expanded,
+                        onExpandedChange = { expanded = it }
+                    ) {
+                        OutlinedTextField(
+                            value = categoryLabels[selectedCategory] ?: "Selecione uma categoria",
+                            onValueChange = { },
+                            readOnly = true,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor(),
+                            label = { Text("Categoria") },
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                            },
+                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                        )
+                        
+                        ExposedDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            categories.forEach { category ->
+                                DropdownMenuItem(
+                                    text = { Text(categoryLabels[category] ?: category) },
+                                    onClick = {
+                                        onCategorySelected(category)
+                                        expanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    
+                    // Campo de descrição
+                    OutlinedTextField(
+                        value = description,
+                        onValueChange = onDescriptionChanged,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(120.dp),
+                        label = { Text("Descrição (opcional)") },
+                        placeholder = { Text("Descreva a ocorrência...") }
+                    )
+                    
+                    // Mensagem de erro, se houver
+                    if (errorMessage != null) {
+                        Text(
+                            text = errorMessage,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                    
+                    // Botões de ação
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(
+                            onClick = onDismiss
+                        ) {
+                            Text("Cancelar")
+                        }
+                        
+                        Spacer(modifier = Modifier.width(8.dp))
+                        
+                        Button(
+                            onClick = onSubmit,
+                            enabled = !isSubmitting
+                        ) {
+                            if (isSubmitting) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Text("Enviar")
+                            }
+                        }
+                    }
+                }
             }
         }
     }
