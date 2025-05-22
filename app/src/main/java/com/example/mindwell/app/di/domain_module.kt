@@ -72,6 +72,10 @@ abstract class DomainModule {
     
     @Binds
     @Singleton
+    abstract fun bindGetPreferencesUseCase(impl: GetPreferencesUseCaseImpl): GetPreferencesUseCase
+    
+    @Binds
+    @Singleton
     abstract fun bindUpdatePreferencesUseCase(impl: UpdatePreferencesUseCaseImpl): UpdatePreferencesUseCase
     
     // Reminder

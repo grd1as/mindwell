@@ -13,6 +13,7 @@ import com.example.mindwell.app.presentation.screens.home.HomeScreen
 import com.example.mindwell.app.presentation.screens.login.LoginScreen
 import com.example.mindwell.app.presentation.screens.resources.ResourceDetailScreen
 import com.example.mindwell.app.presentation.screens.resources.ResourcesScreen
+import com.example.mindwell.app.presentation.screens.settings.SettingsScreen
 
 /**
  * Destinos de navegação do aplicativo.
@@ -89,7 +90,7 @@ fun AppNavigation(
         
         // Tela de Configurações
         composable(AppDestinations.SETTINGS) {
-            // TODO: Implementar tela de Configurações
+            SettingsScreen(navController)
         }
         
         // Tela de Denúncia/Report

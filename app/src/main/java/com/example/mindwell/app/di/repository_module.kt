@@ -38,6 +38,12 @@ abstract class RepositoryModule {
     
     @Binds
     @Singleton
+    abstract fun bindUserPreferenceRepository(
+        impl: UserPreferenceRepositoryImpl
+    ): UserPreferenceRepository
+    
+    @Binds
+    @Singleton
     abstract fun bindPreferenceRepository(
         impl: PreferenceRepositoryImpl
     ): PreferenceRepository
