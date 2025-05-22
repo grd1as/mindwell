@@ -33,6 +33,11 @@ class CheckinRemoteDataSource @Inject constructor(
         val fromString = from?.format(dateFormatter)
         val toString = to?.format(dateFormatter)
         
-        return apiService.getCheckins(page, size, fromString, toString)
+        return apiService.getCheckins(
+            page ?: 0,
+            size ?: 20,
+            fromString,
+            toString
+        )
     }
 } 

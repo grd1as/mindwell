@@ -95,5 +95,19 @@ data class AnswerDTO(
     val questionId: Int,
     
     @SerializedName("optionId")
-    val optionId: Int
+    val optionId: Int,
+    
+    @SerializedName("value")
+    val value: Double? = null,
+    
+    @SerializedName("text")
+    val text: String? = null
+)
+
+/**
+ * DTO para resposta de API com localização no cabeçalho
+ */
+data class ResponseWithLocation(
+    @SerializedName("location")
+    val location: String? = null
 ) 

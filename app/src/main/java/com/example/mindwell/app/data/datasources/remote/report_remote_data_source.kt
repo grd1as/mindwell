@@ -6,23 +6,21 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Fonte de dados remota para denúncias/reports.
+ * Fonte de dados remota para reports.
  */
 @Singleton
 class ReportRemoteDataSource @Inject constructor(
     private val apiService: ApiService
 ) {
     /**
-     * Envia uma nova denúncia/report.
-     * @param report Dados da denúncia
-     * @return true se o envio foi bem-sucedido
+     * Envia um report.
+     * @param report Dados do report
+     * @return ID do report criado
      */
-    suspend fun submitReport(report: ReportDTO): Boolean {
-        try {
-            apiService.submitReport(report)
-            return true
-        } catch (e: Exception) {
-            return false
-        }
+    suspend fun submitReport(report: ReportDTO): Int {
+        val response = apiService.submitReport(report)
+        // Extrai o ID do report a partir da URL retornada (exemplo: /reports/42)
+        val locationPath = response.location ?: ""
+        return locationPath.substringAfterLast("/").toIntOrNull() ?: -1
     }
 } 

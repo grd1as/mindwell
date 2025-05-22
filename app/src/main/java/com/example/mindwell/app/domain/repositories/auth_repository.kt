@@ -8,25 +8,26 @@ import com.example.mindwell.app.domain.entities.User
 interface AuthRepository {
     /**
      * Realiza login com token do Google.
-     * @param idToken Token do Google
-     * @return Usuário autenticado com JWT
+     * @param idToken Token de ID do Google
+     * @return Usuário autenticado ou null em caso de falha
      */
-    suspend fun login(idToken: String): User
+    suspend fun login(idToken: String): User?
+    
+    /**
+     * Realiza logout.
+     * @return true se o logout foi bem-sucedido
+     */
+    suspend fun logout(): Boolean
     
     /**
      * Verifica se o usuário está autenticado.
-     * @return true se estiver autenticado, false caso contrário
+     * @return true se o usuário estiver autenticado e o token for válido
      */
-    suspend fun isAuthenticated(): Boolean
+    fun isAuthenticated(): Boolean
     
     /**
-     * Obtém o token JWT atual.
+     * Obtém o token JWT.
      * @return Token JWT ou null se não estiver autenticado
      */
-    suspend fun getJwtToken(): String?
-    
-    /**
-     * Realiza logout do usuário.
-     */
-    suspend fun logout()
+    fun getJwtToken(): String?
 } 

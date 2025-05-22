@@ -8,18 +8,18 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Implementação do repositório de denúncias/reports.
+ * Implementação do repositório de reports.
  */
 @Singleton
 class ReportRepositoryImpl @Inject constructor(
     private val remoteDataSource: ReportRemoteDataSource
 ) : ReportRepository {
     /**
-     * Envia uma nova denúncia/report.
-     * @param report Dados da denúncia
-     * @return true se o envio foi bem-sucedido
+     * Envia um report.
+     * @param report Dados do report
+     * @return ID do report criado
      */
-    override suspend fun submitReport(report: Report): Boolean {
+    override suspend fun submitReport(report: Report): Int {
         val reportDto = ReportMapper.mapToDto(report)
         return remoteDataSource.submitReport(reportDto)
     }

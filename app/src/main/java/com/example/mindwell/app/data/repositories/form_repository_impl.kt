@@ -2,6 +2,7 @@ package com.example.mindwell.app.data.repositories
 
 import com.example.mindwell.app.data.datasources.remote.FormRemoteDataSource
 import com.example.mindwell.app.data.mappers.FormMapper
+import com.example.mindwell.app.data.model.FormResponseRequest
 import com.example.mindwell.app.domain.entities.Answer
 import com.example.mindwell.app.domain.entities.Form
 import com.example.mindwell.app.domain.entities.FormDetail
@@ -44,6 +45,7 @@ class FormRepositoryImpl @Inject constructor(
      */
     override suspend fun submitFormResponses(formId: Int, answers: List<Answer>): Int {
         val answerDtos = FormMapper.mapToDto(answers)
-        return remoteDataSource.submitFormResponses(formId, answerDtos)
+        val request = FormResponseRequest(answerDtos)
+        return remoteDataSource.submitFormResponses(formId, request)
     }
 } 

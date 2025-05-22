@@ -6,10 +6,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.mindwell.app.presentation.screens.checkin.CheckinScreen
+import com.example.mindwell.app.presentation.screens.evolution.EvolutionScreen
 import com.example.mindwell.app.presentation.screens.forms.FormDetailScreen
 import com.example.mindwell.app.presentation.screens.forms.FormsScreen
 import com.example.mindwell.app.presentation.screens.home.HomeScreen
 import com.example.mindwell.app.presentation.screens.login.LoginScreen
+import com.example.mindwell.app.presentation.screens.resources.ResourceDetailScreen
+import com.example.mindwell.app.presentation.screens.resources.ResourcesScreen
 
 /**
  * Destinos de navegação do aplicativo.
@@ -21,12 +24,14 @@ object AppDestinations {
     const val FORMS = "forms"
     const val FORM_DETAIL = "form_detail/{formId}"
     const val RESOURCES = "resources"
+    const val RESOURCE_DETAIL = "resource_detail/{resourceId}"
     const val EVOLUTION = "evolution"
     const val SETTINGS = "settings"
     const val REPORT = "report"
     
     // Funções auxiliares para navegação com parâmetros
     fun formDetail(formId: Int) = "form_detail/$formId"
+    fun resourceDetail(resourceId: String) = "resource_detail/$resourceId"
 }
 
 /**
@@ -66,14 +71,20 @@ fun AppNavigation(
             FormDetailScreen(navController)
         }
         
-        // Tela de Recursos
+        // Tela de Recursos/Guias
         composable(AppDestinations.RESOURCES) {
-            // TODO: Implementar tela de Recursos
+            ResourcesScreen(navController)
+        }
+        
+        // Tela de Detalhes do Recurso
+        composable(AppDestinations.RESOURCE_DETAIL) { backStackEntry ->
+            val resourceId = backStackEntry.arguments?.getString("resourceId") ?: ""
+            ResourceDetailScreen(navController, resourceId)
         }
         
         // Tela de Evolução
         composable(AppDestinations.EVOLUTION) {
-            // TODO: Implementar tela de Evolução
+            EvolutionScreen(navController)
         }
         
         // Tela de Configurações

@@ -15,10 +15,24 @@ class AuthRemoteDataSource @Inject constructor(
 ) {
     /**
      * Realiza login com token do Google.
-     * @param idToken Token do Google
+     * @param idToken Token de ID do Google
      * @return Resposta com token JWT
      */
     suspend fun login(idToken: String): LoginResponse {
-        return apiService.login(LoginRequest(idToken))
+        val request = LoginRequest(idToken)
+        return apiService.login(request)
+    }
+    
+    /**
+     * Realiza logout.
+     * @return true se o logout foi bem-sucedido
+     */
+    suspend fun logout(): Boolean {
+        return try {
+            val response = apiService.logout()
+            response["status"] == "logged-out"
+        } catch (e: Exception) {
+            false
+        }
     }
 } 

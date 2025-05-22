@@ -1,9 +1,9 @@
 package com.example.mindwell.app.data.datasources.remote
 
-import com.example.mindwell.app.data.model.AnswerDTO
 import com.example.mindwell.app.data.model.FormDTO
 import com.example.mindwell.app.data.model.FormDetailDTO
 import com.example.mindwell.app.data.model.FormResponseRequest
+import com.example.mindwell.app.data.model.ResponseWithLocation
 import com.example.mindwell.app.data.network.ApiService
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -36,14 +36,13 @@ class FormRemoteDataSource @Inject constructor(
     /**
      * Envia respostas para um formulário.
      * @param formId ID do formulário
-     * @param answers Lista de respostas
-     * @return ID da resposta (obtido do header Location)
+     * @param request Dados das respostas
+     * @return ID da resposta extraído da URL retornada
      */
-    suspend fun submitFormResponses(formId: Int, answers: List<AnswerDTO>): Int {
-        val request = FormResponseRequest(answers)
-        apiService.submitFormResponses(formId, request)
-        // Em um cenário real, parsearíamos o header Location para obter o ID da resposta
-        // Por enquanto, retornamos um valor fictício
-        return 0
+    suspend fun submitFormResponses(formId: Int, request: FormResponseRequest): Int {
+        val response = apiService.submitFormResponses(formId, request)
+        // Extrai o ID da resposta a partir da URL retornada (exemplo: /forms/1/responses/42)
+        val locationPath = response.location ?: ""
+        return locationPath.substringAfterLast("/").toIntOrNull() ?: -1
     }
 } 

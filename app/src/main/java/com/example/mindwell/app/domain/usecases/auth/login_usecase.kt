@@ -27,7 +27,11 @@ class LoginUseCaseImpl @Inject constructor(
     override operator fun invoke(idToken: String): Flow<Result<User>> = flow {
         try {
             val user = authRepository.login(idToken)
-            emit(Result.success(user))
+            if (user != null) {
+                emit(Result.success(user))
+            } else {
+                emit(Result.failure(Exception("Falha na autenticação")))
+            }
         } catch (e: Exception) {
             emit(Result.failure(e))
         }

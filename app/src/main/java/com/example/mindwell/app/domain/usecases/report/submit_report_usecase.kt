@@ -15,13 +15,13 @@ interface SubmitReportUseCase {
      * @param category Categoria da denúncia
      * @param description Descrição da denúncia
      * @param tags Tags associadas à denúncia
-     * @return Flow com o resultado da operação
+     * @return Flow com o resultado da operação, contendo o ID do report criado ou -1 em caso de falha
      */
     operator fun invoke(
         category: String,
         description: String,
         tags: List<String>
-    ): Flow<Result<Boolean>>
+    ): Flow<Result<Int>>
 }
 
 /**
@@ -34,11 +34,11 @@ class SubmitReportUseCaseImpl @Inject constructor(
         category: String,
         description: String,
         tags: List<String>
-    ): Flow<Result<Boolean>> = flow {
+    ): Flow<Result<Int>> = flow {
         try {
             val report = Report(category, description, tags)
-            val result = reportRepository.submitReport(report)
-            emit(Result.success(result))
+            val reportId = reportRepository.submitReport(report)
+            emit(Result.success(reportId))
         } catch (e: Exception) {
             emit(Result.failure(e))
         }

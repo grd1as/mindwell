@@ -16,6 +16,12 @@ interface ApiService {
     suspend fun login(@Body request: LoginRequest): LoginResponse
     
     /**
+     * Realiza logout.
+     */
+    @POST("auth/mobile/logout")
+    suspend fun logout(): Map<String, String>
+    
+    /**
      * Obtém a lista de formulários disponíveis.
      * @param type Tipo opcional de formulário para filtrar
      * @return Lista de formulários
@@ -35,23 +41,22 @@ interface ApiService {
      * Envia respostas para um formulário.
      * @param formId ID do formulário
      * @param request Dados das respostas
+     * @return Resposta da API (Created 201)
      */
     @POST("forms/{formId}/responses")
     suspend fun submitFormResponses(
         @Path("formId") formId: Int,
         @Body request: FormResponseRequest
-    )
+    ): ResponseWithLocation
     
     /**
      * Obtém o resumo dos check-ins por período.
      * @param month Mês no formato YYYY-MM (opcional)
-     * @param week Semana no formato YYYY-Www (opcional)
      * @return Resumo consolidado
      */
     @GET("summary/checkin")
     suspend fun getSummary(
-        @Query("month") month: String? = null,
-        @Query("week") week: String? = null
+        @Query("month") month: String
     ): SummaryDTO
     
     /**
@@ -64,8 +69,8 @@ interface ApiService {
      */
     @GET("checkins")
     suspend fun getCheckins(
-        @Query("page") page: Int? = null,
-        @Query("size") size: Int? = null,
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 20,
         @Query("from") from: String? = null,
         @Query("to") to: String? = null
     ): CheckinPageDTO
@@ -95,7 +100,8 @@ interface ApiService {
     /**
      * Envia uma nova denúncia/report.
      * @param report Dados da denúncia
+     * @return Resposta da API (Created 201)
      */
     @POST("reports")
-    suspend fun submitReport(@Body report: ReportDTO)
+    suspend fun submitReport(@Body report: ReportDTO): ResponseWithLocation
 } 

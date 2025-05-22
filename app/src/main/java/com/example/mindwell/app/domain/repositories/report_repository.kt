@@ -3,13 +3,13 @@ package com.example.mindwell.app.domain.repositories
 import com.example.mindwell.app.domain.entities.Report
 
 /**
- * Interface para o repositório de denúncias/reports.
+ * Interface para o repositório de reports.
  */
 interface ReportRepository {
     /**
-     * Envia uma nova denúncia/report.
-     * @param report Dados da denúncia
-     * @return true se o envio foi bem-sucedido
+     * Envia um report.
+     * @param report Dados do report
+     * @return ID do report criado
      */
-    suspend fun submitReport(report: Report): Boolean
+    suspend fun submitReport(report: Report): Int
 } 
