@@ -1,6 +1,7 @@
 package com.example.mindwell.app.di
 
 import android.content.Context
+import com.example.mindwell.app.R
 import com.example.mindwell.app.presentation.screens.login.GoogleSignInClientFactory
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import dagger.Module
@@ -14,14 +15,13 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object PresentationModule {
     
-    // ID do cliente OAuth para autenticação com Google
-    private const val SERVER_CLIENT_ID = "YOUR_OAUTH_CLIENT_ID"
-    
     @Provides
     @Singleton
     fun provide_google_sign_in_client(
-        factory: GoogleSignInClientFactory
+        factory: GoogleSignInClientFactory,
+        @ApplicationContext context: Context
     ): GoogleSignInClient {
-        return factory.create(SERVER_CLIENT_ID)
+        val clientId = context.getString(R.string.web_client_id)
+        return factory.create(clientId)
     }
 } 
