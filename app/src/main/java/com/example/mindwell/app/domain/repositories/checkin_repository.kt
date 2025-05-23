@@ -2,6 +2,7 @@ package com.example.mindwell.app.domain.repositories
 
 import com.example.mindwell.app.domain.entities.Checkin
 import com.example.mindwell.app.domain.entities.CheckinPage
+import com.example.mindwell.app.domain.entities.MonthlySummary
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
@@ -53,4 +54,12 @@ interface CheckinRepository {
         from: LocalDate? = null,
         to: LocalDate? = null
     ): CheckinPage
+    
+    /**
+     * Obtém o resumo mensal dos check-ins.
+     * @param year Ano para filtrar
+     * @param month Mês para filtrar (1-12)
+     * @return Resumo mensal dos check-ins
+     */
+    suspend fun get_monthly_summary(year: Int, month: Int): MonthlySummary
 } 

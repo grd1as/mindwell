@@ -1,13 +1,19 @@
 package com.example.mindwell.app.di
 
 import com.example.mindwell.app.domain.usecases.auth.*
-import com.example.mindwell.app.domain.usecases.checkin.*
+import com.example.mindwell.app.domain.usecases.checkin.GetCheckinsUseCase
+import com.example.mindwell.app.domain.usecases.checkin.GetCheckinsUseCaseImpl
+import com.example.mindwell.app.domain.usecases.checkin.GetLastCheckinUseCase
+import com.example.mindwell.app.domain.usecases.checkin.GetLastCheckinUseCaseImpl
+import com.example.mindwell.app.domain.usecases.checkin.GetMonthlySummaryUseCase
+import com.example.mindwell.app.domain.usecases.checkin.GetMonthlySummaryUseCaseImpl
 import com.example.mindwell.app.domain.usecases.form.*
 import com.example.mindwell.app.domain.usecases.onboarding.*
 import com.example.mindwell.app.domain.usecases.preference.*
 import com.example.mindwell.app.domain.usecases.reminder.*
 import com.example.mindwell.app.domain.usecases.report.*
-import com.example.mindwell.app.domain.usecases.summary.*
+import com.example.mindwell.app.domain.usecases.summary.GetWeeklySummaryUseCase
+import com.example.mindwell.app.domain.usecases.summary.GetWeeklySummaryUseCaseImpl
 import com.example.mindwell.app.domain.usecases.resource.*
 import com.example.mindwell.app.domain.usecases.feeling.*
 import dagger.Binds
@@ -59,11 +65,11 @@ abstract class DomainModule {
     @Singleton
     abstract fun bind_get_last_checkin_use_case(impl: GetLastCheckinUseCaseImpl): GetLastCheckinUseCase
     
-    // Summary
     @Binds
     @Singleton
     abstract fun bind_get_monthly_summary_use_case(impl: GetMonthlySummaryUseCaseImpl): GetMonthlySummaryUseCase
     
+    // Summary
     @Binds
     @Singleton
     abstract fun bind_get_weekly_summary_use_case(impl: GetWeeklySummaryUseCaseImpl): GetWeeklySummaryUseCase

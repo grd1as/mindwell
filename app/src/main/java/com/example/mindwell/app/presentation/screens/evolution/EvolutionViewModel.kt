@@ -8,7 +8,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mindwell.app.data.model.MonthlyTrendDTO
 import com.example.mindwell.app.data.network.ApiService
+import com.example.mindwell.app.domain.entities.MonthlySummary
+import com.example.mindwell.app.domain.usecases.checkin.GetMonthlySummaryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
@@ -19,9 +22,10 @@ import javax.inject.Inject
  * Estado da tela de evolução
  */
 data class EvolutionState(
-    val isLoading: Boolean = true,
-    val currentMonth: YearMonth = YearMonth.now(),
-    val monthlyTrend: MonthlyTrendDTO? = null,
+    val is_loading: Boolean = true,
+    val current_month: YearMonth = YearMonth.now(),
+    val monthly_trend: MonthlyTrendDTO? = null,
+    val monthly_summary: MonthlySummary? = null,
     val error: String? = null
 )
 
@@ -30,7 +34,8 @@ data class EvolutionState(
  */
 @HiltViewModel
 class EvolutionViewModel @Inject constructor(
-    private val apiService: ApiService
+    private val api_service: ApiService,
+    private val get_monthly_summary_use_case: GetMonthlySummaryUseCase
 ) : ViewModel() {
     private val TAG = "EvolutionViewModel"
     
@@ -38,76 +43,124 @@ class EvolutionViewModel @Inject constructor(
         private set
     
     init {
-        loadMonthlyTrend(state.currentMonth)
+        load_monthly_data(state.current_month)
     }
     
     /**
-     * Carrega análise de tendência para um mês específico
+     * Carrega dados mensais (trend e summary) para um mês específico
      */
-    private fun loadMonthlyTrend(month: YearMonth) {
-        state = state.copy(isLoading = true, currentMonth = month)
+    private fun load_monthly_data(month: YearMonth) {
+        state = state.copy(is_loading = true, current_month = month)
         
-        Log.d(TAG, "🌐 Tentando carregar análise de tendência mensal para ${month}")
+        Log.d(TAG, "🌐 Carregando dados mensais para ${month}")
         
         viewModelScope.launch {
             try {
-                // A API já filtra automaticamente os dados para o mês especificado
-                val monthlyTrend = apiService.get_monthly_trend(
-                    year = month.year,
-                    month = month.monthValue
-                )
+                // Carrega o resumo mensal usando o use case
+                load_monthly_summary(month.year, month.monthValue)
                 
-                Log.d(TAG, "✅ Análise de tendência carregada com sucesso!")
-                Log.d(TAG, "   - Período: ${monthlyTrend.period}")
-                Log.d(TAG, "   - Semanas analisadas: ${monthlyTrend.weeklyMood.size}")
-                Log.d(TAG, "   - Tendência geral: ${monthlyTrend.overallTrend}")
-                
-                state = state.copy(
-                    isLoading = false,
-                    monthlyTrend = monthlyTrend,
-                    error = null
-                )
+                // Carrega análise de tendência (mantendo a API existente)
+                load_monthly_trend(month)
                 
             } catch (e: Exception) {
-                Log.e(TAG, "❌ ERRO ao carregar análise de tendência: ${e.message}", e)
+                Log.e(TAG, "❌ ERRO ao carregar dados mensais: ${e.message}", e)
                 
                 state = state.copy(
-                    isLoading = false,
-                    error = "Erro ao carregar análise: ${e.message}"
+                    is_loading = false,
+                    error = "Erro ao carregar dados: ${e.message}"
                 )
             }
         }
     }
     
     /**
+     * Carrega o resumo mensal usando o use case
+     */
+    private suspend fun load_monthly_summary(year: Int, month: Int) {
+        get_monthly_summary_use_case(year, month).collectLatest { result ->
+            result.fold(
+                onSuccess = { summary ->
+                    Log.d(TAG, "✅ Resumo mensal carregado com sucesso!")
+                    Log.d(TAG, "   - Período: ${summary.period}")
+                    Log.d(TAG, "   - Total check-ins: ${summary.total_checkins}")
+                    Log.d(TAG, "   - Emoji predominante: ${summary.predominant_emoji.firstOrNull()?.label}")
+                    Log.d(TAG, "   - Tendência: ${summary.trend}")
+                    
+                    state = state.copy(
+                        monthly_summary = summary,
+                        error = null
+                    )
+                },
+                onFailure = { exception ->
+                    Log.e(TAG, "❌ ERRO ao carregar resumo mensal: ${exception.message}", exception)
+                    state = state.copy(
+                        error = "Erro ao carregar resumo: ${exception.message}"
+                    )
+                }
+            )
+        }
+    }
+    
+    /**
+     * Carrega análise de tendência para um mês específico
+     */
+    private suspend fun load_monthly_trend(month: YearMonth) {
+        try {
+            val monthly_trend = api_service.get_monthly_trend(
+                year = month.year,
+                month = month.monthValue
+            )
+            
+            Log.d(TAG, "✅ Análise de tendência carregada com sucesso!")
+            Log.d(TAG, "   - Período: ${monthly_trend.period}")
+            Log.d(TAG, "   - Semanas analisadas: ${monthly_trend.weeklyMood.size}")
+            Log.d(TAG, "   - Tendência geral: ${monthly_trend.overallTrend}")
+            
+            state = state.copy(
+                is_loading = false,
+                monthly_trend = monthly_trend,
+                error = null
+            )
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ ERRO ao carregar análise de tendência: ${e.message}", e)
+            
+            state = state.copy(
+                is_loading = false,
+                error = "Erro ao carregar análise: ${e.message}"
+            )
+        }
+    }
+    
+    /**
      * Navega para o próximo mês
      */
-    fun nextMonth() {
-        val nextMonth = state.currentMonth.plusMonths(1)
-        loadMonthlyTrend(nextMonth)
+    fun next_month() {
+        val next_month = state.current_month.plusMonths(1)
+        load_monthly_data(next_month)
     }
     
     /**
      * Navega para o mês anterior
      */
-    fun previousMonth() {
-        val previousMonth = state.currentMonth.minusMonths(1)
-        loadMonthlyTrend(previousMonth)
+    fun previous_month() {
+        val previous_month = state.current_month.minusMonths(1)
+        load_monthly_data(previous_month)
     }
     
     /**
      * Recarrega os dados do mês atual
      */
     fun refresh() {
-        loadMonthlyTrend(state.currentMonth)
+        load_monthly_data(state.current_month)
     }
     
     /**
      * Formata o mês atual para exibição
      */
-    fun formatCurrentMonth(): String {
+    fun format_current_month(): String {
         val formatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
-        return state.currentMonth.format(formatter).replaceFirstChar { 
+        return state.current_month.format(formatter).replaceFirstChar { 
             if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() 
         }
     }
@@ -115,7 +168,7 @@ class EvolutionViewModel @Inject constructor(
     /**
      * Obtém nomes dos dias da semana
      */
-    fun getWeekdayName(weekday: Int): String {
+    fun get_weekday_name(weekday: Int): String {
         return when (weekday) {
             0 -> "Dom"
             1 -> "Seg"
@@ -131,23 +184,36 @@ class EvolutionViewModel @Inject constructor(
     /**
      * Obtém emoji baseado no ID da opção
      */
-    fun getEmojiFromOptionId(optionId: Int): String {
-        return when (optionId) {
+    fun get_emoji_from_option_id(option_id: Int): String {
+        return when (option_id) {
             1 -> "😢" // TRISTE
             2 -> "😊" // ALEGRE
             3 -> "😴" // CANSADO
             4 -> "😰" // ANSIOSO
             5 -> "😨" // MEDO
             6 -> "😡" // RAIVA
+            7 -> "😤" // ESTRESSADO
             else -> "😐" // NEUTRO
+        }
+    }
+    
+    /**
+     * Obtém ícone de tendência baseado no valor
+     */
+    fun get_trend_icon(): String {
+        return when (state.monthly_summary?.trend) {
+            "up" -> "📈"
+            "down" -> "📉"
+            "stable" -> "📊"
+            else -> "📊"
         }
     }
     
     /**
      * Obtém dica personalizada com base na tendência
      */
-    fun getTrendTip(): String {
-        val trend = state.monthlyTrend?.overallTrend ?: ""
+    fun get_trend_tip(): String {
+        val trend = state.monthly_trend?.overallTrend ?: ""
         
         return when {
             trend.contains("positiva", ignoreCase = true) || 
@@ -168,7 +234,29 @@ class EvolutionViewModel @Inject constructor(
     /**
      * Calcula a porcentagem de um valor em relação ao máximo
      */
-    fun calculatePercentage(value: Int, maxValue: Int): Float {
-        return if (maxValue > 0) (value.toFloat() / maxValue.toFloat()) else 0f
+    fun calculate_percentage(value: Int, max_value: Int): Float {
+        return if (max_value > 0) (value.toFloat() / max_value.toFloat()) else 0f
+    }
+    
+    /**
+     * Formata a mudança percentual da carga de trabalho
+     */
+    fun format_workload_change(): String {
+        val workload = state.monthly_summary?.workload ?: return "N/A"
+        val change = workload.percent_change
+        val sign = if (change > 0) "+" else ""
+        return "${sign}${String.format("%.1f", change)}%"
+    }
+    
+    /**
+     * Obtém cor para a mudança da carga de trabalho
+     */
+    fun get_workload_change_color(): androidx.compose.ui.graphics.Color {
+        val change = state.monthly_summary?.workload?.percent_change ?: 0.0
+        return when {
+            change > 5 -> androidx.compose.ui.graphics.Color.Red
+            change < -5 -> androidx.compose.ui.graphics.Color.Green
+            else -> androidx.compose.ui.graphics.Color.Gray
+        }
     }
 } 

@@ -8,6 +8,9 @@ import com.example.mindwell.app.data.network.ApiService
 import com.example.mindwell.app.domain.entities.Checkin
 import com.example.mindwell.app.domain.entities.CheckinPage
 import com.example.mindwell.app.domain.entities.Emotion
+import com.example.mindwell.app.domain.entities.MonthlySummary
+import com.example.mindwell.app.domain.entities.OptionCount
+import com.example.mindwell.app.domain.entities.WorkloadInfo
 import com.example.mindwell.app.domain.repositories.CheckinRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
@@ -112,6 +115,40 @@ class CheckinRepositoryImpl @Inject constructor(
             )
         } catch (e: Exception) {
             throw e // Propaga o erro em vez de usar fallback
+        }
+    }
+    
+    override suspend fun get_monthly_summary(year: Int, month: Int): MonthlySummary {
+        try {
+            // Chama a API do resumo mensal
+            val response = api_service.get_monthly_summary(year, month)
+            
+            return MonthlySummary(
+                period = response.period,
+                total_checkins = response.totalCheckins,
+                predominant_emoji = response.predominantEmoji.map { 
+                    OptionCount(
+                        option_id = it.optionId,
+                        label = it.label,
+                        count = it.count
+                    )
+                },
+                predominant_sentiment = response.predominantSentiment.map {
+                    OptionCount(
+                        option_id = it.optionId,
+                        label = it.label,
+                        count = it.count
+                    )
+                },
+                trend = response.trend,
+                workload = WorkloadInfo(
+                    current_avg = response.workload.currentAvg,
+                    previous_avg = response.workload.previousAvg,
+                    percent_change = response.workload.percentChange
+                )
+            )
+        } catch (e: Exception) {
+            throw e
         }
     }
     

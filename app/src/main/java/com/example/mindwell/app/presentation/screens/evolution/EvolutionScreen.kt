@@ -23,6 +23,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.mindwell.app.data.model.WeekdayTotalDTO
 import com.example.mindwell.app.data.model.WeeklyMoodDTO
+import com.example.mindwell.app.presentation.screens.evolution.components.MonthlySummaryCard
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,7 +66,7 @@ fun EvolutionScreen(
             )
         }
     ) { padding ->
-        if (state.isLoading) {
+        if (state.is_loading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(
                     color = MaterialTheme.colorScheme.primary,
@@ -77,11 +78,12 @@ fun EvolutionScreen(
         } else {
             EvolutionContent(
                 modifier = Modifier.padding(padding),
-                monthLabel = vm.formatCurrentMonth(),
-                monthlyTrend = state.monthlyTrend,
+                monthLabel = vm.format_current_month(),
+                monthlyTrend = state.monthly_trend,
+                monthlySummary = state.monthly_summary,
                 viewModel = vm,
-                onPreviousMonth = { vm.previousMonth() },
-                onNextMonth = { vm.nextMonth() }
+                onPreviousMonth = { vm.previous_month() },
+                onNextMonth = { vm.next_month() }
             )
         }
     }
@@ -145,6 +147,7 @@ private fun EvolutionContent(
     modifier: Modifier = Modifier,
     monthLabel: String,
     monthlyTrend: com.example.mindwell.app.data.model.MonthlyTrendDTO?,
+    monthlySummary: com.example.mindwell.app.domain.entities.MonthlySummary?,
     viewModel: EvolutionViewModel,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit
@@ -194,6 +197,17 @@ private fun EvolutionContent(
             onNextMonth = onNextMonth
         )
         
+        // Monthly summary card - First chart as requested
+        monthlySummary?.let { summary ->
+            MonthlySummaryCard(
+                summary = summary,
+                get_emoji_from_option_id = viewModel::get_emoji_from_option_id,
+                get_trend_icon = viewModel::get_trend_icon,
+                format_workload_change = viewModel::format_workload_change,
+                get_workload_change_color = viewModel::get_workload_change_color
+            )
+        }
+        
         // Weekly mood chart with overall trend included
         ModernWeeklyMoodChart(
             weeklyMood = monthlyTrend.weeklyMood,
@@ -206,6 +220,17 @@ private fun EvolutionContent(
             dailySummary = monthlyTrend.dailySummary,
             viewModel = viewModel
         )
+        
+        // Monthly summary card
+        monthlySummary?.let { summary ->
+            MonthlySummaryCard(
+                summary = summary,
+                get_emoji_from_option_id = viewModel::get_emoji_from_option_id,
+                get_trend_icon = viewModel::get_trend_icon,
+                format_workload_change = viewModel::format_workload_change,
+                get_workload_change_color = viewModel::get_workload_change_color
+            )
+        }
         
         // Espaço final
         Spacer(modifier = Modifier.height(80.dp))
@@ -382,7 +407,7 @@ private fun ModernWeeklyMoodChart(
             // Overall trend card (modern)
             ModernOverallTrendCard(
                 trend = overallTrend,
-                tip = viewModel.getTrendTip()
+                tip = viewModel.get_trend_tip()
             )
         }
     }
@@ -492,7 +517,7 @@ private fun ModernTimelineItem(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = viewModel.getEmojiFromOptionId(weekData.predominantEmoji.optionId),
+                        text = viewModel.get_emoji_from_option_id(weekData.predominantEmoji.optionId),
                         fontSize = 20.sp
                     )
                 }
@@ -632,7 +657,7 @@ private fun CombinedActivityCard(
                         
                         Text(
                             text = dailySummary.peakWeekdays.joinToString(", ") { 
-                                viewModel.getWeekdayName(it) 
+                                viewModel.get_weekday_name(it) 
                             },
                             style = MaterialTheme.typography.bodySmall,
                             color = Color(0xFF10B981),
@@ -667,7 +692,7 @@ private fun CombinedActivityCard(
                         
                         Text(
                             text = dailySummary.lowWeekdays.joinToString(", ") { 
-                                viewModel.getWeekdayName(it) 
+                                viewModel.get_weekday_name(it) 
                             },
                             style = MaterialTheme.typography.bodySmall,
                             color = Color(0xFFEF4444),
@@ -734,7 +759,7 @@ private fun ModernDayColumn(
         
         // Day label
         Text(
-            text = viewModel.getWeekdayName(weekdayTotal.weekday).take(3),
+            text = viewModel.get_weekday_name(weekdayTotal.weekday).take(3),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = FontWeight.Medium

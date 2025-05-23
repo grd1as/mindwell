@@ -147,4 +147,16 @@ interface ApiService {
         @Query("year") year: Int? = null,
         @Query("month") month: Int? = null
     ): MonthlyTrendDTO
+    
+    /**
+     * Obtém o resumo mensal dos check-ins.
+     * @param year Ano
+     * @param month Mês de 1-12
+     * @return Resumo mensal dos check-ins
+     */
+    @GET("checkins/monthly-summary")
+    suspend fun get_monthly_summary(
+        @Query("year") year: Int,
+        @Query("month") month: Int
+    ): MonthlySummaryDTO
 } 
