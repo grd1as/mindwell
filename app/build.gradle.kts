@@ -85,7 +85,9 @@ dependencies {
     // Coroutines
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
-    
+
+    implementation("androidx.compose.material:material-icons-extended:1.6.1")
+
     // DataStore
     implementation(libs.androidx.datastore.preferences)
     

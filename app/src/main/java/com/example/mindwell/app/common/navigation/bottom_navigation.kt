@@ -6,7 +6,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.Icons.Default
+import androidx.compose.material.icons.automirrored.filled.Note
+import androidx.compose.material.icons.automirrored.filled.Notes
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -54,22 +59,22 @@ val bottomNavItems = listOf(
     BottomNavItem(
         route = AppDestinations.FORMS,
         title = "Questionários",
-        icon = Icons.Outlined.List,
-        selectedIcon = Icons.Filled.List,
+        icon = Icons.AutoMirrored.Filled.Note,
+        selectedIcon = Icons.AutoMirrored.Filled.Note,
         color = Color(0xFFEF4444) // Vermelho
     ),
     BottomNavItem(
         route = AppDestinations.RESOURCES,
         title = "Recursos",
-        icon = Icons.Outlined.Settings,
-        selectedIcon = Icons.Filled.Settings,
+        icon = Icons.Outlined.Star,
+        selectedIcon = Icons.Filled.Star,
         color = Color(0xFF8B5CF6) // Roxo
     ),
     BottomNavItem(
         route = AppDestinations.EVOLUTION,
         title = "Evolução",
-        icon = Icons.Outlined.Info,
-        selectedIcon = Icons.Filled.Info,
+        icon = Icons.AutoMirrored.Filled.TrendingUp,
+        selectedIcon = Icons.AutoMirrored.Filled.TrendingUp,
         color = Color(0xFF06B6D4) // Ciano
     )
 )
