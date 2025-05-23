@@ -141,40 +141,41 @@ fun FormItem(
             ) {
                 Text(
                     text = form.name,
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.headlineSmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
+                
+                Spacer(modifier = Modifier.height(4.dp))
                 
                 Text(
                     text = form.description,
                     style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Código: ${form.code}",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    
-                    SuggestionChip(
-                        onClick = { },
-                        label = { 
-                            Text(
-                                when(form.type) {
-                                    "daily" -> "Diário"
-                                    "weekly" -> "Semanal"
-                                    "monthly" -> "Mensal"
-                                    else -> form.type
-                                }
-                            ) 
-                        }
-                    )
-                }
+            }
+            
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                SuggestionChip(
+                    onClick = { },
+                    label = { 
+                        Text(
+                            when(form.type) {
+                                "SELF_ASSESSMENT" -> "Autoavaliação"
+                                "CLIMATE" -> "Clima"
+                                "daily" -> "Diário"
+                                "weekly" -> "Semanal"
+                                "monthly" -> "Mensal"
+                                else -> form.type
+                            }
+                        ) 
+                    }
+                )
             }
         }
     }
