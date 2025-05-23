@@ -42,6 +42,7 @@ class AuthInterceptor @Inject constructor(
                 .header("Authorization", "Bearer $token")
                 .build()
             Log.d("AuthInterceptor", "✅ Header Authorization adicionado à requisição")
+            Log.d("AuthInterceptor", "🔍 JWT completo enviado: $token")
             chain.proceed(newRequest)
         } else {
             // Se não tiver token, prossegue com a requisição original
