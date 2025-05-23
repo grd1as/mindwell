@@ -194,16 +194,11 @@ private fun EvolutionContent(
             onNextMonth = onNextMonth
         )
         
-        // Weekly mood chart
+        // Weekly mood chart with overall trend included
         ModernWeeklyMoodChart(
             weeklyMood = monthlyTrend.weeklyMood,
+            overallTrend = monthlyTrend.overallTrend,
             viewModel = viewModel
-        )
-        
-        // Overall trend card (compact, no title)
-        CompactOverallTrendCard(
-            trend = monthlyTrend.overallTrend,
-            tip = viewModel.getTrendTip()
         )
         
         // Daily summary chart with peak/low days combined
@@ -279,47 +274,38 @@ private fun CompactOverallTrendCard(
     trend: String,
     tip: String
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.Transparent
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        Color(0xFF6366F1),
+                        Color(0xFF8B5CF6)
+                    )
+                ),
+                shape = RoundedCornerShape(16.dp)
+            )
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            Color(0xFF6366F1),
-                            Color(0xFF8B5CF6)
-                        )
-                    ),
-                    shape = RoundedCornerShape(20.dp)
-                )
+        Column(
+            modifier = Modifier.padding(16.dp)
         ) {
-            Column(
-                modifier = Modifier.padding(20.dp)
-            ) {
-                Text(
-                    text = trend,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.White.copy(alpha = 0.95f),
-                    lineHeight = 22.sp
-                )
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                Text(
-                    text = tip,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = 0.8f),
-                    lineHeight = 20.sp
-                )
-            }
+            Text(
+                text = trend,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = Color.White.copy(alpha = 0.95f),
+                lineHeight = 20.sp
+            )
+            
+            Spacer(modifier = Modifier.height(6.dp))
+            
+            Text(
+                text = tip,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.White.copy(alpha = 0.8f),
+                lineHeight = 18.sp
+            )
         }
     }
 }
@@ -407,6 +393,7 @@ private fun ModernOverallTrendCard(
 @Composable
 private fun ModernWeeklyMoodChart(
     weeklyMood: List<WeeklyMoodDTO>,
+    overallTrend: String,
     viewModel: EvolutionViewModel
 ) {
     Card(
@@ -469,6 +456,14 @@ private fun ModernWeeklyMoodChart(
             } else {
                 ModernTimelineView(weeklyMood, viewModel)
             }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Overall trend card (compact, no title)
+            CompactOverallTrendCard(
+                trend = overallTrend,
+                tip = viewModel.getTrendTip()
+            )
         }
     }
 }
