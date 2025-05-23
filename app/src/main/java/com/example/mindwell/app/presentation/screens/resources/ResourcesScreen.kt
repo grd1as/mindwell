@@ -190,16 +190,16 @@ fun ResourcesScreen(
                             title = "🎯 Explorar Categorias",
                             subtitle = "Descubra recursos por tema"
                         )
-                    }
-                    
-                    item {
+                }
+                
+                item {
                         ModernCategoriesSection(
-                            categories = state.categories,
-                            selectedCategoryId = state.selectedCategoryId,
-                            onCategorySelected = { vm.selectCategory(it) }
-                        )
-                    }
-                    
+                        categories = state.categories,
+                        selectedCategoryId = state.selectedCategoryId,
+                        onCategorySelected = { vm.selectCategory(it) }
+                    )
+                }
+                
                     // Mostrar recursos filtrados por categoria
                     state.personalizedContent?.let { content ->
                         val filteredResources = if (state.selectedCategoryId == "all" || state.selectedCategoryId == null) {
@@ -209,7 +209,7 @@ fun ResourcesScreen(
                         }
                         
                         if (filteredResources.isNotEmpty()) {
-                            item {
+                item {
                                 val categoryName = state.categories.find { it.id == state.selectedCategoryId }?.title ?: "Categoria"
                                 SectionHeader(
                                     title = "📚 $categoryName",
@@ -219,10 +219,10 @@ fun ResourcesScreen(
                             
                             items(filteredResources) { resource ->
                                 ModernPersonalizedResourceCard(
-                                    resource = resource,
+                        resource = resource,
                                     onClick = { selectedResource = resource }
-                                )
-                            }
+                    )
+                }
                         }
                     }
                 }

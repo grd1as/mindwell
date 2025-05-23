@@ -482,7 +482,7 @@ private fun ModernTimelineItem(
         
         Spacer(modifier = Modifier.height(12.dp))
         
-        // Content card
+        // Content card - Only emoji now
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
@@ -491,50 +491,16 @@ private fun ModernTimelineItem(
             ),
             elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
         ) {
-            Column(
-                modifier = Modifier.padding(12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
             ) {
-                // Emoji with background
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(
-                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = viewModel.get_emoji_from_option_id(weekData.predominantEmoji.optionId),
-                        fontSize = 20.sp
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                // Emoji label
+                // Single main emoji - centered
                 Text(
-                    text = weekData.predominantEmoji.label,
-                    style = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    textAlign = TextAlign.Center,
-                    maxLines = 2,
-                    lineHeight = 14.sp
-                )
-                
-                Spacer(modifier = Modifier.height(4.dp))
-                
-                // Sentiment
-                Text(
-                    text = weekData.predominantSentiment.label,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                    maxLines = 2,
-                    lineHeight = 12.sp,
-                    fontSize = 11.sp
+                    text = viewModel.get_emoji_from_option_id(weekData.predominantEmoji.optionId),
+                    fontSize = 36.sp
                 )
             }
         }

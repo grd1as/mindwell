@@ -12,6 +12,9 @@ import com.example.mindwell.app.data.model.ReportDTO
 import com.example.mindwell.app.data.model.WeeklyCheckinDTO
 import com.example.mindwell.app.data.model.DayCheckinDTO
 import com.example.mindwell.app.data.network.ApiService
+import com.example.mindwell.app.data.services.GeminiService
+import com.example.mindwell.app.data.services.PersonalizedTip
+import com.example.mindwell.app.data.services.UserProfileData
 import com.example.mindwell.app.domain.usecases.checkin.GetLastCheckinUseCase
 import com.example.mindwell.app.domain.usecases.form.GetPendingFormsUseCase
 import com.example.mindwell.app.domain.usecases.preference.GetUserPreferencesUseCase
@@ -40,7 +43,8 @@ class HomeViewModel @Inject constructor(
     private val getPendingForms: GetPendingFormsUseCase,
     private val getFeelings: GetFeelingsUseCase,
     private val apiService: ApiService,
-    private val submitFormResponsesUseCase: SubmitFormResponsesUseCase
+    private val submitFormResponsesUseCase: SubmitFormResponsesUseCase,
+    private val geminiService: GeminiService
 ) : ViewModel() {
     private val TAG = "HomeViewModel"
     
@@ -57,7 +61,8 @@ class HomeViewModel @Inject constructor(
         val id: String,
         val title: String,
         val description: String,
-        val iconId: Int = 0
+        val iconId: Int = 0,
+        val category: String = "general"
     )
     
     // Estado da tela home
@@ -81,6 +86,7 @@ class HomeViewModel @Inject constructor(
         val navigationEvent: NavigationEvent? = null,
         val activeTooltip: String? = null,
         val customTips: List<CustomTip> = emptyList(),
+        val isLoadingTips: Boolean = false,
         val greeting: String = "",
         val greetingEmoji: String = "",
         val feelings: List<Feeling> = emptyList()
@@ -95,7 +101,7 @@ class HomeViewModel @Inject constructor(
     
     init {
         loadData()
-        loadCustomTips()
+        loadPersonalizedTips()
         updateGreeting()
     }
     
@@ -152,6 +158,112 @@ class HomeViewModel @Inject constructor(
         }
     }
     
+    /**
+     * Carrega dicas personalizadas do Gemini AI
+     */
+    private fun loadPersonalizedTips() {
+        state = state.copy(isLoadingTips = true)
+        
+        viewModelScope.launch {
+            try {
+                Log.d(TAG, "🤖 Gerando dicas personalizadas com Gemini...")
+                
+                // Coletar dados do usuário para personalização
+                val userContext = buildUserContext()
+                
+                // Gerar 2 dicas personalizadas com o Gemini
+                val tips = geminiService.generate_personalized_tips(
+                    userContext
+                )
+                
+                // Converter para CustomTip
+                val customTips = tips.getOrElse { emptyList() }.mapIndexed { index: Int, tip: PersonalizedTip ->
+                    CustomTip(
+                        id = "gemini_tip_${index + 1}",
+                        title = tip.title,
+                        description = tip.content,
+                        category = tip.category
+                    )
+                }
+                
+                Log.d(TAG, "✅ ${customTips.size} dicas personalizadas geradas com sucesso!")
+                customTips.forEach { tip: CustomTip ->
+                    Log.d(TAG, "   - ${tip.title}: ${tip.description}")
+                }
+                
+                state = state.copy(
+                    customTips = customTips,
+                    isLoadingTips = false
+                )
+                
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ ERRO ao gerar dicas personalizadas: ${e.message}", e)
+                
+                // Fallback para dicas padrão
+                val fallbackTips = listOf(
+                    CustomTip(
+                        id = "breathing_478",
+                        title = "Técnica de Respiração 4-7-8",
+                        description = "Uma técnica simples e eficaz para reduzir ansiedade.",
+                        category = "breathing"
+                    ),
+                    CustomTip(
+                        id = "meditation_mindfulness",
+                        title = "Meditação Mindfulness",
+                        description = "Exercícios de atenção plena para o momento presente.",
+                        category = "meditation"
+                    )
+                )
+                
+                state = state.copy(
+                    customTips = fallbackTips,
+                    isLoadingTips = false
+                )
+            }
+        }
+    }
+    
+    /**
+     * Constrói contexto do usuário para personalização das dicas
+     */
+    private fun buildUserContext(): UserProfileData {
+        val currentState = state
+        val calendar = Calendar.getInstance()
+        val timeOfDay = calendar.get(Calendar.HOUR_OF_DAY)
+        val dayOfWeek = calendar.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, java.util.Locale.getDefault()) ?: ""
+        
+        val currentTime = when {
+            timeOfDay in 5..11 -> "manhã"
+            timeOfDay in 12..17 -> "tarde"
+            else -> "noite"
+        }
+        
+        return UserProfileData(
+            recent_feelings = emptyList(), // Por enquanto vazio, pode ser expandido
+            stress_level = 5, // Valor padrão
+            anxiety_level = 5, // Valor padrão
+            energy_level = 5, // Valor padrão
+            sleep_pattern = "normal",
+            preferred_activities = emptyList(),
+            current_time = currentTime,
+            day_of_week = dayOfWeek,
+            current_mood = "neutro",
+            mood_history = "",
+            last_checkin_time = if (currentState.lastCheckin.isNotEmpty()) "realizado hoje" else "não realizado",
+            patterns = listOf(
+                "Check-ins na semana: ${currentState.weeklyCheckins?.days?.count { it.hasCheckin } ?: 0}/7",
+                "Formulários pendentes: ${currentState.pendingForms}"
+            )
+        )
+    }
+    
+    /**
+     * Recarrega as dicas personalizadas
+     */
+    fun refreshPersonalizedTips() {
+        loadPersonalizedTips()
+    }
+    
     private fun loadUserData() {
         viewModelScope.launch {
             getUserPreferences()
@@ -171,28 +283,6 @@ class HomeViewModel @Inject constructor(
                     }
                 }
         }
-    }
-    
-    /**
-     * Carrega dicas personalizadas para o usuário
-     */
-    private fun loadCustomTips() {
-        // Em um cenário real, essas dicas poderiam vir de uma API baseadas no perfil do usuário
-        // ou de um algoritmo de recomendação
-        state = state.copy(
-            customTips = listOf(
-                CustomTip(
-                    id = "breathing_478",
-                    title = "Técnica de Respiração 4-7-8",
-                    description = "Uma técnica simples e eficaz para reduzir ansiedade e promover relaxamento."
-                ),
-                CustomTip(
-                    id = "meditation_body_scan",
-                    title = "Meditação Body Scan",
-                    description = "Uma meditação guiada que ajuda a reconectar com o corpo e liberar tensões."
-                )
-            )
-        )
     }
     
     /**

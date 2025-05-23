@@ -223,6 +223,7 @@ private fun workload_section(
                 }
             }
         } else {
+            // Mostrar dados quando disponíveis
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
