@@ -443,14 +443,15 @@ class HomeViewModel @Inject constructor(
                 }
                 
                 // Mapear feeling para option_id da pergunta 2 (IDs 7-12)
+                // Seguindo exatamente a ordem do banco: MOTIVADO, CANSADO, PREOCUPADO, ESTRESSADO, ANIMADO, SATISFEITO
                 val feelingOptionId = when (feeling.lowercase()) {
-                    "motivado" -> 7      // MOTIVADO
-                    "cansado" -> 8       // CANSADO
-                    "preocupado" -> 9    // PREOCUPADO
-                    "estressado" -> 10   // ESTRESSADO
-                    "animado" -> 11      // ANIMADO
-                    "satisfeito" -> 12   // SATISFEITO
-                    else -> 12 // Valor padrão: SATISFEITO
+                    "motivado" -> 7      // MOTIVADO (ORDINAL 1 da pergunta 2)
+                    "cansado" -> 8       // CANSADO (ORDINAL 2 da pergunta 2)
+                    "preocupado" -> 9    // PREOCUPADO (ORDINAL 3 da pergunta 2)
+                    "estressado" -> 10   // ESTRESSADO (ORDINAL 4 da pergunta 2)
+                    "animado" -> 11      // ANIMADO (ORDINAL 5 da pergunta 2)
+                    "satisfeito" -> 12   // SATISFEITO (ORDINAL 6 da pergunta 2)
+                    else -> 7 // Valor padrão: MOTIVADO
                 }
                 
                 // Criar respostas para ambas as perguntas do formulário de check-in
