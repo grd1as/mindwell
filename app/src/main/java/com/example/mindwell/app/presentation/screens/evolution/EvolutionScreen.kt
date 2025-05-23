@@ -185,7 +185,7 @@ private fun EvolutionContent(
             .fillMaxSize()
             .padding(20.dp)
             .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Month selector
         ModernMonthSelector(
@@ -194,32 +194,26 @@ private fun EvolutionContent(
             onNextMonth = onNextMonth
         )
         
-        // Overall trend card
-        ModernOverallTrendCard(
-            trend = monthlyTrend.overallTrend,
-            tip = viewModel.getTrendTip()
-        )
-        
         // Weekly mood chart
         ModernWeeklyMoodChart(
             weeklyMood = monthlyTrend.weeklyMood,
             viewModel = viewModel
         )
         
-        // Daily summary chart
-        ModernDailySummaryChart(
-            dailySummary = monthlyTrend.dailySummary,
-            viewModel = viewModel
+        // Overall trend card (compact, no title)
+        CompactOverallTrendCard(
+            trend = monthlyTrend.overallTrend,
+            tip = viewModel.getTrendTip()
         )
         
-        // Peak and low days info
-        ModernPeakLowDaysCard(
+        // Daily summary chart with peak/low days combined
+        CombinedActivityCard(
             dailySummary = monthlyTrend.dailySummary,
             viewModel = viewModel
         )
         
         // Espaço final
-        Spacer(modifier = Modifier.height(100.dp))
+        Spacer(modifier = Modifier.height(80.dp))
     }
 }
 
@@ -274,6 +268,56 @@ private fun ModernMonthSelector(
                 Icon(
                     Icons.Default.ArrowForward, 
                     contentDescription = "Próximo mês"
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CompactOverallTrendCard(
+    trend: String,
+    tip: String
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.Transparent
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            Color(0xFF6366F1),
+                            Color(0xFF8B5CF6)
+                        )
+                    ),
+                    shape = RoundedCornerShape(20.dp)
+                )
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp)
+            ) {
+                Text(
+                    text = trend,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.White.copy(alpha = 0.95f),
+                    lineHeight = 22.sp
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Text(
+                    text = tip,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.8f),
+                    lineHeight = 20.sp
                 )
             }
         }
@@ -367,21 +411,21 @@ private fun ModernWeeklyMoodChart(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
-            modifier = Modifier.padding(24.dp)
+            modifier = Modifier.padding(20.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(36.dp)
                         .clip(CircleShape)
                         .background(
                             brush = Brush.linearGradient(
@@ -397,16 +441,16 @@ private fun ModernWeeklyMoodChart(
                         imageVector = Icons.Default.DateRange,
                         contentDescription = null,
                         tint = Color.White,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                 }
                 
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(12.dp))
                 
                 Column {
                     Text(
                         text = "Timeline Semanal",
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -418,7 +462,7 @@ private fun ModernWeeklyMoodChart(
                 }
             }
             
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             
             if (weeklyMood.isEmpty()) {
                 EmptyStateMessage("Nenhum dado semanal disponível ainda")
@@ -540,7 +584,7 @@ private fun ModernTimelineView(
 }
 
 @Composable
-private fun ModernDailySummaryChart(
+private fun CombinedActivityCard(
     dailySummary: com.example.mindwell.app.data.model.DailySummaryDTO,
     viewModel: EvolutionViewModel
 ) {
@@ -555,6 +599,7 @@ private fun ModernDailySummaryChart(
         Column(
             modifier = Modifier.padding(20.dp)
         ) {
+            // Header
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -614,6 +659,77 @@ private fun ModernDailySummaryChart(
                         viewModel = viewModel,
                         modifier = Modifier.weight(1f)
                     )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Peak and Low Days Info
+            Column {
+                // Peak days
+                if (dailySummary.peakWeekdays.isNotEmpty()) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowUp,
+                            contentDescription = null,
+                            tint = Color(0xFF10B981),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        
+                        Spacer(modifier = Modifier.width(8.dp))
+                        
+                        Text(
+                            text = "Mais ativos: ",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        
+                        Text(
+                            text = dailySummary.peakWeekdays.joinToString(", ") { 
+                                viewModel.getWeekdayName(it) 
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFF10B981),
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    
+                    if (dailySummary.lowWeekdays.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                }
+                
+                // Low days
+                if (dailySummary.lowWeekdays.isNotEmpty()) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowDown,
+                            contentDescription = null,
+                            tint = Color(0xFFEF4444),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        
+                        Spacer(modifier = Modifier.width(8.dp))
+                        
+                        Text(
+                            text = "Menos ativos: ",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        
+                        Text(
+                            text = dailySummary.lowWeekdays.joinToString(", ") { 
+                                viewModel.getWeekdayName(it) 
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFFEF4444),
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             }
         }
@@ -679,162 +795,6 @@ private fun CompactDayColumn(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = FontWeight.Medium
         )
-    }
-}
-
-@Composable
-private fun ModernPeakLowDaysCard(
-    dailySummary: com.example.mindwell.app.data.model.DailySummaryDTO,
-    viewModel: EvolutionViewModel
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.Transparent
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            Color(0xFFF59E0B),
-                            Color(0xFFEF4444)
-                        )
-                    ),
-                    shape = RoundedCornerShape(24.dp)
-                )
-        ) {
-            Column(
-                modifier = Modifier.padding(24.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.2f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Info,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                    
-                    Spacer(modifier = Modifier.width(16.dp))
-                    
-                    Column {
-                        Text(
-                            text = "Análise dos Dias",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.White
-                        )
-                        Text(
-                            text = "Seus padrões de atividade",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.8f)
-                        )
-                    }
-                }
-                
-                Spacer(modifier = Modifier.height(20.dp))
-                
-                // Peak days
-                if (dailySummary.peakWeekdays.isNotEmpty()) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clip(CircleShape)
-                                .background(Color.White.copy(alpha = 0.2f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.KeyboardArrowUp,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                        
-                        Spacer(modifier = Modifier.width(12.dp))
-                        
-                        Column {
-                            Text(
-                                text = "Dias mais ativos",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium,
-                                color = Color.White.copy(alpha = 0.9f)
-                            )
-                            
-                            Text(
-                                text = dailySummary.peakWeekdays.joinToString(", ") { 
-                                    viewModel.getWeekdayName(it) 
-                                },
-                                style = MaterialTheme.typography.titleSmall,
-                                color = Color.White,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                    }
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-                
-                // Low days
-                if (dailySummary.lowWeekdays.isNotEmpty()) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clip(CircleShape)
-                                .background(Color.White.copy(alpha = 0.2f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.KeyboardArrowDown,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                        
-                        Spacer(modifier = Modifier.width(12.dp))
-                        
-                        Column {
-                            Text(
-                                text = "Dias menos ativos",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium,
-                                color = Color.White.copy(alpha = 0.9f)
-                            )
-                            
-                            Text(
-                                text = dailySummary.lowWeekdays.joinToString(", ") { 
-                                    viewModel.getWeekdayName(it) 
-                                },
-                                style = MaterialTheme.typography.titleSmall,
-                                color = Color.White,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                    }
-                }
-            }
-        }
     }
 }
 
