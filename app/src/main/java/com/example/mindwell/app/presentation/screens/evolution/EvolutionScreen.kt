@@ -12,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -19,9 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.mindwell.app.common.navigation.AppDestinations
-import com.example.mindwell.app.domain.entities.SummaryItem
-import com.example.mindwell.app.presentation.screens.evolution.TrendData
+import com.example.mindwell.app.data.model.WeekdayTotalDTO
+import com.example.mindwell.app.data.model.WeeklyMoodDTO
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,12 +34,20 @@ fun EvolutionScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Resultados") },
+                title = { Text("Análise de Evolução") },
                 navigationIcon = {
                     IconButton(onClick = { nav.navigateUp() }) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Voltar"
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { vm.refresh() }) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Atualizar"
                         )
                     }
                 },
@@ -56,15 +64,13 @@ fun EvolutionScreen(
                 CircularProgressIndicator()
             }
         } else if (state.error != null) {
-            ErrorContent(state.error, onRetry = { vm.loadSummary(state.currentMonth) })
+            ErrorContent(state.error, onRetry = { vm.refresh() })
         } else {
             EvolutionContent(
                 modifier = Modifier.padding(padding),
                 monthLabel = vm.formatCurrentMonth(),
-                summary = state.summary,
-                trendData = state.trendData,
-                trendDirection = state.trendDirection,
-                trendTip = vm.getTrendTip(),
+                monthlyTrend = state.monthlyTrend,
+                viewModel = vm,
                 onPreviousMonth = { vm.previousMonth() },
                 onNextMonth = { vm.nextMonth() }
             )
@@ -84,16 +90,29 @@ private fun ErrorContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        Icon(
+            imageVector = Icons.Default.Warning,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.error,
+            modifier = Modifier.size(64.dp)
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
         Text(
             text = "Ocorreu um erro:",
             style = MaterialTheme.typography.titleMedium
         )
+        
         Text(
             text = errorMessage,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.error
+            color = MaterialTheme.colorScheme.error,
+            textAlign = TextAlign.Center
         )
+        
         Spacer(modifier = Modifier.height(16.dp))
+        
         Button(onClick = onRetry) {
             Text("Tentar novamente")
         }
@@ -104,16 +123,27 @@ private fun ErrorContent(
 private fun EvolutionContent(
     modifier: Modifier = Modifier,
     monthLabel: String,
-    summary: com.example.mindwell.app.domain.entities.Summary?,
-    trendData: List<TrendData>,
-    trendDirection: String,
-    trendTip: String,
+    monthlyTrend: com.example.mindwell.app.data.model.MonthlyTrendDTO?,
+    viewModel: EvolutionViewModel,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit
 ) {
-    if (summary == null) {
+    if (monthlyTrend == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Nenhum dado disponível para o período selecionado")
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = null,
+                    modifier = Modifier.size(64.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Nenhum dado disponível para o período selecionado",
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center
+                )
+            }
         }
         return
     }
@@ -132,20 +162,28 @@ private fun EvolutionContent(
             onNextMonth = onNextMonth
         )
         
-        // Status card
-        StatusCard(summary)
+        // Overall trend card
+        OverallTrendCard(
+            trend = monthlyTrend.overallTrend,
+            tip = viewModel.getTrendTip()
+        )
         
-        // Summary card
-        SummaryCard(summary = summary)
+        // Weekly mood chart
+        WeeklyMoodChart(
+            weeklyMood = monthlyTrend.weeklyMood,
+            viewModel = viewModel
+        )
         
-        // Breakdown chart
-        BreakdownChart(summary.breakdown)
+        // Daily summary chart
+        DailySummaryChart(
+            dailySummary = monthlyTrend.dailySummary,
+            viewModel = viewModel
+        )
         
-        // Trend analysis card
-        TrendAnalysisCard(
-            trendData = trendData,
-            trendDirection = trendDirection,
-            trendTip = trendTip
+        // Peak and low days info
+        PeakLowDaysCard(
+            dailySummary = monthlyTrend.dailySummary,
+            viewModel = viewModel
         )
         
         // Espaço maior na parte inferior para não sobrepor com a barra de navegação
@@ -159,300 +197,432 @@ private fun MonthSelector(
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        IconButton(onClick = onPreviousMonth) {
-            Icon(Icons.Default.ArrowBack, contentDescription = "Mês anterior")
-        }
-        
-        Text(
-            text = monthLabel,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
-        
-        IconButton(onClick = onNextMonth) {
-            Icon(Icons.Default.ArrowForward, contentDescription = "Próximo mês")
-        }
-    }
-}
-
-@Composable
-private fun StatusCard(summary: com.example.mindwell.app.domain.entities.Summary) {
-    val status = when (summary.overallLevel) {
-        "VERY_GOOD" -> "Excelente"
-        "GOOD" -> "Bom"
-        "NEUTRAL" -> "Neutro"
-        "BAD" -> "Difícil"
-        "VERY_BAD" -> "Desafiador"
-        else -> "Indefinido"
-    }
-    
-    val statusColor = when (summary.overallLevel) {
-        "VERY_GOOD" -> Color(0xFF4CAF50)
-        "GOOD" -> Color(0xFF8BC34A)
-        "NEUTRAL" -> Color(0xFFFFEB3B)
-        "BAD" -> Color(0xFFFFAB40)
-        "VERY_BAD" -> Color(0xFFFF5252)
-        else -> Color.Gray
-    }
-    
-    val message = when (summary.overallLevel) {
-        "VERY_GOOD" -> "Seu bem-estar está em alta! Continue com as práticas positivas."
-        "GOOD" -> "Você está indo bem! Mantenha os bons hábitos."
-        "NEUTRAL" -> "Seu estado emocional está equilibrado. Considere atividades que aumentem seu bem-estar."
-        "BAD" -> "Tem sido um período difícil. Pratique autocuidado e busque apoio se necessário."
-        "VERY_BAD" -> "Momento desafiador. Considere falar com um profissional de saúde mental."
-        else -> "Sem dados suficientes para análise."
-    }
-    
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = statusColor.copy(alpha = 0.15f)
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(
-                    imageVector = when (summary.overallLevel) {
-                        "VERY_GOOD" -> Icons.Default.Star
-                        "GOOD" -> Icons.Default.Favorite
-                        "NEUTRAL" -> Icons.Default.Info
-                        "BAD" -> Icons.Default.Warning
-                        "VERY_BAD" -> Icons.Default.Close
-                        else -> Icons.Default.MoreVert
-                    },
-                    contentDescription = null,
-                    tint = statusColor,
-                    modifier = Modifier.size(28.dp)
-                )
-                
-                Spacer(modifier = Modifier.width(12.dp))
-                
-                Text(
-                    text = "Status: $status",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = statusColor
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Text(
-                text = message,
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
-    }
-}
-
-@Composable
-private fun SummaryCard(summary: com.example.mindwell.app.domain.entities.Summary) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer
         )
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "Resumo do Mês",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Text(
-                text = "Nível Geral: ${summary.overallLevel}",
-                style = MaterialTheme.typography.bodyLarge
-            )
-            
-            Spacer(modifier = Modifier.height(8.dp))
+            IconButton(
+                onClick = onPreviousMonth,
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
+            ) {
+                Icon(
+                    Icons.Default.ArrowBack, 
+                    contentDescription = "Mês anterior",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
             
             Text(
-                text = "Total de Check-ins: ${summary.total}",
-                style = MaterialTheme.typography.bodyLarge
-            )
-        }
-    }
-}
-
-@Composable
-private fun BreakdownChart(
-    breakdown: List<SummaryItem>
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(
-                text = "Distribuição de Humor",
-                style = MaterialTheme.typography.titleMedium,
+                text = monthLabel,
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center
+                color = MaterialTheme.colorScheme.onPrimaryContainer
             )
             
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Chart visualization
-            breakdown.forEach { item ->
-                val barColor = when (item.level) {
-                    "VERY_BAD" -> Color(0xFFFF5252)  // Red
-                    "BAD" -> Color(0xFFFFAB40)       // Orange
-                    "NEUTRAL" -> Color(0xFFFFEB3B)   // Yellow
-                    "GOOD" -> Color(0xFF8BC34A)      // Light green
-                    "VERY_GOOD" -> Color(0xFF4CAF50) // Green
-                    else -> Color.Gray
-                }
-                
-                val barPercent = (item.percent / 100f).coerceIn(0f, 1f)
-                
-                Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = item.value,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        
-                        Text(
-                            text = "${item.count} (${item.percent}%)",
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                    
-                    Spacer(modifier = Modifier.height(4.dp))
-                    
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(24.dp)
-                            .background(Color.LightGray, RoundedCornerShape(4.dp))
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth(barPercent)
-                                .fillMaxHeight()
-                                .background(barColor, RoundedCornerShape(4.dp))
-                        )
-                    }
-                }
+            IconButton(
+                onClick = onNextMonth,
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
+            ) {
+                Icon(
+                    Icons.Default.ArrowForward, 
+                    contentDescription = "Próximo mês",
+                    tint = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }
 }
 
 @Composable
-private fun TrendAnalysisCard(
-    trendData: List<TrendData>,
-    trendDirection: String,
-    trendTip: String
+private fun OverallTrendCard(
+    trend: String,
+    tip: String
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFFF3E5F5)
+        )
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(20.dp)
         ) {
-            Text(
-                text = "Análise de Tendência",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Visualização simples de tendência com círculos conectados
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                trendData.forEachIndexed { index, trendItem ->
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        // Círculo colorido representando o nível
-                        val dotColor = when (trendItem.moodLevel) {
-                            "VERY_BAD" -> Color(0xFFFF5252)
-                            "BAD" -> Color(0xFFFFAB40)
-                            "NEUTRAL" -> Color(0xFFFFEB3B)
-                            "GOOD" -> Color(0xFF8BC34A)
-                            "VERY_GOOD" -> Color(0xFF4CAF50)
-                            else -> Color.Gray
-                        }
-                        
-                        Box(
-                            modifier = Modifier
-                                .size(20.dp)
-                                .background(dotColor, CircleShape)
-                        )
-                        
-                        Spacer(modifier = Modifier.height(4.dp))
-                        
-                        // Label da semana
-                        Text(
-                            text = trendItem.weekLabel,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                    
-                    // Linha conectando os pontos, exceto após o último
-                    if (index < trendData.size - 1) {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(2.dp)
-                                .background(Color.LightGray)
-                        )
-                    }
-                }
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = null,
+                    tint = Color(0xFF9C27B0),
+                    modifier = Modifier.size(32.dp)
+                )
+                
+                Spacer(modifier = Modifier.width(12.dp))
+                
+                Text(
+                    text = "Tendência Geral",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF9C27B0)
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            Text(
+                text = trend,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = tip,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun WeeklyMoodChart(
+    weeklyMood: List<WeeklyMoodDTO>,
+    viewModel: EvolutionViewModel
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFFE8F5E8)
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.DateRange,
+                    contentDescription = null,
+                    tint = Color(0xFF4CAF50),
+                    modifier = Modifier.size(28.dp)
+                )
+                
+                Spacer(modifier = Modifier.width(12.dp))
+                
+                Text(
+                    text = "Acompanhamento Semanal",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF4CAF50)
+                )
             }
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // Descrição da tendência
-            Text(
-                text = "Sua tendência geral é $trendDirection neste mês.",
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
+            if (weeklyMood.isEmpty()) {
+                Text(
+                    text = "Nenhum dado semanal disponível",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
+            } else {
+                weeklyMood.forEachIndexed { index, week ->
+                    WeeklyMoodItem(
+                        weekNumber = index + 1,
+                        weekData = week,
+                        viewModel = viewModel
+                    )
+                    
+                    if (index < weeklyMood.size - 1) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun WeeklyMoodItem(
+    weekNumber: Int,
+    weekData: WeeklyMoodDTO,
+    viewModel: EvolutionViewModel
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Week indicator
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF4CAF50)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "S$weekNumber",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+            }
             
-            // Dica baseada na tendência
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.width(16.dp))
             
-            Text(
-                text = "Dica: $trendTip",
-                style = MaterialTheme.typography.bodySmall,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.primary
+            Column(modifier = Modifier.weight(1f)) {
+                // Emoji predominante
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = viewModel.getEmojiFromOptionId(weekData.predominantEmoji.optionId),
+                        fontSize = 20.sp
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = weekData.predominantEmoji.label,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(4.dp))
+                
+                // Sentimento predominante
+                Text(
+                    text = "Sentimento: ${weekData.predominantSentiment.label}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DailySummaryChart(
+    dailySummary: com.example.mindwell.app.data.model.DailySummaryDTO,
+    viewModel: EvolutionViewModel
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFFE3F2FD)
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.List,
+                    contentDescription = null,
+                    tint = Color(0xFF2196F3),
+                    modifier = Modifier.size(28.dp)
+                )
+                
+                Spacer(modifier = Modifier.width(12.dp))
+                
+                Text(
+                    text = "Check-ins por Dia da Semana",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF2196F3)
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Simple bar chart
+            val maxTotal = dailySummary.weekdayTotals.maxOfOrNull { it.total } ?: 1
+            
+            dailySummary.weekdayTotals.forEach { weekdayTotal ->
+                WeekdayBarItem(
+                    weekdayTotal = weekdayTotal,
+                    maxTotal = maxTotal,
+                    viewModel = viewModel
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun WeekdayBarItem(
+    weekdayTotal: WeekdayTotalDTO,
+    maxTotal: Int,
+    viewModel: EvolutionViewModel
+) {
+    val percentage = viewModel.calculatePercentage(weekdayTotal.total, maxTotal)
+    
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = viewModel.getWeekdayName(weekdayTotal.weekday),
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.width(40.dp)
+        )
+        
+        Spacer(modifier = Modifier.width(8.dp))
+        
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(24.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color.Gray.copy(alpha = 0.2f))
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(percentage)
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0xFF2196F3))
             )
+        }
+        
+        Spacer(modifier = Modifier.width(8.dp))
+        
+        Text(
+            text = weekdayTotal.total.toString(),
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.width(30.dp),
+            textAlign = TextAlign.End
+        )
+    }
+}
+
+@Composable
+private fun PeakLowDaysCard(
+    dailySummary: com.example.mindwell.app.data.model.DailySummaryDTO,
+    viewModel: EvolutionViewModel
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFFFFF3E0)
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = null,
+                    tint = Color(0xFFFF9800),
+                    modifier = Modifier.size(28.dp)
+                )
+                
+                Spacer(modifier = Modifier.width(12.dp))
+                
+                Text(
+                    text = "Análise dos Dias",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFFF9800)
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Peak days
+            if (dailySummary.peakWeekdays.isNotEmpty()) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowUp,
+                        contentDescription = null,
+                        tint = Color(0xFF4CAF50),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    
+                    Spacer(modifier = Modifier.width(8.dp))
+                    
+                    Text(
+                        text = "Dias com mais check-ins: ",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium
+                    )
+                    
+                    Text(
+                        text = dailySummary.peakWeekdays.joinToString(", ") { 
+                            viewModel.getWeekdayName(it) 
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color(0xFF4CAF50),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+            
+            // Low days
+            if (dailySummary.lowWeekdays.isNotEmpty()) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowDown,
+                        contentDescription = null,
+                        tint = Color(0xFFFF5722),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    
+                    Spacer(modifier = Modifier.width(8.dp))
+                    
+                    Text(
+                        text = "Dias com menos check-ins: ",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium
+                    )
+                    
+                    Text(
+                        text = dailySummary.lowWeekdays.joinToString(", ") { 
+                            viewModel.getWeekdayName(it) 
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color(0xFFFF5722),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
         }
     }
 } 

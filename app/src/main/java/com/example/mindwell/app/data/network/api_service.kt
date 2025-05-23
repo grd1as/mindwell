@@ -135,4 +135,16 @@ interface ApiService {
      */
     @GET("resources/categories")
     suspend fun get_resource_categories(): List<ResourceCategoryDTO>
+    
+    /**
+     * Obtém análise de tendência mensal dos check-ins.
+     * @param year Ano (opcional, padrão: ano atual)
+     * @param month Mês de 1-12 (opcional, padrão: mês atual)
+     * @return Análise de tendências do período
+     */
+    @GET("analysis/checkins/monthly-trend")
+    suspend fun get_monthly_trend(
+        @Query("year") year: Int? = null,
+        @Query("month") month: Int? = null
+    ): MonthlyTrendDTO
 } 
