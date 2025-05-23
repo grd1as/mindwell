@@ -19,8 +19,8 @@ class ReportRemoteDataSource @Inject constructor(
      */
     suspend fun submit_report(report: ReportDTO): Int {
         val response = api_service.submit_report(report)
-        // Extrai o ID do report a partir da URL retornada (exemplo: /reports/42)
-        val locationPath = response.location ?: ""
-        return locationPath.substringAfterLast("/").toIntOrNull() ?: -1
+        // Extrai o ID do report a partir do header Location (exemplo: /reports/42)
+        val locationHeader = response.headers()["Location"] ?: ""
+        return locationHeader.substringAfterLast("/").toIntOrNull() ?: -1
     }
 } 
