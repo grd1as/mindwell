@@ -85,6 +85,9 @@ class EvolutionViewModel @Inject constructor(
                     Log.d(TAG, "   - Total check-ins: ${summary.total_checkins}")
                     Log.d(TAG, "   - Emoji predominante: ${summary.predominant_emoji.firstOrNull()?.label}")
                     Log.d(TAG, "   - Tendência: ${summary.trend}")
+                    Log.d(TAG, "   - Workload - Atual: ${summary.workload.current_avg}")
+                    Log.d(TAG, "   - Workload - Anterior: ${summary.workload.previous_avg}")
+                    Log.d(TAG, "   - Workload - Mudança: ${summary.workload.percent_change}%")
                     
                     state = state.copy(
                         monthly_summary = summary,

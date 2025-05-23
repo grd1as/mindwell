@@ -221,17 +221,6 @@ private fun EvolutionContent(
             viewModel = viewModel
         )
         
-        // Monthly summary card
-        monthlySummary?.let { summary ->
-            MonthlySummaryCard(
-                summary = summary,
-                get_emoji_from_option_id = viewModel::get_emoji_from_option_id,
-                get_trend_icon = viewModel::get_trend_icon,
-                format_workload_change = viewModel::format_workload_change,
-                get_workload_change_color = viewModel::get_workload_change_color
-            )
-        }
-        
         // Espaço final
         Spacer(modifier = Modifier.height(80.dp))
     }
