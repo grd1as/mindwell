@@ -13,6 +13,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.SheetState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -81,10 +84,18 @@ fun HomeScreen(
     var showFeelingDropdown by remember { mutableStateOf(false) }
     var showSubmitSuccess by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
+    val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     
     // Configurar o NavController no ViewModel
     LaunchedEffect(nav) {
         vm.setNavController(nav)
+    }
+    
+    // Atualizar a saudação sempre que a tela for mostrada
+    LaunchedEffect(Unit) {
+        // Este bloco executa na abertura da tela
+        println("HomeScreen ativada - atualizando saudação")
+        vm.refreshGreeting() // Novo método a ser adicionado
     }
     
     // Observar eventos de navegação
@@ -117,9 +128,9 @@ fun HomeScreen(
     // Lista de sentimentos para o dropdown atualizada
     val feelings = listOf("Motivado", "Cansado", "Preocupado", "Estressado", "Animado", "Satisfeito")
     
-    // Mostrar o diálogo de feedback se necessário
+    // Mostrar o bottom sheet de feedback se necessário
     if (state.showFeedbackDialog) {
-        FeedbackDialog(
+        FeedbackBottomSheet(
             categories = vm.feedbackCategories,
             selectedCategory = state.feedbackCategory,
             description = state.feedbackDescription,
@@ -129,7 +140,8 @@ fun HomeScreen(
             onCategorySelected = { vm.updateFeedbackCategory(it) },
             onDescriptionChanged = { vm.updateFeedbackDescription(it) },
             onSubmit = { vm.submitFeedback() },
-            onDismiss = { vm.hideFeedbackDialog() }
+            onDismiss = { vm.hideFeedbackDialog() },
+            bottomSheetState = bottomSheetState
         )
     }
     
@@ -170,9 +182,9 @@ fun HomeScreen(
                     .padding(padding)
                     .padding(horizontal = 16.dp)
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Header simplificado - sem nome do usuário
+                // Header com saudação baseada no horário
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -180,13 +192,25 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "MindWell",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = state.greeting,
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        
+                        Spacer(modifier = Modifier.width(8.dp))
+                        
+                        Text(
+                            text = state.greetingEmoji,
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontSize = 28.sp
+                        )
+                    }
                     
-                    // Ícone de configurações (sem dados do perfil)
+                    // Ícone de configurações
                     Box {
                         IconButton(
                             onClick = { nav.navigate(AppDestinations.SETTINGS) },
@@ -446,7 +470,7 @@ fun HomeScreen(
                     )
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp)
+                        modifier = Modifier.padding(16.dp, 12.dp)
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically
@@ -477,15 +501,20 @@ fun HomeScreen(
                             )
                         }
                         
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(4.dp))
                         
-                        // Lista de dicas personalizadas
-                        state.customTips.forEach { tip ->
-                            CustomTipItem(
-                                tip = tip,
-                                onClick = { vm.navigateToResource(tip.id) }
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
+                        // Lista de dicas personalizadas em uma única linha
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            state.customTips.forEach { tip ->
+                                CustomTipButton(
+                                    tip = tip,
+                                    onClick = { vm.navigateToResource(tip.id) },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
                         }
                     }
                 }
@@ -665,11 +694,11 @@ fun QuestionnaireItem(
 }
 
 /**
- * Diálogo para envio de feedback/report
+ * Bottom sheet para envio de feedback/report (Canal de Escuta)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FeedbackDialog(
+fun FeedbackBottomSheet(
     categories: List<String>,
     selectedCategory: String,
     description: String,
@@ -679,7 +708,8 @@ fun FeedbackDialog(
     onCategorySelected: (String) -> Unit,
     onDescriptionChanged: (String) -> Unit,
     onSubmit: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    bottomSheetState: SheetState
 ) {
     val categoryLabels = mapOf(
         "ASSÉDIO_MORAL" to "Assédio Moral",
@@ -698,137 +728,222 @@ fun FeedbackDialog(
     
     var expanded by remember { mutableStateOf(false) }
     
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Column(
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = bottomSheetState,
+        modifier = Modifier
+            .fillMaxHeight(0.9f),
+        dragHandle = { 
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(vertical = 16.dp),
+                contentAlignment = Alignment.Center
             ) {
+                Divider(
+                    modifier = Modifier
+                        .width(40.dp)
+                        .height(4.dp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                )
+            }
+        },
+        containerColor = MaterialTheme.colorScheme.surface
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 20.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Cabeçalho com ícone
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(32.dp)
+                )
+                
+                Spacer(modifier = Modifier.width(12.dp))
+                
                 Text(
                     text = "Canal de Escuta",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
-                
-                if (success) {
-                    // Mensagem de sucesso
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = "Sucesso",
-                                tint = Color.Green,
-                                modifier = Modifier.size(48.dp)
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "Feedback enviado com sucesso!",
-                                style = MaterialTheme.typography.bodyLarge,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
-                } else {
-                    // Seleção de categoria
-                    ExposedDropdownMenuBox(
-                        expanded = expanded,
-                        onExpandedChange = { expanded = it }
-                    ) {
-                        OutlinedTextField(
-                            value = categoryLabels[selectedCategory] ?: "Selecione uma categoria",
-                            onValueChange = { },
-                            readOnly = true,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor(),
-                            label = { Text("Categoria") },
-                            trailingIcon = {
-                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                            },
-                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
-                        )
-                        
-                        ExposedDropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            categories.forEach { category ->
-                                DropdownMenuItem(
-                                    text = { Text(categoryLabels[category] ?: category) },
-                                    onClick = {
-                                        onCategorySelected(category)
-                                        expanded = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-                    
-                    // Campo de descrição
-                    OutlinedTextField(
-                        value = description,
-                        onValueChange = onDescriptionChanged,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(120.dp),
-                        label = { Text("Descrição (opcional)") },
-                        placeholder = { Text("Descreva a ocorrência...") }
+            }
+            
+            // Descrição do que é o Canal de Escuta
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                ),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "O que é o Canal de Escuta?",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
                     )
                     
-                    // Mensagem de erro, se houver
-                    if (errorMessage != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Text(
+                        text = "Este é um espaço seguro para você relatar situações desconfortáveis, denunciar comportamentos inadequados ou sugerir melhorias no ambiente de trabalho.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Text(
+                        text = "Todas as informações são tratadas com confidencialidade e anonimato. Seu bem-estar é nossa prioridade.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+            
+            if (success) {
+                // Mensagem de sucesso
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = "Sucesso",
+                            tint = Color.Green,
+                            modifier = Modifier.size(48.dp)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = errorMessage,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall
+                            text = "Feedback enviado com sucesso!",
+                            style = MaterialTheme.typography.bodyLarge,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Agradecemos sua contribuição para um ambiente melhor.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+                }
+            } else {
+                // Seleção de categoria
+                Text(
+                    text = "Selecione uma categoria:",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Medium
+                )
+                
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = it }
+                ) {
+                    OutlinedTextField(
+                        value = categoryLabels[selectedCategory] ?: "Selecione uma categoria",
+                        onValueChange = { },
+                        readOnly = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(),
+                        label = { Text("Categoria") },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                        },
+                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                    )
                     
-                    // Botões de ação
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        TextButton(
-                            onClick = onDismiss
-                        ) {
-                            Text("Cancelar")
+                        categories.forEach { category ->
+                            DropdownMenuItem(
+                                text = { Text(categoryLabels[category] ?: category) },
+                                onClick = {
+                                    onCategorySelected(category)
+                                    expanded = false
+                                }
+                            )
                         }
-                        
-                        Spacer(modifier = Modifier.width(8.dp))
-                        
-                        Button(
-                            onClick = onSubmit,
-                            enabled = !isSubmitting
-                        ) {
-                            if (isSubmitting) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp),
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    strokeWidth = 2.dp
-                                )
-                            } else {
-                                Text("Enviar")
-                            }
+                    }
+                }
+                
+                // Campo de descrição
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = onDescriptionChanged,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp),
+                    label = { Text("Descreva a situação") },
+                    placeholder = { Text("Descreva a situação de forma clara e detalhada...") }
+                )
+                
+                // Texto sobre anonimato
+                Text(
+                    text = "Sua identidade será protegida. Somente o departamento de RH terá acesso a esta informação.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                
+                // Mensagem de erro, se houver
+                if (errorMessage != null) {
+                    Text(
+                        text = errorMessage,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                
+                // Botões de ação
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(
+                        onClick = onDismiss
+                    ) {
+                        Text("Cancelar")
+                    }
+                    
+                    Spacer(modifier = Modifier.width(8.dp))
+                    
+                    Button(
+                        onClick = onSubmit,
+                        enabled = !isSubmitting
+                    ) {
+                        if (isSubmitting) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text("Enviar")
                         }
                     }
                 }
             }
+            
+            // Aumentar o espaçamento no final para garantir que todos elementos sejam visíveis
+            Spacer(modifier = Modifier.height(60.dp))
         }
     }
 }
@@ -847,13 +962,15 @@ fun Modifier.combinedClickable(
     }
 
 @Composable
-fun CustomTipItem(
+fun CustomTipButton(
     tip: HomeViewModel.CustomTip,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
+            .height(100.dp)
             .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
@@ -862,20 +979,28 @@ fun CustomTipItem(
             defaultElevation = 2.dp
         )
     ) {
-        Row(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxSize()
+                .padding(12.dp),
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Ícone da dica
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer),
-                contentAlignment = Alignment.Center
+            // Título da dica
+            Text(
+                text = tip.title,
+                style = MaterialTheme.typography.titleSmall.copy(
+                    fontWeight = FontWeight.Bold
+                ),
+                maxLines = 2,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+            )
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                // Ícone da dica
                 Icon(
                     imageVector = when {
                         tip.id.contains("breathing") -> Icons.Default.Favorite
@@ -883,36 +1008,18 @@ fun CustomTipItem(
                         else -> Icons.Default.Favorite
                     },
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
-            
-            // Conteúdo da dica
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 16.dp)
-            ) {
-                Text(
-                    text = tip.title,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold
-                    )
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
                 )
                 
-                Text(
-                    text = tip.description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                // Ícone de seta
+                Icon(
+                    imageVector = Icons.Default.ArrowForward,
+                    contentDescription = "Ver mais",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(16.dp)
                 )
             }
-            
-            // Ícone de seta
-            Icon(
-                imageVector = Icons.Default.ArrowForward,
-                contentDescription = "Ver mais",
-                tint = MaterialTheme.colorScheme.primary
-            )
         }
     }
 } 

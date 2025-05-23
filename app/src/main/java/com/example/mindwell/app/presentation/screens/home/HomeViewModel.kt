@@ -19,6 +19,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import java.util.Calendar
 import javax.inject.Inject
 
 /**
@@ -66,7 +67,9 @@ class HomeViewModel @Inject constructor(
         val checkInError: String? = null,
         val navigationEvent: NavigationEvent? = null,
         val activeTooltip: String? = null,
-        val customTips: List<CustomTip> = emptyList()
+        val customTips: List<CustomTip> = emptyList(),
+        val greeting: String = "",
+        val greetingEmoji: String = ""
     )
     
     // Estado atual da tela
@@ -79,6 +82,7 @@ class HomeViewModel @Inject constructor(
     init {
         loadData()
         loadCustomTips()
+        updateGreeting()
     }
     
     /**
@@ -149,6 +153,53 @@ class HomeViewModel @Inject constructor(
                 )
             )
         )
+    }
+    
+    /**
+     * Atualiza a saudação baseada na hora do dia
+     * Método interno que implementa a lógica
+     */
+    private fun updateGreeting() {
+        // Obter a hora atual usando várias abordagens para garantir precisão
+        val calendar = Calendar.getInstance()
+        val hourOfDay = calendar.get(Calendar.HOUR_OF_DAY)
+        
+        // Registra informações detalhadas para debug
+        println("HORA ATUAL: $hourOfDay")
+        println("CALENDAR COMPLETO: ${calendar.time}")
+        
+        // SOLUÇÃO TEMPORÁRIA: Forçar "Boa noite" apenas para teste
+        // Remover após testar e resolver o problema de horário
+        //val greeting = "Boa noite" 
+        
+        // Lógica normal com condições explícitas e claras
+        val greeting = when {
+            hourOfDay in 5..11 -> "Bom dia"
+            hourOfDay in 12..17 -> "Boa tarde"
+            else -> "Boa noite"  // 18-23 e 0-4
+        }
+        
+        val greetingEmoji = when {
+            hourOfDay in 5..11 -> "☀️" // Sol para manhã
+            hourOfDay in 12..17 -> "🌤️" // Sol com nuvens para tarde
+            hourOfDay in 18..21 -> "🌆" // Pôr do sol para início da noite
+            else -> "🌙" // Lua para noite
+        }
+        
+        println("SAUDAÇÃO SELECIONADA: $greeting $greetingEmoji para hora $hourOfDay")
+        
+        state = state.copy(
+            greeting = greeting,
+            greetingEmoji = greetingEmoji
+        )
+    }
+    
+    /**
+     * Método público para atualizar a saudação
+     * Pode ser chamado de fora do ViewModel quando necessário
+     */
+    fun refreshGreeting() {
+        updateGreeting()
     }
     
     /**
