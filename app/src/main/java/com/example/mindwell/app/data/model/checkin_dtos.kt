@@ -6,7 +6,7 @@ import com.google.gson.annotations.SerializedName
  * DTO para página de check-ins.
  */
 data class CheckinPageDTO(
-    @SerializedName("page")
+    @SerializedName("number")
     val page: Int,
     
     @SerializedName("size")
@@ -15,10 +15,10 @@ data class CheckinPageDTO(
     @SerializedName("totalPages")
     val total_pages: Int,
     
-    @SerializedName("totalItems")
+    @SerializedName("totalElements")
     val total_items: Int,
     
-    @SerializedName("items")
+    @SerializedName("content")
     val items: List<CheckinDTO>
 )
 

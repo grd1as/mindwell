@@ -3,11 +3,22 @@ package com.example.mindwell.app.data.mappers
 import com.example.mindwell.app.data.model.*
 import com.example.mindwell.app.domain.entities.*
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeFormatterBuilder
+import java.time.temporal.ChronoField
 
 /**
  * Mapper para conversão entre DTOs e entidades de formulário.
  */
 object FormMapper {
+    // Formatter personalizado para lidar com diferentes formatos de data
+    private val customDateTimeFormatter = DateTimeFormatterBuilder()
+        .appendPattern("yyyy-MM-dd'T'HH:mm:ss")
+        .optionalStart()
+        .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true)
+        .optionalEnd()
+        .toFormatter()
+    
     /**
      * Converte DTO de formulário para entidade de domínio Form.
      * @param dto DTO de formulário
@@ -20,9 +31,29 @@ object FormMapper {
             name = dto.name,
             type = dto.type,
             description = dto.description,
-            nextAllowed = dto.nextAllowed?.let { ZonedDateTime.parse(it) },
-            lastAnsweredAt = dto.lastAnsweredAt?.let { ZonedDateTime.parse(it) }
+            nextAllowed = dto.nextAllowed?.let { parseDateTime(it) },
+            lastAnsweredAt = dto.lastAnsweredAt?.let { parseDateTime(it) }
         )
+    }
+    
+    /**
+     * Faz o parsing de data com suporte a diferentes formatos.
+     * @param dateTimeString String da data/hora
+     * @return ZonedDateTime parseado
+     */
+    private fun parseDateTime(dateTimeString: String): ZonedDateTime {
+        return try {
+            // Tenta parsing padrão primeiro
+            ZonedDateTime.parse(dateTimeString)
+        } catch (e: Exception) {
+            try {
+                // Tenta parsing com formatter customizado
+                ZonedDateTime.parse(dateTimeString, customDateTimeFormatter.withZone(java.time.ZoneId.systemDefault()))
+            } catch (e2: Exception) {
+                // Se falhar, adiciona o timezone UTC
+                ZonedDateTime.parse("${dateTimeString}Z")
+            }
+        }
     }
     
     /**
