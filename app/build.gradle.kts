@@ -95,6 +95,10 @@ dependencies {
     // Date/Time support for lower API levels
     coreLibraryDesugaring(libs.desugar.jdk.libs)
     
+    // Coil for image loading with SVG support
+    implementation("io.coil-kt:coil-compose:2.4.0")
+    implementation("io.coil-kt:coil-svg:2.4.0")
+    
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

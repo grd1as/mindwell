@@ -143,10 +143,18 @@ private fun summary_stat_item(
         
         Text(
             text = value,
-            style = MaterialTheme.typography.headlineMedium,
+            style = if (value.length > 3) {
+                // Para textos longos como "Preocupado", usar fonte menor
+                MaterialTheme.typography.titleMedium
+            } else {
+                // Para números e emojis, manter fonte grande
+                MaterialTheme.typography.headlineMedium
+            },
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+            lineHeight = 20.sp
         )
         
         subtitle?.let {

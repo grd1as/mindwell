@@ -37,6 +37,11 @@ import com.example.mindwell.app.R
 import com.example.mindwell.app.common.navigation.AppDestinations
 import kotlin.math.cos
 import kotlin.math.sin
+import androidx.compose.ui.tooling.preview.Preview
+import coil.compose.AsyncImage
+import coil.decode.SvgDecoder
+import coil.request.ImageRequest
+import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,6 +54,10 @@ fun LoginScreen(
     var showLogoAnimation by remember { mutableStateOf(false) }
     var showContentAnimation by remember { mutableStateOf(false) }
     var showButtonsAnimation by remember { mutableStateOf(false) }
+    
+    // Logo gradient colors
+    val logoColorStart = Color(0xFFF29F9F)
+    val logoColorEnd = Color(0xFFFF80B3)
     
     // Animações sequenciadas
     LaunchedEffect(Unit) {
@@ -174,33 +183,28 @@ fun LoginScreen(
                             horizontalArrangement = Arrangement.Start,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            // Logo com círculo
-                            Box(
-                                modifier = Modifier
-                                    .size(72.dp)
-                                    .background(
-                                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f),
-                                        CircleShape
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Image(
-                                    painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                                    contentDescription = "MindWell Logo",
-                                    modifier = Modifier.size(50.dp),
-                                    contentScale = ContentScale.Fit
-                                )
-                            }
+                            // Logo sem círculo
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data("file:///android_asset/mindwell-logo.svg")
+                                    .decoderFactory(SvgDecoder.Factory())
+                                    .build(),
+                                contentDescription = "MindWell Logo",
+                                modifier = Modifier.size(64.dp),
+                                contentScale = ContentScale.Fit
+                            )
                             
                             Spacer(modifier = Modifier.width(16.dp))
                             
-                            // Título ao lado do logo
-                            Text(
-                                text = "MindWell",
-                                style = MaterialTheme.typography.headlineMedium.copy(
-                                    fontWeight = FontWeight.Bold
-                                ),
-                                color = MaterialTheme.colorScheme.primary
+                            // Logo outline como texto
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data("file:///android_asset/mindwell-logo(outline).svg")
+                                    .decoderFactory(SvgDecoder.Factory())
+                                    .build(),
+                                contentDescription = "MindWell Logo Text",
+                                modifier = Modifier.height(32.dp),
+                                contentScale = ContentScale.FillHeight
                             )
                         }
                     }
@@ -259,8 +263,8 @@ fun LoginScreen(
                                 .height(60.dp),
                             shape = RoundedCornerShape(30.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = MaterialTheme.colorScheme.onPrimary
+                                containerColor = logoColorStart,
+                                contentColor = Color.White
                             ),
                             elevation = ButtonDefaults.buttonElevation(
                                 defaultElevation = 6.dp,
@@ -275,7 +279,7 @@ fun LoginScreen(
                                 if (vm.isLoading) {
                                     CircularProgressIndicator(
                                         modifier = Modifier.size(20.dp),
-                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        color = Color.White,
                                         strokeWidth = 2.dp
                                     )
                                 } else {

@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -21,6 +22,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -55,9 +57,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -65,6 +70,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import coil.decode.SvgDecoder
+import coil.request.ImageRequest
 import com.example.mindwell.app.R
 import com.example.mindwell.app.common.navigation.AppDestinations
 import com.example.mindwell.app.domain.entities.OnboardingPage
@@ -148,6 +156,21 @@ private fun OnboardingContent(
                 )
         )
 
+        // Background logo - positioned in the top right as a subtle watermark
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data("file:///android_asset/mindwell-logo.svg")
+                .decoderFactory(SvgDecoder.Factory())
+                .build(),
+            contentDescription = null,
+            modifier = Modifier
+                .size(300.dp)
+                .align(Alignment.TopEnd)
+                .offset(x = 100.dp, y = (-50).dp),
+            contentScale = ContentScale.Fit,
+            alpha = 0.05f
+        )
+
         // Conteúdo da página atual (scrollable)
         if (uiState.pages.isNotEmpty()) {
             val currentPage = uiState.pages[uiState.currentPage]
@@ -155,12 +178,12 @@ private fun OnboardingContent(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(24.dp)
                     .padding(bottom = 120.dp) // Adicionando espaço para os botões fixos
                     .verticalScroll(scrollState),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(40.dp))
                 
                 AnimatedVisibility(
                     visible = true,
@@ -193,7 +216,7 @@ private fun OnboardingContent(
                         )
                     )
                 )
-                .padding(bottom = 32.dp, start = 16.dp, end = 16.dp, top = 16.dp)
+                .padding(bottom = 32.dp, start = 24.dp, end = 24.dp, top = 16.dp)
         ) {
             // Indicadores de página
             Row(
@@ -259,8 +282,9 @@ private fun OnboardingContent(
                         .height(48.dp)
                         .width(if (isLastPage) 160.dp else 140.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+                        containerColor = Color(0xFFF29F9F),
+                        contentColor = Color.White,
+                        disabledContainerColor = Color(0xFFF29F9F).copy(alpha = 0.3f)
                     )
                 ) {
                     Row(
@@ -310,8 +334,8 @@ private fun ConfirmationsPageContent(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+            .padding(horizontal = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(32.dp)
     ) {
         // Cabeçalho
         Column(
@@ -319,51 +343,74 @@ private fun ConfirmationsPageContent(
             modifier = Modifier.fillMaxWidth()
         ) {
             // Imagem da página
-            Image(
-                painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                contentDescription = "Confirmações",
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data("file:///android_asset/mindwell-logo.svg")
+                    .decoderFactory(SvgDecoder.Factory())
+                    .build(),
+                contentDescription = "MindWell Logo",
                 modifier = Modifier
-                    .size(100.dp)
-                    .padding(bottom = 16.dp)
+                    .size(80.dp)
+                    .padding(bottom = 24.dp),
+                contentScale = ContentScale.Fit,
+                alpha = 0.8f
             )
             
             // Título da página
             Text(
                 text = "Antes de começar",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.ExtraBold,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(vertical = 8.dp)
+                fontSize = 32.sp,
+                modifier = Modifier.padding(bottom = 16.dp)
             )
+            
+            // Linha decorativa
+            Box(
+                modifier = Modifier
+                    .width(60.dp)
+                    .height(4.dp)
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(
+                                Color(0xFFF29F9F),
+                                Color(0xFFFF80B3)
+                            )
+                        ),
+                        shape = RoundedCornerShape(2.dp)
+                    )
+                    .padding(bottom = 24.dp)
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
             
             // Descrição da página
             Text(
                 text = "Por favor, leia e confirme os termos abaixo para continuar:",
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                lineHeight = 28.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 16.dp)
             )
         }
         
         // Card de confirmações
-        Card(
+        Surface(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            ),
-            elevation = CardDefaults.cardElevation(
-                defaultElevation = 2.dp
-            )
+            shape = RoundedCornerShape(24.dp),
+            color = MaterialTheme.colorScheme.surface,
+            shadowElevation = 4.dp
         ) {
             Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                modifier = Modifier.padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
                 // Checkbox para Termos de Uso (obrigatório)
                 CheckboxItem(
                     title = "Termos de Uso",
-                    description = "Concordo com os Termos de Uso e Política de Privacidade do MindWell.",
+                    description = "Concordo com os Termos de Uso e Política de Privacidade.",
                     isChecked = uiState.confirmationCheckboxes["termsAccepted"] ?: false,
                     isRequired = true,
                     onCheckedChange = { isChecked ->
@@ -371,12 +418,15 @@ private fun ConfirmationsPageContent(
                     }
                 )
                 
-                Divider(thickness = 0.5.dp)
+                Divider(
+                    thickness = 0.5.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                )
                 
                 // Checkbox para Coleta de Dados (obrigatório)
                 CheckboxItem(
                     title = "Coleta de Dados",
-                    description = "Entendo que o MindWell coletará dados sobre meu uso para melhorar minha experiência.",
+                    description = "Entendo que os dados sobre meu uso serão coletados para melhorar minha experiência.",
                     isChecked = uiState.confirmationCheckboxes["dataCollection"] ?: false,
                     isRequired = true,
                     onCheckedChange = { isChecked ->
@@ -384,7 +434,10 @@ private fun ConfirmationsPageContent(
                     }
                 )
                 
-                Divider(thickness = 0.5.dp)
+                Divider(
+                    thickness = 0.5.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                )
                 
                 // Checkbox para Notificações (opcional)
                 CheckboxItem(
@@ -404,7 +457,10 @@ private fun ConfirmationsPageContent(
             text = "* Itens obrigatórios para continuar",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-            modifier = Modifier.padding(top = 8.dp)
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp)
         )
     }
 }
@@ -477,87 +533,61 @@ private fun PageContent(page: OnboardingPage) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        // Cabeçalho com layout assimétrico
+        // Logo pequena no topo
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data("file:///android_asset/mindwell-logo.svg")
+                .decoderFactory(SvgDecoder.Factory())
+                .build(),
+            contentDescription = "MindWell Logo",
+            modifier = Modifier
+                .size(80.dp)
+                .padding(bottom = 32.dp),
+            contentScale = ContentScale.Fit,
+            alpha = 0.8f
+        )
+        
+        // Título da página
+        Text(
+            text = page.title,
+            style = MaterialTheme.typography.headlineLarge,
+            fontWeight = FontWeight.ExtraBold,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(bottom = 20.dp),
+            fontSize = 32.sp
+        )
+        
+        // Linha decorativa
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 32.dp)
-        ) {
-            // Título da página - alinhado à esquerda com destaque visual
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth(0.7f)
-                    .align(Alignment.CenterStart)
-            ) {
-                Text(
-                    text = page.title,
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Start,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                .width(60.dp)
+                .height(4.dp)
+                .background(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(
+                            Color(0xFFF29F9F),
+                            Color(0xFFFF80B3)
+                        )
+                    ),
+                    shape = RoundedCornerShape(2.dp)
                 )
-                
-                // Linha decorativa
-                Divider(
-                    modifier = Modifier
-                        .width(80.dp)
-                        .padding(bottom = 16.dp),
-                    thickness = 4.dp,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                
-                // Descrição da página
-                Text(
-                    text = page.description,
-                    style = MaterialTheme.typography.bodyLarge,
-                    textAlign = TextAlign.Start
-                )
-            }
-        }
+        )
         
-        // Imagem da página - tamanho aumentado com posicionamento assimétrico
-        val imageRes = when (page.image_resource) {
-            "welcome" -> R.drawable.ic_launcher_foreground // Substitua por imagens reais
-            "checkin" -> R.drawable.ic_launcher_foreground
-            "reports" -> R.drawable.ic_launcher_foreground
-            "resources" -> R.drawable.ic_launcher_foreground
-            else -> R.drawable.ic_launcher_foreground
-        }
+        Spacer(modifier = Modifier.height(32.dp))
         
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp)
-        ) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(280.dp)
-                    .align(Alignment.Center),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-                ),
-                elevation = CardDefaults.cardElevation(
-                    defaultElevation = 4.dp
-                )
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Image(
-                        painter = painterResource(id = imageRes),
-                        contentDescription = page.title,
-                        modifier = Modifier
-                            .size(200.dp)
-                            .padding(16.dp)
-                    )
-                }
-            }
-        }
+        // Descrição da página
+        Text(
+            text = page.description,
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center,
+            lineHeight = 28.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 20.dp)
+        )
     }
 }
 
