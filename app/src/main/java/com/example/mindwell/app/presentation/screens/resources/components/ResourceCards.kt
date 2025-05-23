@@ -1,6 +1,8 @@
 package com.example.mindwell.app.presentation.screens.resources.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -8,10 +10,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.mindwell.app.data.services.PersonalizedResource
 import com.example.mindwell.app.data.services.PersonalizedTip
 
@@ -24,16 +29,14 @@ fun ModernPersonalizedResourceCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         onClick = onClick,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(16.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(20.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -45,18 +48,18 @@ fun ModernPersonalizedResourceCard(
                 ) {
                     Text(
                         text = resource.title,
-                        style = MaterialTheme.typography.titleMedium.copy(
+                        style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Bold
                         ),
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = Color(0xFF1A1A1A)
                     )
                     
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
                     
                     Text(
                         text = resource.description,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color(0xFF666666),
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -64,24 +67,29 @@ fun ModernPersonalizedResourceCard(
                 
                 Spacer(modifier = Modifier.width(12.dp))
                 
-                Card(
-                    shape = RoundedCornerShape(8.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
+                // Ícone com background colorido
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    Color(0xFF6366F1),
+                                    Color(0xFF8B5CF6)
+                                )
+                            ),
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = getResourceIcon(resource.icon),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier
-                            .size(32.dp)
-                            .padding(6.dp)
+                    Text(
+                        text = getResourceEmoji(resource.icon),
+                        fontSize = 24.sp
                     )
                 }
             }
             
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -92,35 +100,35 @@ fun ModernPersonalizedResourceCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Card(
-                        shape = RoundedCornerShape(16.dp),
+                        shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                            containerColor = Color(0xFFF3F4F6)
                         )
                     ) {
                         Text(
                             text = "${resource.duration_minutes} min",
-                            style = MaterialTheme.typography.labelSmall.copy(
+                            style = MaterialTheme.typography.bodySmall.copy(
                                 fontWeight = FontWeight.Medium
                             ),
-                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            color = Color(0xFF374151),
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         )
                     }
                     
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
                     
                     Card(
-                        shape = RoundedCornerShape(16.dp),
+                        shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                            containerColor = Color(0xFFEEF2FF)
                         )
                     ) {
                         Text(
                             text = resource.difficulty,
-                            style = MaterialTheme.typography.labelSmall.copy(
+                            style = MaterialTheme.typography.bodySmall.copy(
                                 fontWeight = FontWeight.Medium
                             ),
-                            color = MaterialTheme.colorScheme.onTertiaryContainer,
+                            color = Color(0xFF6366F1),
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         )
                     }
@@ -128,12 +136,15 @@ fun ModernPersonalizedResourceCard(
                 
                 Button(
                     onClick = onClick,
-                    shape = RoundedCornerShape(20.dp),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF6366F1)
+                    ),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
                 ) {
                     Text(
                         text = resource.action_text,
-                        style = MaterialTheme.typography.labelMedium.copy(
+                        style = MaterialTheme.typography.bodySmall.copy(
                             fontWeight = FontWeight.Bold
                         )
                     )
@@ -153,9 +164,7 @@ fun ModernPersonalizedResourceCard(
 fun ModernPersonalizedTipCard(tip: PersonalizedTip) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        ),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         shape = RoundedCornerShape(16.dp)
     ) {
@@ -173,27 +182,24 @@ fun ModernPersonalizedTipCard(tip: PersonalizedTip) {
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f)
                 ) {
-                    Card(
-                        shape = RoundedCornerShape(10.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = when (tip.priority) {
-                                "high" -> MaterialTheme.colorScheme.errorContainer
-                                "medium" -> MaterialTheme.colorScheme.primaryContainer
-                                else -> MaterialTheme.colorScheme.secondaryContainer
-                            }
-                        )
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(
+                                brush = Brush.radialGradient(
+                                    colors = when (tip.priority) {
+                                        "high" -> listOf(Color(0xFFFF6B6B), Color(0xFFFF8E8E))
+                                        "medium" -> listOf(Color(0xFF6366F1), Color(0xFF8B5CF6))
+                                        else -> listOf(Color(0xFF10B981), Color(0xFF34D399))
+                                    }
+                                ),
+                                shape = CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = getTipIcon(tip.icon),
-                            contentDescription = null,
-                            tint = when (tip.priority) {
-                                "high" -> MaterialTheme.colorScheme.onErrorContainer
-                                "medium" -> MaterialTheme.colorScheme.onPrimaryContainer
-                                else -> MaterialTheme.colorScheme.onSecondaryContainer
-                            },
-                            modifier = Modifier
-                                .size(32.dp)
-                                .padding(6.dp)
+                        Text(
+                            text = getTipEmoji(tip.icon),
+                            fontSize = 18.sp
                         )
                     }
                     
@@ -201,30 +207,26 @@ fun ModernPersonalizedTipCard(tip: PersonalizedTip) {
                     
                     Text(
                         text = tip.title,
-                        style = MaterialTheme.typography.titleMedium.copy(
+                        style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Bold
                         ),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = Color(0xFF1A1A1A)
                     )
                 }
                 
                 Card(
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = when (tip.priority) {
-                            "high" -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
-                            "medium" -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-                            else -> MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f)
-                        }
+                        containerColor = Color(0xFFF3F4F6)
                     )
                 ) {
                     Text(
                         text = tip.estimated_time,
-                        style = MaterialTheme.typography.labelSmall.copy(
+                        style = MaterialTheme.typography.bodySmall.copy(
                             fontWeight = FontWeight.Medium
                         ),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                        color = Color(0xFF374151),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
             }
@@ -234,8 +236,8 @@ fun ModernPersonalizedTipCard(tip: PersonalizedTip) {
             Text(
                 text = tip.content,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                lineHeight = MaterialTheme.typography.bodyMedium.lineHeight
+                color = Color(0xFF666666),
+                lineHeight = 20.sp
             )
         }
     }
@@ -255,6 +257,19 @@ fun getResourceIcon(iconName: String): ImageVector {
 }
 
 @Composable
+fun getResourceEmoji(iconName: String): String {
+    return when (iconName) {
+        "breathing" -> "🌬️"
+        "meditation" -> "🧘"
+        "exercise" -> "🏃"
+        "sleep" -> "😴"
+        "writing" -> "✍️"
+        "heart" -> "❤️"
+        else -> "✨"
+    }
+}
+
+@Composable
 fun getTipIcon(iconName: String): ImageVector {
     return when (iconName) {
         "lightbulb" -> Icons.Default.Info
@@ -263,5 +278,17 @@ fun getTipIcon(iconName: String): ImageVector {
         "smile" -> Icons.Default.Favorite
         "target" -> Icons.Default.Info
         else -> Icons.Default.Info
+    }
+}
+
+@Composable
+fun getTipEmoji(iconName: String): String {
+    return when (iconName) {
+        "lightbulb" -> "💡"
+        "heart" -> "❤️"
+        "star" -> "⭐"
+        "smile" -> "😊"
+        "target" -> "🎯"
+        else -> "💡"
     }
 } 

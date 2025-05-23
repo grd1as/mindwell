@@ -26,21 +26,12 @@ class FormsViewModel @Inject constructor(
     data class FormsState(
         val forms: List<Form> = emptyList(),
         val isLoading: Boolean = false,
-        val error: String? = null,
-        val filterType: String? = null
+        val error: String? = null
     )
     
     // Estado atual da tela
     var state by mutableStateOf(FormsState(isLoading = true))
         private set
-    
-    // Categorias de formulários (dados estáticos da UI, não da API)
-    val formCategories = listOf(
-        null to "Todos",
-        "daily" to "Diários",
-        "weekly" to "Semanais",
-        "monthly" to "Mensais"
-    )
     
     init {
         loadForms()
@@ -48,19 +39,26 @@ class FormsViewModel @Inject constructor(
     
     /**
      * Carrega a lista de formulários.
+     * Exclui checkin (fica só na home) e report (canal de escuta no botão flutuante).
+     * Mostra apenas questionários: SELF_ASSESSMENT, CLIMATE, etc.
      */
     fun loadForms() {
         state = state.copy(isLoading = true, error = null)
         
-        // Real implementation with API
-        Log.d(TAG, "🌐 Tentando carregar formulários da API real")
+        Log.d(TAG, "🌐 Carregando questionários da API (excluindo checkin e report)")
         viewModelScope.launch {
-            getFormsUseCase(state.filterType).collect { result ->
+            getFormsUseCase(null).collect { result ->
                 if (result.isSuccess) {
-                    val forms = result.getOrNull() ?: emptyList()
-                    Log.d(TAG, "✅ Sucesso ao carregar ${forms.size} formulários da API")
+                    val allForms = result.getOrNull() ?: emptyList()
+                    
+                    // Filtrar apenas questionários válidos (excluir CHECKIN e REPORT)
+                    val questionnairesForms = allForms.filter { form ->
+                        form.type != "CHECKIN" && form.type != "REPORT"
+                    }
+                    
+                    Log.d(TAG, "✅ Carregados ${allForms.size} formulários, ${questionnairesForms.size} questionários válidos")
                     state = state.copy(
-                        forms = forms,
+                        forms = questionnairesForms,
                         isLoading = false
                     )
                 } else {
@@ -72,17 +70,6 @@ class FormsViewModel @Inject constructor(
                     )
                 }
             }
-        }
-    }
-    
-    /**
-     * Filtra formulários por tipo.
-     * @param type Tipo de formulário
-     */
-    fun filterByType(type: String?) {
-        if (state.filterType != type) {
-            state = state.copy(filterType = type)
-            loadForms()
         }
     }
 } 

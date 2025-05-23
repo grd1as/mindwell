@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -12,9 +13,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.mindwell.app.domain.entities.ResourceCategory
 
 @Composable
@@ -24,27 +27,23 @@ fun ModernPersonalizedMessageCard(
     isLoading: Boolean
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        shape = RoundedCornerShape(16.dp)
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        shape = RoundedCornerShape(20.dp)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    Brush.horizontalGradient(
+                    brush = Brush.verticalGradient(
                         colors = listOf(
-                            MaterialTheme.colorScheme.primaryContainer,
-                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f)
+                            Color(0xFF6366F1),
+                            Color(0xFF8B5CF6)
                         )
                     )
                 )
-                .padding(16.dp)
+                .padding(20.dp)
         ) {
             Column {
                 Row(
@@ -58,47 +57,48 @@ fun ModernPersonalizedMessageCard(
                         Icon(
                             imageVector = Icons.Default.Star,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            tint = Color.White,
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "Recomendação IA",
-                            style = MaterialTheme.typography.titleSmall.copy(
+                            style = MaterialTheme.typography.bodyMedium.copy(
                                 fontWeight = FontWeight.Bold
                             ),
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                            color = Color.White
                         )
                     }
                     
                     IconButton(
                         onClick = onRefresh,
-                        enabled = !isLoading
+                        enabled = !isLoading,
+                        modifier = Modifier.size(32.dp)
                     ) {
                         if (isLoading) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(16.dp),
                                 strokeWidth = 2.dp,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                                color = Color.White
                             )
                         } else {
                             Icon(
                                 imageVector = Icons.Default.Refresh,
                                 contentDescription = "Atualizar recomendações",
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                tint = Color.White,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
                     }
                 }
                 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 
                 Text(
                     text = message,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    lineHeight = MaterialTheme.typography.bodyMedium.lineHeight
+                    color = Color.White.copy(alpha = 0.95f),
+                    lineHeight = 20.sp
                 )
             }
         }
@@ -114,7 +114,7 @@ fun ModernCategoriesSection(
     LazyRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
-        contentPadding = PaddingValues(horizontal = 4.dp)
+        contentPadding = PaddingValues(horizontal = 16.dp)
     ) {
         items(categories) { category ->
             ModernCategoryCard(
@@ -133,43 +133,27 @@ fun ModernCategoryCard(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val containerColor = if (isSelected) {
-        MaterialTheme.colorScheme.primary
-    } else {
-        MaterialTheme.colorScheme.surfaceVariant
-    }
-    
-    val contentColor = if (isSelected) {
-        MaterialTheme.colorScheme.onPrimary
-    } else {
-        MaterialTheme.colorScheme.onSurfaceVariant
-    }
-    
     Card(
         onClick = onClick,
-        modifier = Modifier
-            .wrapContentWidth()
-            .height(48.dp),
+        modifier = Modifier.wrapContentWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = containerColor
+            containerColor = if (isSelected) Color(0xFF6366F1) else Color.White
         ),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isSelected) 8.dp else 2.dp
+            defaultElevation = if (isSelected) 8.dp else 4.dp
         ),
-        shape = RoundedCornerShape(24.dp)
+        shape = RoundedCornerShape(16.dp)
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 20.dp, vertical = 12.dp),
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = category.title,
-                style = MaterialTheme.typography.labelLarge.copy(
+                style = MaterialTheme.typography.bodyMedium.copy(
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                 ),
-                color = contentColor,
+                color = if (isSelected) Color.White else Color(0xFF1A1A1A),
                 textAlign = TextAlign.Center
             )
         }
@@ -179,66 +163,67 @@ fun ModernCategoryCard(
 @Composable
 fun ModernWelcomeHeader() {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        shape = RoundedCornerShape(16.dp)
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    Brush.radialGradient(
+                    brush = Brush.verticalGradient(
                         colors = listOf(
-                            MaterialTheme.colorScheme.primaryContainer,
-                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
+                            Color(0xFFF0F9FF),
+                            Color(0xFFFFFFFF)
                         )
                     )
                 )
-                .padding(20.dp)
+                .padding(24.dp)
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Card(
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
+                // Ícone com background gradiente
+                Box(
+                    modifier = Modifier
+                        .size(64.dp)
+                        .background(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    Color(0xFF6366F1),
+                                    Color(0xFF8B5CF6)
+                                )
+                            ),
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Star,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier
-                            .size(32.dp)
-                            .padding(8.dp)
+                    Text(
+                        text = "🧠",
+                        fontSize = 32.sp
                     )
                 }
                 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(16.dp))
                 
                 Text(
                     text = "Recursos Inteligentes",
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Bold
                     ),
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    color = Color(0xFF1A1A1A),
                     textAlign = TextAlign.Center
                 )
                 
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 
                 Text(
                     text = "Conteúdo personalizado gerado por IA para apoiar seu bem-estar mental",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.9f),
+                    color = Color(0xFF666666),
                     textAlign = TextAlign.Center,
-                    lineHeight = MaterialTheme.typography.bodyMedium.lineHeight
+                    lineHeight = 20.sp
                 )
             }
         }
@@ -248,36 +233,46 @@ fun ModernWelcomeHeader() {
 @Composable
 fun ModernGeminiInfoCard() {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.tertiaryContainer
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        shape = RoundedCornerShape(20.dp)
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFFFEF3F2),
+                            Color(0xFFFFFFFF)
+                        )
+                    )
+                )
                 .padding(24.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Card(
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.tertiary
-                    )
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    Color(0xFFFF6B6B),
+                                    Color(0xFFFF8E8E)
+                                )
+                            ),
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Info,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onTertiary,
-                        modifier = Modifier
-                            .size(32.dp)
-                            .padding(6.dp)
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
                     )
                 }
                 
@@ -285,10 +280,10 @@ fun ModernGeminiInfoCard() {
                 
                 Text(
                     text = "Sobre a Personalização IA",
-                    style = MaterialTheme.typography.titleLarge.copy(
+                    style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold
                     ),
-                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                    color = Color(0xFF1A1A1A)
                 )
             }
             
@@ -296,9 +291,9 @@ fun ModernGeminiInfoCard() {
             
             Text(
                 text = "Os recursos e dicas acima são gerados pela inteligência artificial Gemini, baseados no seu histórico de check-ins, padrões de humor e preferências pessoais.",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onTertiaryContainer,
-                lineHeight = MaterialTheme.typography.bodyLarge.lineHeight
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color(0xFF666666),
+                lineHeight = 20.sp
             )
             
             Spacer(modifier = Modifier.height(12.dp))
@@ -309,7 +304,7 @@ fun ModernGeminiInfoCard() {
                 Icon(
                     imageVector = Icons.Default.Star,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.tertiary,
+                    tint = Color(0xFFFF6B6B),
                     modifier = Modifier.size(20.dp)
                 )
                 
@@ -320,7 +315,7 @@ fun ModernGeminiInfoCard() {
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.Medium
                     ),
-                    color = MaterialTheme.colorScheme.tertiary
+                    color = Color(0xFFFF6B6B)
                 )
             }
         }
@@ -335,20 +330,20 @@ fun SectionHeader(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
+            .padding(vertical = 8.dp, horizontal = 4.dp)
     ) {
         Text(
             text = title,
-            style = MaterialTheme.typography.titleLarge.copy(
+            style = MaterialTheme.typography.titleMedium.copy(
                 fontWeight = FontWeight.Bold
             ),
-            color = MaterialTheme.colorScheme.onSurface
+            color = Color(0xFF1A1A1A)
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = subtitle,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            color = Color(0xFF666666)
         )
     }
 } 
