@@ -21,12 +21,12 @@ interface GetOnboardingPagesUseCase {
  * Implementação do caso de uso para obter as páginas do onboarding.
  */
 class GetOnboardingPagesUseCaseImpl @Inject constructor(
-    private val onboardingRepository: OnboardingRepository
+    private val onboarding_repository: OnboardingRepository
 ) : GetOnboardingPagesUseCase {
     
     override operator fun invoke(): Flow<Result<List<OnboardingPage>>> = flow {
         try {
-            val pages = onboardingRepository.getOnboardingPages()
+            val pages = onboarding_repository.get_onboarding_pages()
             emit(Result.success(pages))
         } catch (e: Exception) {
             emit(Result.failure(e))

@@ -12,21 +12,21 @@ interface OnboardingRepository {
      * Obtém todas as páginas do onboarding.
      * @return Lista de páginas do onboarding
      */
-    suspend fun getOnboardingPages(): List<OnboardingPage>
+    suspend fun get_onboarding_pages(): List<OnboardingPage>
     
     /**
      * Obtém o estado atual do onboarding.
      * @return Flow com o estado atual do onboarding
      */
-    fun getOnboardingState(): Flow<OnboardingState>
+    fun get_onboarding_state(): Flow<OnboardingState>
     
     /**
      * Marca o onboarding como concluído.
      */
-    suspend fun completeOnboarding()
+    suspend fun complete_onboarding()
     
     /**
      * Reseta o estado do onboarding, marcando-o como não concluído.
      */
-    suspend fun resetOnboarding()
+    suspend fun reset_onboarding()
 } 

@@ -22,11 +22,11 @@ interface GetOnboardingStateUseCase {
  * Implementação do caso de uso para obter o estado do onboarding.
  */
 class GetOnboardingStateUseCaseImpl @Inject constructor(
-    private val onboardingRepository: OnboardingRepository
+    private val onboarding_repository: OnboardingRepository
 ) : GetOnboardingStateUseCase {
     
     override fun invoke(): Flow<Result<OnboardingState>> {
-        return onboardingRepository.getOnboardingState()
+        return onboarding_repository.get_onboarding_state()
             .map { Result.success(it) }
             .catch { emit(Result.failure(it)) }
     }

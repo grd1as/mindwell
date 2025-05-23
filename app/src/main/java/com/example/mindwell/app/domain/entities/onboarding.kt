@@ -7,12 +7,12 @@ data class OnboardingPage(
     val id: Int,
     val title: String,
     val description: String,
-    val imageResource: String
+    val image_resource: String
 )
 
 /**
  * Entidade de domínio representando o estado do onboarding.
  */
 data class OnboardingState(
-    val isCompleted: Boolean = false
+    val is_completed: Boolean = false
 ) 

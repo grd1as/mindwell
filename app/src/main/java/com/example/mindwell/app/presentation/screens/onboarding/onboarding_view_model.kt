@@ -35,8 +35,8 @@ data class OnboardingUiState(
  */
 @HiltViewModel
 class OnboardingViewModel @Inject constructor(
-    private val getOnboardingPagesUseCase: GetOnboardingPagesUseCase,
-    private val completeOnboardingUseCase: CompleteOnboardingUseCase
+    private val get_onboarding_pages_use_case: GetOnboardingPagesUseCase,
+    private val complete_onboarding_use_case: CompleteOnboardingUseCase
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(OnboardingUiState(isLoading = true))
@@ -51,7 +51,7 @@ class OnboardingViewModel @Inject constructor(
      */
     private fun loadOnboardingPages() {
         viewModelScope.launch {
-            getOnboardingPagesUseCase().collectLatest { result ->
+            get_onboarding_pages_use_case().collectLatest { result ->
                 result.fold(
                     onSuccess = { pages ->
                         // Adicionamos uma página para os termos e confirmações
@@ -63,7 +63,7 @@ class OnboardingViewModel @Inject constructor(
                                     id = 999, // Usando um ID numérico único
                                     title = "Antes de começar",
                                     description = "Por favor, confirme que você está ciente dos seguintes termos antes de continuar.",
-                                    imageResource = "confirmations"
+                                    image_resource = "confirmations"
                                 )
                             )
                         }
@@ -158,7 +158,7 @@ class OnboardingViewModel @Inject constructor(
      */
     fun completeOnboarding() {
         viewModelScope.launch {
-            completeOnboardingUseCase().collectLatest { result ->
+            complete_onboarding_use_case().collectLatest { result ->
                 result.fold(
                     onSuccess = {
                         // Onboarding concluído com sucesso, navegará para tela de login

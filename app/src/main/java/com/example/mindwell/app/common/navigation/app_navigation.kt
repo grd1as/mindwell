@@ -69,9 +69,9 @@ class StartDestinationHelper @Inject constructor(
         return try {
             // Obtém apenas o primeiro resultado do flow e verifica se o onboarding foi completado
             val result = getOnboardingStateUseCase().firstOrNull()
-            val isOnboardingCompleted = result?.getOrNull()?.isCompleted ?: false
+            val is_onboarding_completed = result?.getOrNull()?.is_completed ?: false
             
-            if (isOnboardingCompleted) {
+            if (is_onboarding_completed) {
                 AppDestinations.LOGIN
             } else {
                 AppDestinations.ONBOARDING

@@ -20,12 +20,12 @@ interface CompleteOnboardingUseCase {
  * Implementação do caso de uso para concluir o onboarding.
  */
 class CompleteOnboardingUseCaseImpl @Inject constructor(
-    private val onboardingRepository: OnboardingRepository
+    private val onboarding_repository: OnboardingRepository
 ) : CompleteOnboardingUseCase {
     
     override fun invoke(): Flow<Result<Unit>> = flow {
         try {
-            onboardingRepository.completeOnboarding()
+            onboarding_repository.complete_onboarding()
             emit(Result.success(Unit))
         } catch (e: Exception) {
             emit(Result.failure(e))

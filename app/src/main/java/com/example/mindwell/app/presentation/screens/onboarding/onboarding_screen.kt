@@ -518,7 +518,7 @@ private fun PageContent(page: OnboardingPage) {
         }
         
         // Imagem da página - tamanho aumentado com posicionamento assimétrico
-        val imageRes = when (page.imageResource) {
+        val imageRes = when (page.image_resource) {
             "welcome" -> R.drawable.ic_launcher_foreground // Substitua por imagens reais
             "checkin" -> R.drawable.ic_launcher_foreground
             "reports" -> R.drawable.ic_launcher_foreground

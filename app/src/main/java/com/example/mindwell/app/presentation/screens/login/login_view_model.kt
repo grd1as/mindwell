@@ -2,6 +2,9 @@ package com.example.mindwell.app.presentation.screens.login
 
 import android.content.Context
 import android.content.Intent
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mindwell.app.domain.usecases.auth.LoginUseCase
@@ -24,6 +27,10 @@ class LoginViewModel @Inject constructor(
     private val googleSignInClient: GoogleSignInClient
 ) : ViewModel() {
     
+    // Estado de loading
+    var isLoading by mutableStateOf(false)
+        private set
+    
     /**
      * Obtém intent para iniciar o fluxo de login do Google.
      * @return Intent para autenticação com Google
@@ -43,22 +50,28 @@ class LoginViewModel @Inject constructor(
         onSuccess: () -> Unit,
         onError: (String) -> Unit
     ) {
+        if (isLoading) return // Previne múltiplas chamadas
+        
         if (data == null) {
             onError("Falha na autenticação: Nenhum dado recebido")
             return
         }
         
         try {
+            isLoading = true
+            
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
             val account = task.getResult(Exception::class.java)
             
             if (account == null) {
+                isLoading = false
                 onError("Falha na autenticação: Conta não encontrada")
                 return
             }
             
             val idToken = account.idToken
             if (idToken == null) {
+                isLoading = false
                 onError("Falha na autenticação: Token não encontrado")
                 return
             }
@@ -66,9 +79,11 @@ class LoginViewModel @Inject constructor(
             viewModelScope.launch {
                 loginUseCase(idToken)
                     .catch { e ->
+                        isLoading = false
                         onError("Falha na autenticação: ${e.message}")
                     }
                     .collect { result ->
+                        isLoading = false
                         if (result.isSuccess) {
                             onSuccess()
                         } else {
@@ -78,6 +93,7 @@ class LoginViewModel @Inject constructor(
             }
             
         } catch (e: Exception) {
+            isLoading = false
             onError("Falha na autenticação: ${e.message}")
         }
     }

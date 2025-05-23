@@ -249,7 +249,11 @@ fun LoginScreen(
                     ) {
                         // Botão de login com o Google
                         Button(
-                            onClick = { launcher.launch(vm.signInIntent()) },
+                            onClick = { 
+                                if (!vm.isLoading) {
+                                    launcher.launch(vm.signInIntent()) 
+                                }
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(60.dp),
@@ -261,30 +265,39 @@ fun LoginScreen(
                             elevation = ButtonDefaults.buttonElevation(
                                 defaultElevation = 6.dp,
                                 pressedElevation = 8.dp
-                            )
+                            ),
+                            enabled = !vm.isLoading
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.Center
                             ) {
-                                // Ícone do Google em um círculo
-                                Box(
-                                    modifier = Modifier
-                                        .size(32.dp)
-                                        .background(Color.White, CircleShape),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Image(
-                                        painter = painterResource(id = R.drawable.ic_google),
-                                        contentDescription = "Google",
-                                        modifier = Modifier.size(18.dp)
+                                if (vm.isLoading) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        strokeWidth = 2.dp
                                     )
+                                } else {
+                                    // Ícone do Google em um círculo
+                                    Box(
+                                        modifier = Modifier
+                                            .size(32.dp)
+                                            .background(Color.White, CircleShape),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Image(
+                                            painter = painterResource(id = R.drawable.ic_google),
+                                            contentDescription = "Google",
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
                                 }
                                 
                                 Spacer(modifier = Modifier.width(16.dp))
                                 
                                 Text(
-                                    text = "Continuar com o Google",
+                                    text = if (vm.isLoading) "Entrando..." else "Continuar com o Google",
                                     style = MaterialTheme.typography.bodyLarge.copy(
                                         fontWeight = FontWeight.SemiBold
                                     )

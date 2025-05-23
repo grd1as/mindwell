@@ -94,6 +94,10 @@ abstract class DomainModule {
     @Singleton
     abstract fun bind_complete_onboarding_use_case(impl: CompleteOnboardingUseCaseImpl): CompleteOnboardingUseCase
     
+    @Binds
+    @Singleton
+    abstract fun bind_is_first_time_use_case(impl: IsFirstTimeUseCaseImpl): IsFirstTimeUseCase
+    
     // Reminder
     @Binds
     @Singleton
