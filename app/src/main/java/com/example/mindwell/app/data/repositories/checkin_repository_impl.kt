@@ -75,37 +75,44 @@ class CheckinRepositoryImpl @Inject constructor(
         from: LocalDate?,
         to: LocalDate?
     ): CheckinPage {
-        // Para manter compatibilidade com a versão atual da interface,
-        // implementamos uma lógica que busca do banco local e simula paginação
-        
-        val start_date = from ?: LocalDate.now().minusMonths(1)
-        val end_date = to ?: LocalDate.now()
-        
-        // Busca todos os check-ins no período e depois pagina na memória
-        val all_checkins = get_checkins_by_date_range(start_date, end_date)
-            .map { list -> list.sortedByDescending { it.date } }
-            .firstOrNull() ?: emptyList()
-        
-        val start_index = page * size
-        val end_index = minOf(start_index + size, all_checkins.size)
-        
-        val items = if (start_index < all_checkins.size) {
-            all_checkins.subList(start_index, end_index)
-        } else {
-            emptyList()
+        // Forçar uso da API real - sem fallback para local
+        try {
+            // Tenta obter dados da API
+            val response = api_service.get_checkins(page, size, from?.toString(), to?.toString())
+            return CheckinPage(
+                page = response.page,
+                size = response.size,
+                total_pages = response.total_pages,
+                total_items = response.total_items,
+                items = response.items.map { dto ->
+                    // Tenta extrair a emoção das respostas (assumindo que a primeira resposta contém a emoção)
+                    val emotionAnswer = dto.answers.firstOrNull()
+                    val emotionValue = emotionAnswer?.value?.toIntOrNull() ?: 3 // Valor padrão se não encontrar
+                    
+                    // Mapeamento baseado no valor da emoção
+                    val emotion = when (emotionValue) {
+                        1 -> Emotion(id = 1, name = "Muito mal", emoji = "😭", value = 1)
+                        2 -> Emotion(id = 2, name = "Mal", emoji = "😢", value = 2)
+                        3 -> Emotion(id = 3, name = "Normal", emoji = "😐", value = 3)
+                        4 -> Emotion(id = 4, name = "Bem", emoji = "🙂", value = 4)
+                        5 -> Emotion(id = 5, name = "Muito bem", emoji = "😄", value = 5)
+                        else -> Emotion(id = 3, name = "Normal", emoji = "😐", value = 3)
+                    }
+                    
+                    Checkin(
+                        id = dto.checkin_id.toLong(),
+                        date = dto.timestamp,
+                        emotion = emotion,
+                        note = null, // Não disponível no DTO atual
+                        streak = dto.streak
+                    )
+                },
+                current_page = response.page,
+                total_elements = response.total_items // Usando total_items como total_elements
+            )
+        } catch (e: Exception) {
+            throw e // Propaga o erro em vez de usar fallback
         }
-        
-        val total_pages = (all_checkins.size + size - 1) / size
-        
-        return CheckinPage(
-            page = page,
-            size = size,
-            total_pages = total_pages,
-            total_items = all_checkins.size,
-            items = items,
-            current_page = page,
-            total_elements = all_checkins.size
-        )
     }
     
     private suspend fun map_entity_to_domain(entity: CheckinEntity): Checkin {

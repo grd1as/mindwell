@@ -1,5 +1,6 @@
 package com.example.mindwell.app.presentation.screens.forms
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -21,6 +22,8 @@ import javax.inject.Inject
 class FormsViewModel @Inject constructor(
     private val getFormsUseCase: GetFormsUseCase
 ) : ViewModel() {
+    private val TAG = "FormsViewModel"
+
     // Estado da tela de formulários
     data class FormsState(
         val forms: List<Form> = emptyList(),
@@ -144,17 +147,18 @@ class FormsViewModel @Inject constructor(
     )
     
     init {
-        loadForms(useMockData = true) // Use mock data for layout testing
+        loadForms(useMockData = false) // Usando API real para testes
     }
     
     /**
      * Carrega a lista de formulários.
      * @param useMockData Se true, usa dados mockados para teste de layout
      */
-    fun loadForms(useMockData: Boolean = true) {
+    fun loadForms(useMockData: Boolean = false) {
         state = state.copy(isLoading = true, error = null)
         
         if (useMockData) {
+            Log.w(TAG, "📋 USANDO DADOS MOCKADOS para formulários")
             // Use mock data for testing
             viewModelScope.launch {
                 // Simulate network delay
@@ -168,17 +172,22 @@ class FormsViewModel @Inject constructor(
         }
         
         // Real implementation with API
+        Log.d(TAG, "🌐 Tentando carregar formulários da API real")
         viewModelScope.launch {
             getFormsUseCase(state.filterType).collect { result ->
                 if (result.isSuccess) {
+                    val forms = result.getOrNull() ?: emptyList()
+                    Log.d(TAG, "✅ Sucesso ao carregar ${forms.size} formulários da API")
                     state = state.copy(
-                        forms = result.getOrNull() ?: emptyList(),
+                        forms = forms,
                         isLoading = false
                     )
                 } else {
+                    val errorMsg = result.exceptionOrNull()?.message ?: "Erro ao carregar formulários"
+                    Log.e(TAG, "❌ ERRO ao carregar formulários da API: $errorMsg", result.exceptionOrNull())
                     state = state.copy(
                         isLoading = false,
-                        error = result.exceptionOrNull()?.message ?: "Erro ao carregar formulários"
+                        error = errorMsg
                     )
                 }
             }
