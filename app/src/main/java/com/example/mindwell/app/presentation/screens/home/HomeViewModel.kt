@@ -432,29 +432,24 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 // Mapear emoji para option_id da pergunta 1 (IDs 1-6)
-                val emojiOptionId = when (emoji.lowercase()) {
-                    "😢", "triste", "sad" -> 1  // TRISTE
-                    "😊", "alegre", "happy" -> 2  // ALEGRE  
-                    "😴", "cansado", "tired" -> 3  // CANSADO
-                    "😰", "ansioso", "anxious" -> 4  // ANSIOSO
-                    "😨", "medo", "scared" -> 5  // MEDO
-                    "😡", "raiva", "angry" -> 6  // RAIVA
+                val emojiOptionId = when (emoji) {
+                    "😢" -> 1   // TRISTE
+                    "😊" -> 2   // ALEGRE  
+                    "😴" -> 3   // CANSADO
+                    "😰" -> 4   // ANSIOSO
+                    "😨" -> 5   // MEDO
+                    "😡" -> 6   // RAIVA
                     else -> 1 // Valor padrão: TRISTE
                 }
                 
                 // Mapear feeling para option_id da pergunta 2 (IDs 7-12)
                 val feelingOptionId = when (feeling.lowercase()) {
-                    "motivado", "motivated" -> 7  // MOTIVADO
-                    "cansado", "tired" -> 8  // CANSADO
-                    "preocupado", "worried" -> 9  // PREOCUPADO
-                    "estressado", "stressed" -> 10  // ESTRESSADO
-                    "animado", "excited" -> 11  // ANIMADO
-                    "satisfeito", "satisfied" -> 12  // SATISFEITO
-                    "muito mal", "péssimo", "triste" -> 8  // CANSADO (melhor match)
-                    "mal", "chateado" -> 9  // PREOCUPADO (melhor match)
-                    "neutro", "normal", "ok" -> 12  // SATISFEITO (melhor match)
-                    "bem", "bom", "feliz" -> 11  // ANIMADO (melhor match)
-                    "muito bem", "ótimo", "excelente" -> 7  // MOTIVADO (melhor match)
+                    "motivado" -> 7      // MOTIVADO
+                    "cansado" -> 8       // CANSADO
+                    "preocupado" -> 9    // PREOCUPADO
+                    "estressado" -> 10   // ESTRESSADO
+                    "animado" -> 11      // ANIMADO
+                    "satisfeito" -> 12   // SATISFEITO
                     else -> 12 // Valor padrão: SATISFEITO
                 }
                 
