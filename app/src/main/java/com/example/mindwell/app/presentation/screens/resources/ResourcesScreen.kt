@@ -26,6 +26,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.mindwell.app.common.navigation.AppDestinations
+import com.example.mindwell.app.data.services.PersonalizedResource
+import com.example.mindwell.app.data.services.PersonalizedTip
 import com.example.mindwell.app.domain.entities.Resource
 import com.example.mindwell.app.domain.entities.ResourceCategory
 
@@ -101,6 +103,61 @@ fun ResourcesScreen(
                     .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                // Seção personalizada do Gemini
+                state.personalizedContent?.let { content ->
+                    item {
+                        PersonalizedMessageCard(
+                            message = content.personalized_message,
+                            onRefresh = { vm.refreshPersonalizedContent() },
+                            isLoading = state.isPersonalizedLoading
+                        )
+                    }
+                    
+                    item {
+                        Text(
+                            text = "✨ Recursos Personalizados para Você",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            modifier = Modifier.padding(top = 8.dp, bottom = 8.dp)
+                        )
+                    }
+                    
+                    items(content.resources) { resource ->
+                        PersonalizedResourceCard(
+                            resource = resource,
+                            onClick = { /* TODO: Implementar ação */ }
+                        )
+                    }
+                }
+                
+                // Seção de dicas personalizadas
+                if (state.personalizedTips.isNotEmpty()) {
+                    item {
+                        Text(
+                            text = "💡 Dicas Personalizadas",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+                        )
+                    }
+                    
+                    items(state.personalizedTips) { tip ->
+                        PersonalizedTipCard(tip = tip)
+                    }
+                }
+                
+                // Divisor entre conteúdo personalizado e recursos gerais
+                if (state.personalizedContent != null || state.personalizedTips.isNotEmpty()) {
+                    item {
+                        Divider(
+                            modifier = Modifier.padding(vertical = 16.dp),
+                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                        )
+                    }
+                }
+                
                 item {
                     Text(
                         text = "Selecione uma categoria:",
@@ -149,6 +206,262 @@ fun ResourcesScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun PersonalizedMessageCard(
+    message: String,
+    onRefresh: () -> Unit,
+    isLoading: Boolean
+) {
+    ElevatedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 16.dp),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        ),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Recomendação IA",
+                        style = MaterialTheme.typography.titleSmall.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+                
+                IconButton(
+                    onClick = onRefresh,
+                    enabled = !isLoading
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Atualizar recomendações",
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PersonalizedResourceCard(
+    resource: PersonalizedResource,
+    onClick: () -> Unit
+) {
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onClick,
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = resource.title,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    modifier = Modifier.weight(1f)
+                )
+                
+                Icon(
+                    imageVector = getResourceIcon(resource.icon),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = resource.description,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    AssistChip(
+                        onClick = { },
+                        label = { Text("${resource.duration_minutes} min") },
+                        colors = AssistChipDefaults.assistChipColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            labelColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    )
+                    
+                    Spacer(modifier = Modifier.width(8.dp))
+                    
+                    AssistChip(
+                        onClick = { },
+                        label = { Text(resource.difficulty) },
+                        colors = AssistChipDefaults.assistChipColors(
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                            labelColor = MaterialTheme.colorScheme.onTertiaryContainer
+                        )
+                    )
+                }
+                
+                Button(
+                    onClick = onClick,
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Text(resource.action_text)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PersonalizedTipCard(tip: PersonalizedTip) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = getTipIcon(tip.icon),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = tip.title,
+                        style = MaterialTheme.typography.titleSmall.copy(
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                }
+                
+                AssistChip(
+                    onClick = { },
+                    label = { Text(tip.estimated_time) },
+                    colors = AssistChipDefaults.assistChipColors(
+                        containerColor = when (tip.priority) {
+                            "high" -> MaterialTheme.colorScheme.errorContainer
+                            "medium" -> MaterialTheme.colorScheme.primaryContainer
+                            else -> MaterialTheme.colorScheme.secondaryContainer
+                        },
+                        labelColor = when (tip.priority) {
+                            "high" -> MaterialTheme.colorScheme.onErrorContainer
+                            "medium" -> MaterialTheme.colorScheme.onPrimaryContainer
+                            else -> MaterialTheme.colorScheme.onSecondaryContainer
+                        }
+                    )
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = tip.content,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+    }
+}
+
+@Composable
+fun getResourceIcon(iconName: String): ImageVector {
+    return when (iconName) {
+        "breathing" -> Icons.Default.Favorite
+        "meditation" -> Icons.Default.Star
+        "exercise" -> Icons.Default.Create
+        "sleep" -> Icons.Default.Info
+        "writing" -> Icons.Default.Edit
+        "heart" -> Icons.Default.Favorite
+        else -> Icons.Default.Star
+    }
+}
+
+@Composable
+fun getTipIcon(iconName: String): ImageVector {
+    return when (iconName) {
+        "lightbulb" -> Icons.Default.Info
+        "heart" -> Icons.Default.Favorite
+        "star" -> Icons.Default.Star
+        "smile" -> Icons.Default.Favorite
+        "target" -> Icons.Default.Info
+        else -> Icons.Default.Info
     }
 }
 

@@ -8,10 +8,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.example.mindwell.app.common.navigation.AppDestinations
+import com.example.mindwell.app.data.services.PersonalizedContentResponse
+import com.example.mindwell.app.data.services.PersonalizedTip
 import com.example.mindwell.app.domain.entities.Resource
 import com.example.mindwell.app.domain.entities.ResourceCategory
 import com.example.mindwell.app.domain.usecases.resource.GetResourcesUseCase
 import com.example.mindwell.app.domain.usecases.resource.GetResourceCategoriesUseCase
+import com.example.mindwell.app.domain.usecases.resource.GetPersonalizedResourcesUseCase
+import com.example.mindwell.app.domain.usecases.resource.GetPersonalizedTipsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
@@ -20,7 +24,9 @@ import javax.inject.Inject
 @HiltViewModel
 class ResourcesViewModel @Inject constructor(
     private val getResourcesUseCase: GetResourcesUseCase,
-    private val getResourceCategoriesUseCase: GetResourceCategoriesUseCase
+    private val getResourceCategoriesUseCase: GetResourceCategoriesUseCase,
+    private val getPersonalizedResourcesUseCase: GetPersonalizedResourcesUseCase,
+    private val getPersonalizedTipsUseCase: GetPersonalizedTipsUseCase
 ) : ViewModel() {
     private val TAG = "ResourcesViewModel"
     
@@ -31,6 +37,7 @@ class ResourcesViewModel @Inject constructor(
     
     init {
         loadResources()
+        loadPersonalizedContent()
     }
     
     fun setNavController(navController: NavController) {
@@ -39,6 +46,46 @@ class ResourcesViewModel @Inject constructor(
     
     fun retry() {
         loadResources()
+        loadPersonalizedContent()
+    }
+    
+    private fun loadPersonalizedContent() {
+        viewModelScope.launch {
+            Log.d(TAG, "🤖 Carregando conteúdo personalizado do Gemini")
+            
+            try {
+                // Carregar recursos personalizados
+                getPersonalizedResourcesUseCase().collect { result ->
+                    result.onSuccess { personalizedContent ->
+                        Log.d(TAG, "✅ Recursos personalizados carregados: ${personalizedContent.resources.size}")
+                        
+                        // Carregar dicas personalizadas
+                        getPersonalizedTipsUseCase().collect { tipsResult ->
+                            tipsResult.onSuccess { tips ->
+                                Log.d(TAG, "✅ Dicas personalizadas carregadas: ${tips.size}")
+                                
+                                state = state.copy(
+                                    personalizedContent = personalizedContent,
+                                    personalizedTips = tips,
+                                    isPersonalizedLoading = false
+                                )
+                            }
+                            tipsResult.onFailure { exception ->
+                                Log.e(TAG, "❌ Erro ao carregar dicas: ${exception.message}")
+                                state = state.copy(isPersonalizedLoading = false)
+                            }
+                        }
+                    }
+                    result.onFailure { exception ->
+                        Log.e(TAG, "❌ Erro ao carregar recursos personalizados: ${exception.message}")
+                        state = state.copy(isPersonalizedLoading = false)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ Erro geral ao carregar conteúdo personalizado: ${e.message}")
+                state = state.copy(isPersonalizedLoading = false)
+            }
+        }
     }
     
     private fun loadResources() {
@@ -124,6 +171,11 @@ class ResourcesViewModel @Inject constructor(
         Log.d(TAG, "Recurso selecionado: $resourceId")
         navController?.navigate(AppDestinations.resourceDetail(resourceId))
     }
+    
+    fun refreshPersonalizedContent() {
+        state = state.copy(isPersonalizedLoading = true)
+        loadPersonalizedContent()
+    }
 }
 
 data class ResourcesState(
@@ -132,5 +184,8 @@ data class ResourcesState(
     val categories: List<ResourceCategory> = emptyList(),
     val featuredResources: List<Resource> = emptyList(),
     val selectedCategoryId: String? = null,
-    val selectedResourceId: String? = null
+    val selectedResourceId: String? = null,
+    val personalizedContent: PersonalizedContentResponse? = null,
+    val personalizedTips: List<PersonalizedTip> = emptyList(),
+    val isPersonalizedLoading: Boolean = true
 ) 

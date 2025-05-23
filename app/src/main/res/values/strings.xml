@@ -3,6 +3,9 @@
     <string name="app_name">MindWell</string>
 
     <string name="web_client_id">326016549814-0ra7e82555s4fis8l3u16u1h0u9vsp89.apps.googleusercontent.com</string>
+    
+    <!-- Gemini AI Configuration -->
+    <string name="gemini_api_key">CHAVE_GEMINI</string>
 
     <!-- Navegação -->
     <string name="home">Início</string>

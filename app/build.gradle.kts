@@ -92,12 +92,18 @@ dependencies {
     // Gson para serialização JSON
     implementation(libs.gson)
     
+    // JSON parsing for Gemini responses
+    implementation("com.google.code.gson:gson:2.10.1")
+    
     // Date/Time support for lower API levels
     coreLibraryDesugaring(libs.desugar.jdk.libs)
     
     // Coil for image loading with SVG support
     implementation("io.coil-kt:coil-compose:2.4.0")
     implementation("io.coil-kt:coil-svg:2.4.0")
+    
+    // Gemini AI SDK
+    implementation("com.google.ai.client.generativeai:generativeai:0.7.0")
     
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

@@ -131,4 +131,13 @@ abstract class DomainModule {
     @Binds
     @Singleton
     abstract fun bind_get_feelings_use_case(impl: GetFeelingsUseCaseImpl): GetFeelingsUseCase
+    
+    // AI Resources
+    @Binds
+    @Singleton
+    abstract fun bind_get_personalized_resources_use_case(impl: GetPersonalizedResourcesUseCaseImpl): GetPersonalizedResourcesUseCase
+    
+    @Binds
+    @Singleton
+    abstract fun bind_get_personalized_tips_use_case(impl: GetPersonalizedTipsUseCaseImpl): GetPersonalizedTipsUseCase
 } 

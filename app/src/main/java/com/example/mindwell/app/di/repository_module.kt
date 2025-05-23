@@ -77,4 +77,10 @@ abstract class RepositoryModule {
     abstract fun bind_feeling_repository(
         impl: FeelingRepositoryImpl
     ): FeelingRepository
+    
+    @Binds
+    @Singleton
+    abstract fun bind_ai_repository(
+        impl: AiRepositoryImpl
+    ): AiRepository
 } 
