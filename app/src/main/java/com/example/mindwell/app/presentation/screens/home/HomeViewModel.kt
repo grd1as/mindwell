@@ -5,6 +5,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavController
+import com.example.mindwell.app.common.navigation.AppDestinations
 import com.example.mindwell.app.data.model.ReportDTO
 import com.example.mindwell.app.data.network.ApiService
 import com.example.mindwell.app.domain.usecases.checkin.GetLastCheckinUseCase
@@ -29,6 +31,14 @@ class HomeViewModel @Inject constructor(
     private val getPendingForms: GetPendingFormsUseCase,
     private val apiService: ApiService
 ) : ViewModel() {
+    
+    // Eventos de navegação
+    sealed class NavigationEvent {
+        data class ToForm(val formId: Int) : NavigationEvent()
+        object ToForms : NavigationEvent()
+        object Handled : NavigationEvent()
+    }
+    
     // Estado da tela home
     data class HomeState(
         val isLoading: Boolean = false,
@@ -44,15 +54,26 @@ class HomeViewModel @Inject constructor(
         val feedbackSuccess: Boolean = false,
         val feedbackError: String? = null,
         val checkInSuccess: Boolean = false,
-        val checkInError: String? = null
+        val checkInError: String? = null,
+        val navigationEvent: NavigationEvent? = null
     )
     
     // Estado atual da tela
     var state by mutableStateOf(HomeState())
         private set
     
+    // NavController para navegação
+    private var navController: NavController? = null
+    
     init {
         loadData()
+    }
+    
+    /**
+     * Configura o NavController para navegação
+     */
+    fun setNavController(nav: NavController) {
+        this.navController = nav
     }
 
     /**
@@ -94,6 +115,13 @@ class HomeViewModel @Inject constructor(
                 )
             }
         }
+    }
+    
+    /**
+     * Tratar evento de navegação
+     */
+    fun handleNavigationEvent() {
+        state = state.copy(navigationEvent = NavigationEvent.Handled)
     }
     
     private fun loadCheckinData() {
@@ -262,12 +290,34 @@ class HomeViewModel @Inject constructor(
      * Inicia um questionário específico
      */
     fun startQuestionnaire(code: String) {
-        // Implementar navegação ou lógica para iniciar o questionário
-        viewModelScope.launch {
-            // Simulação de início de questionário
-            delay(500)
-            
-            // Aqui seria a navegação para o questionário específico
+        when (code) {
+            "SELF_ASSESS" -> {
+                // Navegar para o formulário de auto-avaliação (assumindo ID 1)
+                navController?.let {
+                    it.navigate(AppDestinations.formDetail(1))
+                } ?: run {
+                    // Se não temos NavController, emitimos um evento para navegação
+                    state = state.copy(navigationEvent = NavigationEvent.ToForm(1))
+                }
+            }
+            "CLIMATE" -> {
+                // Navegar para o formulário de clima organizacional (assumindo ID 2)
+                navController?.let {
+                    it.navigate(AppDestinations.formDetail(2))
+                } ?: run {
+                    // Se não temos NavController, emitimos um evento para navegação
+                    state = state.copy(navigationEvent = NavigationEvent.ToForm(2))
+                }
+            }
+            else -> {
+                // Navegar para a lista de formulários
+                navController?.let {
+                    it.navigate(AppDestinations.FORMS)
+                } ?: run {
+                    // Se não temos NavController, emitimos um evento para navegação
+                    state = state.copy(navigationEvent = NavigationEvent.ToForms)
+                }
+            }
         }
     }
     

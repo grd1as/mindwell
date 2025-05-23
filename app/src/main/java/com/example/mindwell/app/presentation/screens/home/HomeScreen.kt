@@ -1,5 +1,6 @@
 package com.example.mindwell.app.presentation.screens.home
 
+import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -24,6 +25,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.mindwell.app.common.navigation.AppDestinations
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,9 +38,37 @@ fun HomeScreen(
     var selectedEmoji by remember { mutableStateOf("") }
     var selectedFeeling by remember { mutableStateOf("") }
     var showFeelingDropdown by remember { mutableStateOf(false) }
+    var showSubmitSuccess by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
     
-    // Lista de sentimentos para o dropdown
-    val feelings = listOf("Muito bem", "Bem", "Normal", "Mal", "Muito mal", "Não sei dizer")
+    // Configurar o NavController no ViewModel
+    LaunchedEffect(nav) {
+        vm.setNavController(nav)
+    }
+    
+    // Observar eventos de navegação
+    state.navigationEvent?.let { event ->
+        when (event) {
+            is HomeViewModel.NavigationEvent.ToForm -> {
+                LaunchedEffect(event) {
+                    nav.navigate(AppDestinations.formDetail(event.formId))
+                    vm.handleNavigationEvent()
+                }
+            }
+            is HomeViewModel.NavigationEvent.ToForms -> {
+                LaunchedEffect(event) {
+                    nav.navigate(AppDestinations.FORMS)
+                    vm.handleNavigationEvent()
+                }
+            }
+            is HomeViewModel.NavigationEvent.Handled -> {
+                // Já tratado
+            }
+        }
+    }
+    
+    // Lista de sentimentos para o dropdown atualizada
+    val feelings = listOf("Motivado", "Cansado", "Preocupado", "Estressado", "Animado", "Satisfeito")
     
     // Mostrar o diálogo de feedback se necessário
     if (state.showFeedbackDialog) {
@@ -78,46 +109,47 @@ fun HomeScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .padding(16.dp)
+                    .padding(horizontal = 16.dp)
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Header with welcome message
+                // Header simplificado - sem nome do usuário
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp, bottom = 4.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column {
-                        Text(
-                            text = "Bem-vindo(a)",
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = state.userName,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.Gray
-                        )
-                    }
+                    Text(
+                        text = "MindWell",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold
+                    )
                     
-                    // Profile avatar or settings
+                    // Ícone de configurações (sem dados do perfil)
                     IconButton(
                         onClick = { nav.navigate(AppDestinations.SETTINGS) },
                         modifier = Modifier
-                            .size(48.dp)
+                            .size(44.dp)
                             .clip(CircleShape)
                             .background(Color.LightGray)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = "Perfil",
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Configurações",
                             tint = Color.White
                         )
                     }
                 }
                 
-                Spacer(modifier = Modifier.height(16.dp))
+                // Texto introdutório
+                Text(
+                    text = "Vamos ajudar a cuidar da sua saúde mental hoje.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
                 
                 // First question - Emoji selection
                 Text(
@@ -126,7 +158,7 @@ fun HomeScreen(
                     fontWeight = FontWeight.Bold
                 )
                 
-                // First row of emojis
+                // Emojis em uma única linha
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -137,50 +169,45 @@ fun HomeScreen(
                         emoji = "😢",
                         label = "Triste",
                         isSelected = selectedEmoji == "😢",
-                        onClick = { selectedEmoji = "😢" }
+                        onClick = { selectedEmoji = "😢" },
+                        modifier = Modifier.size(48.dp)
                     )
                     EmojiOption(
                         emoji = "😊",
                         label = "Alegre",
                         isSelected = selectedEmoji == "😊",
-                        onClick = { selectedEmoji = "😊" }
+                        onClick = { selectedEmoji = "😊" },
+                        modifier = Modifier.size(48.dp)
                     )
                     EmojiOption(
                         emoji = "😴",
                         label = "Cansado",
                         isSelected = selectedEmoji == "😴",
-                        onClick = { selectedEmoji = "😴" }
+                        onClick = { selectedEmoji = "😴" },
+                        modifier = Modifier.size(48.dp)
                     )
-                }
-                
-                // Second row of emojis
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
                     EmojiOption(
                         emoji = "😰",
                         label = "Ansioso",
                         isSelected = selectedEmoji == "😰",
-                        onClick = { selectedEmoji = "😰" }
+                        onClick = { selectedEmoji = "😰" },
+                        modifier = Modifier.size(48.dp)
                     )
                     EmojiOption(
                         emoji = "😨",
                         label = "Medo",
                         isSelected = selectedEmoji == "😨",
-                        onClick = { selectedEmoji = "😨" }
+                        onClick = { selectedEmoji = "😨" },
+                        modifier = Modifier.size(48.dp)
                     )
                     EmojiOption(
                         emoji = "😡",
                         label = "Raiva",
                         isSelected = selectedEmoji == "😡",
-                        onClick = { selectedEmoji = "😡" }
+                        onClick = { selectedEmoji = "😡" },
+                        modifier = Modifier.size(48.dp)
                     )
                 }
-                
-                Spacer(modifier = Modifier.height(16.dp))
                 
                 // Second question - Feeling dropdown
                 Text(
@@ -236,18 +263,42 @@ fun HomeScreen(
                     }
                 }
                 
-                // Submit button
-                Button(
-                    onClick = { vm.submitCheckin(selectedEmoji, selectedFeeling) },
+                // Submit button com feedback visual
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    enabled = selectedEmoji.isNotEmpty() && selectedFeeling.isNotEmpty()
+                        .padding(vertical = 8.dp)
                 ) {
-                    Text("Enviar Check-in")
+                    Button(
+                        onClick = { 
+                            vm.submitCheckin(selectedEmoji, selectedFeeling)
+                            showSubmitSuccess = true
+                            coroutineScope.launch {
+                                delay(2000)
+                                showSubmitSuccess = false
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = selectedEmoji.isNotEmpty() && selectedFeeling.isNotEmpty()
+                    ) {
+                        if (showSubmitSuccess) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = "Sucesso",
+                                    tint = Color.White
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Enviado com sucesso!")
+                            }
+                        } else {
+                            Text("Enviar Check-in")
+                        }
+                    }
                 }
-                
-                Spacer(modifier = Modifier.height(8.dp))
                 
                 // Streak section
                 Card(
@@ -307,7 +358,7 @@ fun HomeScreen(
                     }
                 }
                 
-                // Tips section
+                // Tips section - Restaurada
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
@@ -330,22 +381,6 @@ fun HomeScreen(
                     }
                 }
                 
-                // Feedback channel
-                Button(
-                    onClick = { vm.showFeedbackDialog() },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.White,
-                        contentColor = Color(0xFFFF9800)
-                    ),
-                    border = ButtonDefaults.outlinedButtonBorder
-                ) {
-                    Text(
-                        text = "Canal de escuta/feedback",
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-                }
-                
                 Spacer(modifier = Modifier.height(80.dp))
             }
         }
@@ -357,19 +392,19 @@ fun EmojiOption(
     emoji: String,
     label: String,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.padding(horizontal = 4.dp)
+        modifier = Modifier.padding(horizontal = 2.dp)
     ) {
         Box(
-            modifier = Modifier
-                .size(60.dp)
+            modifier = modifier
                 .clip(CircleShape)
                 .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
                 .border(
-                    width = 2.dp,
+                    width = 1.dp,
                     color = if (isSelected) MaterialTheme.colorScheme.primary else Color.LightGray,
                     shape = CircleShape
                 )
@@ -378,16 +413,15 @@ fun EmojiOption(
         ) {
             Text(
                 text = emoji,
-                fontSize = 24.sp
+                fontSize = 18.sp
             )
         }
-        
-        Spacer(modifier = Modifier.height(4.dp))
         
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            fontSize = 10.sp
         )
     }
 }
