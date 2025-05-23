@@ -183,7 +183,6 @@ fun LoginScreen(
                             horizontalArrangement = Arrangement.Start,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            // Logo sem círculo
                             AsyncImage(
                                 model = ImageRequest.Builder(LocalContext.current)
                                     .data("file:///android_asset/mindwell-logo.svg")
@@ -199,7 +198,7 @@ fun LoginScreen(
                             // Logo outline como texto
                             AsyncImage(
                                 model = ImageRequest.Builder(LocalContext.current)
-                                    .data("file:///android_asset/mindwell-logo(outline).svg")
+                                    .data("file:///android_asset/mindwell-typo.svg")
                                     .decoderFactory(SvgDecoder.Factory())
                                     .build(),
                                 contentDescription = "MindWell Logo Text",
