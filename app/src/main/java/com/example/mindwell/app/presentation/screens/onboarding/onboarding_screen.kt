@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -164,10 +165,10 @@ private fun OnboardingContent(
                 .build(),
             contentDescription = null,
             modifier = Modifier
-                .size(300.dp)
+                .wrapContentSize() // Let it size itself
                 .align(Alignment.TopEnd)
                 .offset(x = 100.dp, y = (-50).dp),
-            contentScale = ContentScale.Fit,
+            contentScale = ContentScale.Fit, // This is fine with wrapContentSize
             alpha = 0.05f
         )
 
