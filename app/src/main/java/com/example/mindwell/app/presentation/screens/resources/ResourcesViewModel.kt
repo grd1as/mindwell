@@ -12,19 +12,17 @@ import com.example.mindwell.app.data.services.PersonalizedContentResponse
 import com.example.mindwell.app.data.services.PersonalizedTip
 import com.example.mindwell.app.domain.entities.Resource
 import com.example.mindwell.app.domain.entities.ResourceCategory
-import com.example.mindwell.app.domain.usecases.resource.GetResourcesUseCase
-import com.example.mindwell.app.domain.usecases.resource.GetResourceCategoriesUseCase
 import com.example.mindwell.app.domain.usecases.resource.GetPersonalizedResourcesUseCase
 import com.example.mindwell.app.domain.usecases.resource.GetPersonalizedTipsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * ViewModel para a tela de recursos, agora funcionando apenas com Gemini AI
+ */
 @HiltViewModel
 class ResourcesViewModel @Inject constructor(
-    private val getResourcesUseCase: GetResourcesUseCase,
-    private val getResourceCategoriesUseCase: GetResourceCategoriesUseCase,
     private val getPersonalizedResourcesUseCase: GetPersonalizedResourcesUseCase,
     private val getPersonalizedTipsUseCase: GetPersonalizedTipsUseCase
 ) : ViewModel() {
@@ -36,8 +34,8 @@ class ResourcesViewModel @Inject constructor(
     private var navController: NavController? = null
     
     init {
-        loadResources()
         loadPersonalizedContent()
+        loadMockCategories()
     }
     
     fun setNavController(navController: NavController) {
@@ -45,13 +43,14 @@ class ResourcesViewModel @Inject constructor(
     }
     
     fun retry() {
-        loadResources()
         loadPersonalizedContent()
     }
     
     private fun loadPersonalizedContent() {
         viewModelScope.launch {
             Log.d(TAG, "🤖 Carregando conteúdo personalizado do Gemini")
+            
+            state = state.copy(isPersonalizedLoading = true)
             
             try {
                 // Carregar recursos personalizados
@@ -67,125 +66,127 @@ class ResourcesViewModel @Inject constructor(
                                 state = state.copy(
                                     personalizedContent = personalizedContent,
                                     personalizedTips = tips,
-                                    isPersonalizedLoading = false
+                                    isPersonalizedLoading = false,
+                                    isLoading = false
                                 )
                             }
                             tipsResult.onFailure { exception ->
                                 Log.e(TAG, "❌ Erro ao carregar dicas: ${exception.message}")
-                                state = state.copy(isPersonalizedLoading = false)
+                                state = state.copy(
+                                    isPersonalizedLoading = false,
+                                    isLoading = false,
+                                    error = "Erro ao carregar dicas personalizadas"
+                                )
                             }
                         }
                     }
                     result.onFailure { exception ->
                         Log.e(TAG, "❌ Erro ao carregar recursos personalizados: ${exception.message}")
-                        state = state.copy(isPersonalizedLoading = false)
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "❌ Erro geral ao carregar conteúdo personalizado: ${e.message}")
-                state = state.copy(isPersonalizedLoading = false)
-            }
-        }
-    }
-    
-    private fun loadResources() {
-        viewModelScope.launch {
-            state = state.copy(isLoading = true, error = null)
-            
-            try {
-                Log.d(TAG, "🌐 Tentando carregar recursos e categorias da API")
-                
-                // Carrega categorias primeiro
-                getResourceCategoriesUseCase().collect { categoriesResult ->
-                    categoriesResult.onSuccess { categories ->
-                        Log.d(TAG, "✅ Sucesso ao carregar ${categories.size} categorias da API")
-                        
-                        // Carrega recursos
-                        getResourcesUseCase().collect { resourcesResult ->
-                            resourcesResult.onSuccess { resources ->
-                                Log.d(TAG, "✅ Sucesso ao carregar ${resources.size} recursos da API")
-                                state = state.copy(
-                                    isLoading = false,
-                                    categories = categories,
-                                    featuredResources = resources,
-                                    selectedCategoryId = "all"
-                                )
-                            }
-                            resourcesResult.onFailure { exception ->
-                                Log.e(TAG, "❌ ERRO ao carregar recursos: ${exception.message}", exception)
-                                state = state.copy(
-                                    isLoading = false,
-                                    error = "Erro ao carregar recursos: ${exception.message}"
-                                )
-                            }
-                        }
-                    }
-                    categoriesResult.onFailure { exception ->
-                        Log.e(TAG, "❌ ERRO ao carregar categorias: ${exception.message}", exception)
                         state = state.copy(
+                            isPersonalizedLoading = false,
                             isLoading = false,
-                            error = "Erro ao carregar categorias: ${exception.message}"
+                            error = "Erro ao carregar recursos personalizados"
                         )
                     }
                 }
-                
             } catch (e: Exception) {
-                Log.e(TAG, "❌ ERRO ao carregar recursos: ${e.message}", e)
+                Log.e(TAG, "❌ ERRO geral: ${e.message}", e)
                 state = state.copy(
+                    isPersonalizedLoading = false,
                     isLoading = false,
-                    error = "Não foi possível carregar os recursos. Verifique sua conexão e tente novamente."
+                    error = "Erro inesperado ao carregar conteúdo"
                 )
             }
         }
     }
     
+    private fun loadMockCategories() {
+        // Carregar categorias mock que se alinham com as do Gemini
+        val mockCategories = listOf(
+            ResourceCategory(
+                id = "all",
+                title = "Todos",
+                description = "Todos os tipos de recursos"
+            ),
+            ResourceCategory(
+                id = "breathing",
+                title = "Respiração",
+                description = "Exercícios de respiração e relaxamento"
+            ),
+            ResourceCategory(
+                id = "meditation",
+                title = "Meditação",
+                description = "Práticas de mindfulness e meditação"
+            ),
+            ResourceCategory(
+                id = "exercise",
+                title = "Exercício",
+                description = "Atividades físicas para bem-estar"
+            ),
+            ResourceCategory(
+                id = "sleep",
+                title = "Sono",
+                description = "Técnicas para melhorar a qualidade do sono"
+            ),
+            ResourceCategory(
+                id = "journaling",
+                title = "Diário",
+                description = "Práticas de escrita reflexiva"
+            ),
+            ResourceCategory(
+                id = "mindfulness",
+                title = "Mindfulness",
+                description = "Atenção plena e consciência do momento presente"
+            )
+        )
+        
+        state = state.copy(
+            categories = mockCategories,
+            selectedCategoryId = "all"
+        )
+    }
+    
     fun selectCategory(categoryId: String) {
         Log.d(TAG, "Categoria selecionada: $categoryId")
         
-        viewModelScope.launch {
-            try {
-                val category = if (categoryId == "all") null else categoryId
-                
-                getResourcesUseCase(category).collect { result ->
-                    result.onSuccess { resources ->
-                        Log.d(TAG, "✅ Recursos filtrados por categoria: ${resources.size}")
-                        state = state.copy(
-                            featuredResources = resources,
-                            selectedCategoryId = categoryId
-                        )
-                    }
-                    result.onFailure { exception ->
-                        Log.e(TAG, "❌ ERRO ao filtrar recursos: ${exception.message}", exception)
-                        state = state.copy(
-                            error = "Erro ao filtrar recursos: ${exception.message}"
-                        )
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "❌ ERRO ao filtrar recursos: ${e.message}", e)
+        state = state.copy(
+            selectedCategoryId = categoryId
+        )
+        
+        // Filtrar recursos personalizados por categoria (se houver)
+        state.personalizedContent?.let { content ->
+            val filteredResources = if (categoryId == "all") {
+                content.resources
+            } else {
+                content.resources.filter { it.category == categoryId }
             }
+            
+            Log.d(TAG, "✅ Recursos filtrados por categoria '$categoryId': ${filteredResources.size}")
         }
     }
     
     fun selectResource(resourceId: String) {
         Log.d(TAG, "Recurso selecionado: $resourceId")
-        navController?.navigate(AppDestinations.resourceDetail(resourceId))
+        // Como não temos detalhes específicos, vamos manter a navegação simples
+        // ou implementar uma tela de detalhes mock
     }
     
     fun refreshPersonalizedContent() {
-        state = state.copy(isPersonalizedLoading = true)
         loadPersonalizedContent()
     }
 }
 
+/**
+ * Estado da tela de recursos simplificado para usar apenas Gemini
+ */
 data class ResourcesState(
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
+    val isPersonalizedLoading: Boolean = false,
     val error: String? = null,
     val categories: List<ResourceCategory> = emptyList(),
-    val featuredResources: List<Resource> = emptyList(),
     val selectedCategoryId: String? = null,
-    val selectedResourceId: String? = null,
     val personalizedContent: PersonalizedContentResponse? = null,
     val personalizedTips: List<PersonalizedTip> = emptyList(),
-    val isPersonalizedLoading: Boolean = true
+    // Manter compatibilidade com a UI existente
+    val featuredResources: List<Resource> = emptyList()
 ) 

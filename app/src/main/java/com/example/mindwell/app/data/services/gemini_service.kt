@@ -26,9 +26,25 @@ class GeminiService @Inject constructor(
     private val api_key = context.getString(R.string.gemini_api_key)
     
     private val generative_model = GenerativeModel(
-        modelName = "gemini-1.5-flash",
+        modelName = "gemini-1.5-flash-latest",
         apiKey = api_key
     )
+    
+    /**
+     * Valida se a API key está configurada corretamente
+     */
+    private fun validateApiKey(): Boolean {
+        val isValid = api_key != "YOUR_GEMINI_API_KEY_HERE" && 
+                     api_key.isNotBlank() && 
+                     api_key.startsWith("AIza") && 
+                     api_key.length > 30
+        if (!isValid) {
+            Log.w(TAG, "⚠️ API key do Gemini não configurada corretamente: ${api_key.take(10)}...")
+        } else {
+            Log.d(TAG, "✅ API key do Gemini válida: ${api_key.take(10)}...")
+        }
+        return isValid
+    }
     
     /**
      * Gera conteúdo personalizado de recursos baseado no perfil do usuário
