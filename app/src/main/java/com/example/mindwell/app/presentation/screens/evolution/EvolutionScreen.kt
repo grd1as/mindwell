@@ -183,48 +183,44 @@ private fun EvolutionContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(20.dp)
             .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Month selector
-        CompactMonthSelector(
+        ModernMonthSelector(
             monthLabel = monthLabel,
             onPreviousMonth = onPreviousMonth,
             onNextMonth = onNextMonth
         )
         
         // Weekly mood chart with overall trend included
-<<<<<<< HEAD
-        CompactWeeklyMoodChart(
-=======
         ModernWeeklyMoodChart(
->>>>>>> 8f2a110 ((wip) analysis layout)
             weeklyMood = monthlyTrend.weeklyMood,
             overallTrend = monthlyTrend.overallTrend,
             viewModel = viewModel
         )
         
         // Daily summary chart with peak/low days combined
-        CompactActivityCard(
+        CombinedActivityCard(
             dailySummary = monthlyTrend.dailySummary,
             viewModel = viewModel
         )
         
         // Espaço final
-        Spacer(modifier = Modifier.height(60.dp))
+        Spacer(modifier = Modifier.height(80.dp))
     }
 }
 
 @Composable
-private fun CompactMonthSelector(
+private fun ModernMonthSelector(
     monthLabel: String,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         ),
@@ -233,107 +229,42 @@ private fun CompactMonthSelector(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(24.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(
+            FilledIconButton(
                 onClick = onPreviousMonth,
-                modifier = Modifier.size(32.dp)
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
             ) {
                 Icon(
                     Icons.Default.ArrowBack, 
-                    contentDescription = "Mês anterior",
-                    modifier = Modifier.size(18.dp)
+                    contentDescription = "Mês anterior"
                 )
             }
             
             Text(
                 text = monthLabel,
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface
             )
             
-            IconButton(
+            FilledIconButton(
                 onClick = onNextMonth,
-                modifier = Modifier.size(32.dp)
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
             ) {
                 Icon(
                     Icons.Default.ArrowForward, 
-                    contentDescription = "Próximo mês",
-                    modifier = Modifier.size(18.dp)
+                    contentDescription = "Próximo mês"
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun CompactOverallTrendCard(
-    trend: String,
-    tip: String
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                brush = Brush.linearGradient(
-                    colors = listOf(
-<<<<<<< HEAD
-                        Color(0xFF1F2937),
-                        Color(0xFF374151)
-                    )
-                ),
-                shape = RoundedCornerShape(12.dp)
-            )
-    ) {
-        Column(
-            modifier = Modifier.padding(12.dp)
-        ) {
-            Text(
-                text = trend,
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.Medium,
-                color = Color.White.copy(alpha = 0.95f),
-                lineHeight = 16.sp,
-                fontSize = 12.sp
-            )
-            
-            Spacer(modifier = Modifier.height(4.dp))
-=======
-                        Color(0xFF6366F1),
-                        Color(0xFF8B5CF6)
-                    )
-                ),
-                shape = RoundedCornerShape(16.dp)
-            )
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(
-                text = trend,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium,
-                color = Color.White.copy(alpha = 0.95f),
-                lineHeight = 20.sp
-            )
-            
-            Spacer(modifier = Modifier.height(6.dp))
->>>>>>> 8f2a110 ((wip) analysis layout)
-            
-            Text(
-                text = tip,
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.White.copy(alpha = 0.8f),
-<<<<<<< HEAD
-                lineHeight = 14.sp,
-                fontSize = 11.sp
-=======
-                lineHeight = 18.sp
->>>>>>> 8f2a110 ((wip) analysis layout)
-            )
         }
     }
 }
@@ -343,104 +274,65 @@ private fun ModernOverallTrendCard(
     trend: String,
     tip: String
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.Transparent
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            Color(0xFF1F2937),
-                            Color(0xFF374151)
-                        )
-                    ),
-                    shape = RoundedCornerShape(24.dp)
-                )
-        ) {
-            Column(
-                modifier = Modifier.padding(24.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.2f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Star,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                    
-                    Spacer(modifier = Modifier.width(16.dp))
-                    
-                    Text(
-                        text = "Tendência Geral",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.White
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        Color(0xFF1F2937),
+                        Color(0xFF374151)
                     )
-                }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                Text(
-                    text = trend,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.White.copy(alpha = 0.95f),
-                    lineHeight = 22.sp
-                )
-                
-                Spacer(modifier = Modifier.height(12.dp))
-                
-                Text(
-                    text = tip,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = 0.8f),
-                    lineHeight = 20.sp
-                )
-            }
+                ),
+                shape = RoundedCornerShape(20.dp)
+            )
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            Text(
+                text = trend,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium,
+                color = Color.White.copy(alpha = 0.95f),
+                lineHeight = 22.sp
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = tip,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White.copy(alpha = 0.8f),
+                lineHeight = 20.sp
+            )
         }
     }
 }
 
 @Composable
-private fun CompactWeeklyMoodChart(
+private fun ModernWeeklyMoodChart(
     weeklyMood: List<WeeklyMoodDTO>,
     overallTrend: String,
     viewModel: EvolutionViewModel
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
-            modifier = Modifier.padding(12.dp)
+            modifier = Modifier.padding(24.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
                     modifier = Modifier
-                        .size(24.dp)
+                        .size(40.dp)
                         .clip(CircleShape)
                         .background(
                             brush = Brush.linearGradient(
@@ -456,38 +348,39 @@ private fun CompactWeeklyMoodChart(
                         imageVector = Icons.Default.DateRange,
                         contentDescription = null,
                         tint = Color.White,
-                        modifier = Modifier.size(14.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                 }
                 
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(16.dp))
                 
-                Text(
-                    text = "Timeline Semanal",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Column {
+                    Text(
+                        text = "Timeline Semanal",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "Suas emoções ao longo das semanas",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
             
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(24.dp))
             
             if (weeklyMood.isEmpty()) {
-                EmptyStateMessage("Nenhum dado disponível")
+                EmptyStateMessage("Nenhum dado semanal disponível ainda")
             } else {
-                CompactTimelineView(weeklyMood, viewModel)
+                ModernTimelineView(weeklyMood, viewModel)
             }
             
-<<<<<<< HEAD
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            // Overall trend card (compact)
-=======
             Spacer(modifier = Modifier.height(16.dp))
             
-            // Overall trend card (compact, no title)
->>>>>>> 8f2a110 ((wip) analysis layout)
-            CompactOverallTrendCard(
+            // Overall trend card (modern)
+            ModernOverallTrendCard(
                 trend = overallTrend,
                 tip = viewModel.getTrendTip()
             )
@@ -496,7 +389,7 @@ private fun CompactWeeklyMoodChart(
 }
 
 @Composable
-private fun CompactTimelineView(
+private fun ModernTimelineView(
     weeklyMood: List<WeeklyMoodDTO>,
     viewModel: EvolutionViewModel
 ) {
@@ -528,7 +421,7 @@ private fun CompactTimelineView(
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             weeklyMood.forEachIndexed { index, week ->
-                HorizontalTimelineItem(
+                ModernTimelineItem(
                     weekNumber = index + 1,
                     weekData = week,
                     viewModel = viewModel,
@@ -540,7 +433,7 @@ private fun CompactTimelineView(
 }
 
 @Composable
-private fun HorizontalTimelineItem(
+private fun ModernTimelineItem(
     weekNumber: Int,
     weekData: WeeklyMoodDTO,
     viewModel: EvolutionViewModel,
@@ -635,86 +528,20 @@ private fun HorizontalTimelineItem(
 }
 
 @Composable
-private fun CompactTimelineItem(
-    weekNumber: Int,
-    weekData: WeeklyMoodDTO,
-    viewModel: EvolutionViewModel,
-    modifier: Modifier
-) {
-    Column(
-        modifier = modifier.padding(horizontal = 2.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // Week indicator circle
-        Box(
-            modifier = Modifier
-                .size(32.dp)
-                .clip(CircleShape)
-                .background(Color(0xFF10B981)),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "S$weekNumber",
-                style = MaterialTheme.typography.labelSmall,
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 10.sp
-            )
-        }
-        
-        Spacer(modifier = Modifier.height(8.dp))
-        
-        // Content card
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(8.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // Emoji
-                Text(
-                    text = viewModel.getEmojiFromOptionId(weekData.predominantEmoji.optionId),
-                    fontSize = 16.sp
-                )
-                
-                Spacer(modifier = Modifier.height(4.dp))
-                
-                // Emoji label
-                Text(
-                    text = weekData.predominantEmoji.label,
-                    style = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    textAlign = TextAlign.Center,
-                    maxLines = 1,
-                    fontSize = 10.sp
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun CompactActivityCard(
+private fun CombinedActivityCard(
     dailySummary: com.example.mindwell.app.data.model.DailySummaryDTO,
     viewModel: EvolutionViewModel
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
-            modifier = Modifier.padding(12.dp)
+            modifier = Modifier.padding(20.dp)
         ) {
             // Header
             Row(
@@ -722,7 +549,7 @@ private fun CompactActivityCard(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(24.dp)
+                        .size(36.dp)
                         .clip(CircleShape)
                         .background(
                             brush = Brush.linearGradient(
@@ -738,21 +565,28 @@ private fun CompactActivityCard(
                         imageVector = Icons.Default.List,
                         contentDescription = null,
                         tint = Color.White,
-                        modifier = Modifier.size(14.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                 }
                 
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(12.dp))
                 
-                Text(
-                    text = "Atividade Semanal",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Column {
+                    Text(
+                        text = "Atividade Semanal",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "Check-ins por dia da semana",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
             
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             
             // Compact horizontal mini chart
             val maxTotal = dailySummary.weekdayTotals.maxOfOrNull { it.total } ?: 1
@@ -763,7 +597,7 @@ private fun CompactActivityCard(
                 verticalAlignment = Alignment.Bottom
             ) {
                 dailySummary.weekdayTotals.forEach { weekdayTotal ->
-                    MiniDayColumn(
+                    ModernDayColumn(
                         weekdayTotal = weekdayTotal,
                         maxTotal = maxTotal,
                         viewModel = viewModel,
@@ -772,64 +606,72 @@ private fun CompactActivityCard(
                 }
             }
             
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             
-            // Peak and Low Days Info (compact)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
+            // Peak and Low Days Info
+            Column {
                 // Peak days
                 if (dailySummary.peakWeekdays.isNotEmpty()) {
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.weight(1f)
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
                             imageVector = Icons.Default.KeyboardArrowUp,
                             contentDescription = null,
                             tint = Color(0xFF10B981),
-                            modifier = Modifier.size(12.dp)
+                            modifier = Modifier.size(16.dp)
                         )
                         
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
                         
                         Text(
-                            text = dailySummary.peakWeekdays.joinToString(",") { 
-                                viewModel.getWeekdayName(it).take(3)
+                            text = "Mais ativos: ",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        
+                        Text(
+                            text = dailySummary.peakWeekdays.joinToString(", ") { 
+                                viewModel.getWeekdayName(it) 
                             },
                             style = MaterialTheme.typography.bodySmall,
                             color = Color(0xFF10B981),
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 11.sp
+                            fontWeight = FontWeight.Medium
                         )
+                    }
+                    
+                    if (dailySummary.lowWeekdays.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
                 
                 // Low days
                 if (dailySummary.lowWeekdays.isNotEmpty()) {
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.weight(1f),
-                        horizontalArrangement = Arrangement.End
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
                             imageVector = Icons.Default.KeyboardArrowDown,
                             contentDescription = null,
                             tint = Color(0xFFEF4444),
-                            modifier = Modifier.size(12.dp)
+                            modifier = Modifier.size(16.dp)
                         )
                         
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
                         
                         Text(
-                            text = dailySummary.lowWeekdays.joinToString(",") { 
-                                viewModel.getWeekdayName(it).take(3)
+                            text = "Menos ativos: ",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        
+                        Text(
+                            text = dailySummary.lowWeekdays.joinToString(", ") { 
+                                viewModel.getWeekdayName(it) 
                             },
                             style = MaterialTheme.typography.bodySmall,
                             color = Color(0xFFEF4444),
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 11.sp
+                            fontWeight = FontWeight.Medium
                         )
                     }
                 }
@@ -839,14 +681,14 @@ private fun CompactActivityCard(
 }
 
 @Composable
-private fun MiniDayColumn(
+private fun ModernDayColumn(
     weekdayTotal: WeekdayTotalDTO,
     maxTotal: Int,
     viewModel: EvolutionViewModel,
     modifier: Modifier
 ) {
     val heightPercentage = if (maxTotal > 0) weekdayTotal.total.toFloat() / maxTotal else 0f
-    val barHeight = (heightPercentage * 24).dp.coerceAtLeast(3.dp)
+    val barHeight = (heightPercentage * 40).dp.coerceAtLeast(4.dp)
     
     Column(
         modifier = modifier,
@@ -858,18 +700,17 @@ private fun MiniDayColumn(
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.SemiBold,
             color = if (weekdayTotal.total > 0) MaterialTheme.colorScheme.primary else Color.Transparent,
-            modifier = Modifier.height(12.dp),
-            fontSize = 9.sp
+            modifier = Modifier.height(16.dp)
         )
         
-        Spacer(modifier = Modifier.height(2.dp))
+        Spacer(modifier = Modifier.height(4.dp))
         
         // Bar
         Box(
             modifier = Modifier
-                .width(16.dp)
+                .width(20.dp)
                 .height(barHeight)
-                .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
+                .clip(RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp))
                 .background(
                     if (weekdayTotal.total > 0) {
                         Brush.verticalGradient(
@@ -889,15 +730,14 @@ private fun MiniDayColumn(
                 )
         )
         
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(6.dp))
         
         // Day label
         Text(
-            text = viewModel.getWeekdayName(weekdayTotal.weekday).take(1),
+            text = viewModel.getWeekdayName(weekdayTotal.weekday).take(3),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontWeight = FontWeight.Medium,
-            fontSize = 9.sp
+            fontWeight = FontWeight.Medium
         )
     }
 }
