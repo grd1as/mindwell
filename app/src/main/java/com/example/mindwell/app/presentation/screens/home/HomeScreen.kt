@@ -568,7 +568,8 @@ fun HomeScreen(
                                     title = form.name,
                                     description = form.description,
                                     onClick = { vm.startQuestionnaire(form.code, form.id) },
-                                    viewModel = vm
+                                    viewModel = vm,
+                                    lastAnsweredAt = form.lastAnsweredAt
                                 )
                                 
                                 Spacer(modifier = Modifier.height(8.dp))
@@ -644,7 +645,8 @@ fun QuestionnaireItem(
     title: String,
     description: String,
     onClick: () -> Unit,
-    viewModel: HomeViewModel
+    viewModel: HomeViewModel,
+    lastAnsweredAt: java.time.ZonedDateTime? = null
 ) {
     val tooltipId = "questionnaire_${title.lowercase().replace(" ", "_")}"
     
@@ -676,6 +678,26 @@ fun QuestionnaireItem(
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodySmall
+                )
+                
+                // Mostrar status baseado em lastAnsweredAt
+                Text(
+                    text = if (lastAnsweredAt != null) {
+                        try {
+                            "Última resposta: ${lastAnsweredAt.toLocalDate()}"
+                        } catch (e: Exception) {
+                            "Respondido anteriormente"
+                        }
+                    } else {
+                        "Ainda não realizado"
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (lastAnsweredAt != null) {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    } else {
+                        MaterialTheme.colorScheme.primary
+                    },
+                    fontWeight = if (lastAnsweredAt == null) FontWeight.Medium else FontWeight.Normal
                 )
             }
             

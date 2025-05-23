@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -154,6 +155,28 @@ fun FormItem(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
+                )
+                
+                Spacer(modifier = Modifier.height(4.dp))
+                
+                // Status de resposta
+                Text(
+                    text = if (form.lastAnsweredAt != null) {
+                        try {
+                            "Última resposta: ${form.lastAnsweredAt.toLocalDate()}"
+                        } catch (e: Exception) {
+                            "Respondido anteriormente"
+                        }
+                    } else {
+                        "Ainda não realizado"
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (form.lastAnsweredAt != null) {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    } else {
+                        MaterialTheme.colorScheme.primary
+                    },
+                    fontWeight = if (form.lastAnsweredAt == null) FontWeight.Medium else FontWeight.Normal
                 )
             }
             
