@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -125,8 +126,8 @@ fun HomeScreen(
         }
     }
     
-    // Lista de sentimentos para o dropdown atualizada
-    val feelings = listOf("Motivado", "Cansado", "Preocupado", "Estressado", "Animado", "Satisfeito")
+    // Obter lista de sentimentos do ViewModel
+    val feelings = vm.getFeelingsList().map { it.label }
     
     // Mostrar o bottom sheet de feedback se necessário
     if (state.showFeedbackDialog) {
@@ -992,7 +993,7 @@ fun CustomTipButton(
                     fontWeight = FontWeight.Bold
                 ),
                 maxLines = 2,
-                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis
             )
             
             Row(

@@ -40,21 +40,26 @@ object CheckinMapper {
     fun mapToDomain(dto: CheckinDTO): Checkin {
         val timestamp = ZonedDateTime.parse(dto.timestamp)
         
-        // Criar uma emoção mock apenas para satisfazer o construtor
-        // Idealmente, esta informação deveria vir das respostas ou de outro mapeamento
-        val mock_emotion = Emotion(
-            id = 1,
-            name = "Normal",
-            emoji = "😐",
-            value = 2
-        )
+        // Extrair emoção da primeira resposta do check-in (assumindo que seja a pergunta de humor)
+        val emotionAnswer = dto.answers.firstOrNull()
+        val emotionValue = emotionAnswer?.value?.toIntOrNull() ?: 3 // Valor padrão: normal
+        
+        // Mapear valor numérico para emoção
+        val emotion = when (emotionValue) {
+            1 -> Emotion(id = 1, name = "Muito mal", emoji = "😭", value = 1)
+            2 -> Emotion(id = 2, name = "Mal", emoji = "😢", value = 2)
+            3 -> Emotion(id = 3, name = "Normal", emoji = "😐", value = 3)
+            4 -> Emotion(id = 4, name = "Bem", emoji = "🙂", value = 4)
+            5 -> Emotion(id = 5, name = "Muito bem", emoji = "😄", value = 5)
+            else -> Emotion(id = 3, name = "Normal", emoji = "😐", value = 3)
+        }
         
         return Checkin(
             id = dto.checkin_id.toLong(),
             date = timestamp.format(date_display_formatter),
-            emotion = mock_emotion,
+            emotion = emotion,
             streak = dto.streak,
-            note = null // Não temos esta informação no DTO
+            note = null // Poderia extrair de uma resposta específica se necessário
         )
     }
     

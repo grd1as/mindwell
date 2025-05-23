@@ -17,7 +17,7 @@ class OnboardingRepositoryImpl @Inject constructor() : OnboardingRepository {
     // Estado atual do onboarding (inicialmente não concluído)
     private val onboardingState = MutableStateFlow(OnboardingState(isCompleted = false))
     
-    // Lista de páginas do onboarding
+    // Lista estática de páginas do onboarding (dados do aplicativo, não da API)
     private val onboardingPages = listOf(
         OnboardingPage(
             id = 1,

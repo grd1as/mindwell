@@ -23,6 +23,7 @@ class DatabaseInitializer @Inject constructor(
     }
     
     private suspend fun insert_default_emotions() {
+        // Emoções padrão para inicialização do banco local (não são dados da API)
         val default_emotions = listOf(
             EmotionEntity(id = 1, name = "Muito mal", emoji = "😭", value = 1),
             EmotionEntity(id = 2, name = "Mal", emoji = "😢", value = 2),

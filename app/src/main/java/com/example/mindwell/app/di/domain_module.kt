@@ -8,6 +8,8 @@ import com.example.mindwell.app.domain.usecases.preference.*
 import com.example.mindwell.app.domain.usecases.reminder.*
 import com.example.mindwell.app.domain.usecases.report.*
 import com.example.mindwell.app.domain.usecases.summary.*
+import com.example.mindwell.app.domain.usecases.resource.*
+import com.example.mindwell.app.domain.usecases.feeling.*
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -101,4 +103,22 @@ abstract class DomainModule {
     @Binds
     @Singleton
     abstract fun bind_submit_report_use_case(impl: SubmitReportUseCaseImpl): SubmitReportUseCase
+    
+    // Resource
+    @Binds
+    @Singleton
+    abstract fun bind_get_resources_use_case(impl: GetResourcesUseCaseImpl): GetResourcesUseCase
+    
+    @Binds
+    @Singleton
+    abstract fun bind_get_resource_detail_use_case(impl: GetResourceDetailUseCaseImpl): GetResourceDetailUseCase
+    
+    @Binds
+    @Singleton
+    abstract fun bind_get_resource_categories_use_case(impl: GetResourceCategoriesUseCaseImpl): GetResourceCategoriesUseCase
+    
+    // Feeling
+    @Binds
+    @Singleton
+    abstract fun bind_get_feelings_use_case(impl: GetFeelingsUseCaseImpl): GetFeelingsUseCase
 } 

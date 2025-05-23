@@ -1,5 +1,6 @@
 package com.example.mindwell.app.presentation.screens.settings
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -10,7 +11,6 @@ import com.example.mindwell.app.domain.usecases.auth.LogoutUseCase
 import com.example.mindwell.app.domain.usecases.preference.GetPreferencesUseCase
 import com.example.mindwell.app.domain.usecases.preference.UpdatePreferencesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -34,36 +34,25 @@ class SettingsViewModel @Inject constructor(
     private val updatePreferencesUseCase: UpdatePreferencesUseCase,
     private val logoutUseCase: LogoutUseCase
 ) : ViewModel() {
+    private val TAG = "SettingsViewModel"
     
     var state by mutableStateOf(SettingsState())
         private set
         
     init {
-        // Em um cenário real, carregaríamos do backend
-        // Para desenvolvimento, vamos simular dados mockados
-        loadMockData()
-    }
-    
-    private fun loadMockData() {
-        viewModelScope.launch {
-            delay(500) // Simulando carregamento
-            state = state.copy(
-                isLoading = false,
-                dailyReminder = true,
-                notificationsEnabled = true,
-                darkModeEnabled = false,
-                privacyMode = false
-            )
-        }
+        loadPreferences()
     }
     
     fun loadPreferences() {
         state = state.copy(isLoading = true)
         
+        Log.d(TAG, "🌐 Tentando carregar preferências da API")
+        
         getPreferencesUseCase()
             .onEach { result ->
                 result.fold(
                     onSuccess = { preferences ->
+                        Log.d(TAG, "✅ Sucesso ao carregar preferências da API")
                         state = state.copy(
                             isLoading = false,
                             notificationsEnabled = preferences.notificationsEnabled,
@@ -74,6 +63,7 @@ class SettingsViewModel @Inject constructor(
                         )
                     },
                     onFailure = { exception ->
+                        Log.e(TAG, "❌ ERRO ao carregar preferências: ${exception.message}", exception)
                         state = state.copy(
                             isLoading = false,
                             errorMessage = exception.message ?: "Erro ao carregar preferências"
@@ -82,6 +72,7 @@ class SettingsViewModel @Inject constructor(
                 )
             }
             .catch { e ->
+                Log.e(TAG, "❌ ERRO ao carregar preferências: ${e.message}", e)
                 state = state.copy(
                     isLoading = false,
                     errorMessage = e.message ?: "Erro desconhecido"
@@ -93,6 +84,8 @@ class SettingsViewModel @Inject constructor(
     fun savePreferences() {
         state = state.copy(isSaving = true)
         
+        Log.d(TAG, "🌐 Tentando salvar preferências na API")
+        
         viewModelScope.launch {
             try {
                 // Construindo o objeto Preference a partir do estado atual
@@ -100,27 +93,28 @@ class SettingsViewModel @Inject constructor(
                     notificationsEnabled = state.notificationsEnabled
                 )
                 
-                // Simulando um salvamento no backend
-                delay(800)
-                
-                // Em um cenário real, chamaríamos o caso de uso:
-                // updatePreferencesUseCase(preference)
-                //     .collect { result ->
-                //         result.fold(
-                //             onSuccess = { ... },
-                //             onFailure = { ... }
-                //         )
-                //     }
-                
-                state = state.copy(
-                    isSaving = false,
-                    saveSuccess = true
-                )
-                
-                // Resetar a mensagem de sucesso após 2 segundos
-                delay(2000)
-                state = state.copy(saveSuccess = false)
+                // Usar o caso de uso real para atualizar as preferências
+                updatePreferencesUseCase(preference)
+                    .collect { result ->
+                        result.fold(
+                            onSuccess = { 
+                                Log.d(TAG, "✅ Sucesso ao salvar preferências na API")
+                                state = state.copy(
+                                    isSaving = false,
+                                    saveSuccess = true
+                                )
+                            },
+                            onFailure = { exception ->
+                                Log.e(TAG, "❌ ERRO ao salvar preferências: ${exception.message}", exception)
+                                state = state.copy(
+                                    isSaving = false,
+                                    errorMessage = exception.message ?: "Erro ao salvar preferências"
+                                )
+                            }
+                        )
+                    }
             } catch (e: Exception) {
+                Log.e(TAG, "❌ ERRO ao salvar preferências: ${e.message}", e)
                 state = state.copy(
                     isSaving = false,
                     errorMessage = e.message ?: "Erro ao salvar preferências"
@@ -153,13 +147,21 @@ class SettingsViewModel @Inject constructor(
      * @param onComplete Callback chamado após o logout ser concluído
      */
     fun logout(onComplete: () -> Unit = {}) {
+        Log.d(TAG, "🌐 Realizando logout do usuário")
         viewModelScope.launch {
             logoutUseCase()
                 .catch { e ->
+                    Log.e(TAG, "❌ ERRO durante logout: ${e.message}", e)
                     // Ignora erros, apenas completa o fluxo
                     onComplete()
                 }
                 .collect { result ->
+                    result.onSuccess {
+                        Log.d(TAG, "✅ Logout realizado com sucesso")
+                    }
+                    result.onFailure { e ->
+                        Log.e(TAG, "❌ ERRO durante logout: ${e.message}", e)
+                    }
                     // Independente do resultado, completa o fluxo
                     onComplete()
                 }

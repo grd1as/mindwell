@@ -17,8 +17,8 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
     
-    // URL para API de teste
-    private const val BASE_URL = "https://mindwell-api.mockable.io/"
+    // URL base da API - usando endereço do emulador Android para servidor local
+    private const val BASE_URL = "http://10.0.2.2:8080/"
     private const val TIMEOUT = 30L
     
     @Provides

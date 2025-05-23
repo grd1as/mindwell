@@ -104,4 +104,34 @@ interface ApiService {
      */
     @POST("reports")
     suspend fun submit_report(@Body report: ReportDTO): ResponseWithLocation
+    
+    /**
+     * Obtém a lista de recursos disponíveis.
+     * @param category Categoria opcional para filtrar recursos
+     * @return Lista de recursos
+     */
+    @GET("resources")
+    suspend fun get_resources(@Query("category") category: String? = null): List<ResourceDTO>
+    
+    /**
+     * Obtém os detalhes de um recurso específico.
+     * @param resourceId ID do recurso
+     * @return Detalhes do recurso
+     */
+    @GET("resources/{resourceId}")
+    suspend fun get_resource_detail(@Path("resourceId") resource_id: String): ResourceDetailDTO
+    
+    /**
+     * Obtém as categorias de recursos disponíveis.
+     * @return Lista de categorias de recursos
+     */
+    @GET("resources/categories")
+    suspend fun get_resource_categories(): List<ResourceCategoryDTO>
+    
+    /**
+     * Obtém a lista de sentimentos disponíveis para check-in.
+     * @return Lista de sentimentos
+     */
+    @GET("feelings")
+    suspend fun get_feelings(): List<FeelingDTO>
 } 

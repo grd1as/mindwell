@@ -78,4 +78,20 @@ object DataSourceModule {
     ): ReportRemoteDataSource {
         return ReportRemoteDataSource(api_service)
     }
+    
+    @Provides
+    @Singleton
+    fun provide_resource_remote_data_source(
+        api_service: ApiService
+    ): ResourceRemoteDataSource {
+        return ResourceRemoteDataSource(api_service)
+    }
+    
+    @Provides
+    @Singleton
+    fun provide_feeling_remote_data_source(
+        api_service: ApiService
+    ): FeelingRemoteDataSource {
+        return FeelingRemoteDataSource(api_service)
+    }
 } 

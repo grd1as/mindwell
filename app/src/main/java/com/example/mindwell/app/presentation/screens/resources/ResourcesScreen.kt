@@ -26,6 +26,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.mindwell.app.common.navigation.AppDestinations
+import com.example.mindwell.app.domain.entities.Resource
+import com.example.mindwell.app.domain.entities.ResourceCategory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

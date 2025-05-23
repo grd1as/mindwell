@@ -9,10 +9,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.mindwell.app.domain.entities.Form
 import com.example.mindwell.app.domain.usecases.form.GetFormsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import java.time.ZonedDateTime
 import javax.inject.Inject
 
 /**
@@ -36,7 +34,7 @@ class FormsViewModel @Inject constructor(
     var state by mutableStateOf(FormsState(isLoading = true))
         private set
     
-    // Categorias de formulários
+    // Categorias de formulários (dados estáticos da UI, não da API)
     val formCategories = listOf(
         null to "Todos",
         "daily" to "Diários",
@@ -44,132 +42,15 @@ class FormsViewModel @Inject constructor(
         "monthly" to "Mensais"
     )
     
-    // Mock data para teste de layout
-    private val mockForms = mapOf(
-        null to listOf(
-            Form(
-                id = 1,
-                code = "PHQ9",
-                name = "Questionário de Saúde do Paciente (PHQ-9)",
-                type = "daily",
-                description = "Avalia sintomas de depressão nas últimas duas semanas",
-                nextAllowed = null,
-                lastAnsweredAt = ZonedDateTime.now().minusDays(2)
-            ),
-            Form(
-                id = 2,
-                code = "GAD7",
-                name = "Transtorno de Ansiedade Generalizada (GAD-7)",
-                type = "weekly",
-                description = "Avalia sintomas de ansiedade nas últimas duas semanas",
-                nextAllowed = null,
-                lastAnsweredAt = null
-            ),
-            Form(
-                id = 3,
-                code = "PSS10",
-                name = "Escala de Estresse Percebido (PSS-10)",
-                type = "monthly",
-                description = "Avalia o nível de estresse percebido no último mês",
-                nextAllowed = ZonedDateTime.now().plusDays(15),
-                lastAnsweredAt = ZonedDateTime.now().minusDays(15)
-            ),
-            Form(
-                id = 4,
-                code = "SLEEP",
-                name = "Questionário de Qualidade do Sono",
-                type = "weekly",
-                description = "Avalia a qualidade do sono na última semana",
-                nextAllowed = null,
-                lastAnsweredAt = null
-            ),
-            Form(
-                id = 5,
-                code = "MOOD",
-                name = "Rastreamento de Humor Diário",
-                type = "daily",
-                description = "Acompanhamento diário de humor e emoções",
-                nextAllowed = null,
-                lastAnsweredAt = ZonedDateTime.now().minusDays(1)
-            )
-        ),
-        "daily" to listOf(
-            Form(
-                id = 1,
-                code = "PHQ9",
-                name = "Questionário de Saúde do Paciente (PHQ-9)",
-                type = "daily",
-                description = "Avalia sintomas de depressão nas últimas duas semanas",
-                nextAllowed = null,
-                lastAnsweredAt = ZonedDateTime.now().minusDays(2)
-            ),
-            Form(
-                id = 5,
-                code = "MOOD",
-                name = "Rastreamento de Humor Diário",
-                type = "daily",
-                description = "Acompanhamento diário de humor e emoções",
-                nextAllowed = null,
-                lastAnsweredAt = ZonedDateTime.now().minusDays(1)
-            )
-        ),
-        "weekly" to listOf(
-            Form(
-                id = 2,
-                code = "GAD7",
-                name = "Transtorno de Ansiedade Generalizada (GAD-7)",
-                type = "weekly",
-                description = "Avalia sintomas de ansiedade nas últimas duas semanas",
-                nextAllowed = null,
-                lastAnsweredAt = null
-            ),
-            Form(
-                id = 4,
-                code = "SLEEP",
-                name = "Questionário de Qualidade do Sono",
-                type = "weekly",
-                description = "Avalia a qualidade do sono na última semana",
-                nextAllowed = null,
-                lastAnsweredAt = null
-            )
-        ),
-        "monthly" to listOf(
-            Form(
-                id = 3,
-                code = "PSS10",
-                name = "Escala de Estresse Percebido (PSS-10)",
-                type = "monthly",
-                description = "Avalia o nível de estresse percebido no último mês",
-                nextAllowed = ZonedDateTime.now().plusDays(15),
-                lastAnsweredAt = ZonedDateTime.now().minusDays(15)
-            )
-        )
-    )
-    
     init {
-        loadForms(useMockData = false) // Usando API real para testes
+        loadForms()
     }
     
     /**
      * Carrega a lista de formulários.
-     * @param useMockData Se true, usa dados mockados para teste de layout
      */
-    fun loadForms(useMockData: Boolean = false) {
+    fun loadForms() {
         state = state.copy(isLoading = true, error = null)
-        
-        if (useMockData) {
-            Log.w(TAG, "📋 USANDO DADOS MOCKADOS para formulários")
-            // Use mock data for testing
-            viewModelScope.launch {
-                // Simulate network delay
-                delay(800)
-                state = state.copy(
-                    forms = mockForms[state.filterType] ?: mockForms[null] ?: emptyList(),
-                    isLoading = false
-                )
-            }
-            return
-        }
         
         // Real implementation with API
         Log.d(TAG, "🌐 Tentando carregar formulários da API real")

@@ -1,5 +1,6 @@
 package com.example.mindwell.app.presentation.screens.evolution
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -9,7 +10,6 @@ import com.example.mindwell.app.domain.entities.Summary
 import com.example.mindwell.app.domain.entities.SummaryItem
 import com.example.mindwell.app.domain.usecases.summary.GetMonthlySummaryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -44,64 +44,32 @@ data class EvolutionState(
 class EvolutionViewModel @Inject constructor(
     private val getMonthlySummaryUseCase: GetMonthlySummaryUseCase
 ) : ViewModel() {
+    private val TAG = "EvolutionViewModel"
     
     var state by mutableStateOf(EvolutionState())
         private set
     
     init {
-        loadMockedData(state.currentMonth)
+        loadSummary(state.currentMonth)
     }
     
     /**
-     * Carrega dados mockados para a tela
+     * Carrega o resumo para um mês específico
      */
-    fun loadMockedData(month: YearMonth) {
+    fun loadSummary(month: YearMonth) {
         state = state.copy(isLoading = true, currentMonth = month)
         
-        // Simular um breve carregamento para UX
-        viewModelScope.launch {
-            delay(500) // Delay artificial para simular carregamento
-            
-            // Mockando dados do resumo
-            val mockSummary = Summary(
-                total = 28,
-                breakdown = listOf(
-                    SummaryItem("Muito Bom", 8, 29, "VERY_GOOD"),
-                    SummaryItem("Bom", 12, 43, "GOOD"),
-                    SummaryItem("Neutro", 5, 18, "NEUTRAL"),
-                    SummaryItem("Ruim", 2, 7, "BAD"),
-                    SummaryItem("Muito Ruim", 1, 3, "VERY_BAD")
-                ),
-                overallLevel = "GOOD"
-            )
-            
-            // Mockando dados de tendência
-            val trendData = getMockedTrendData()
-            val trendDirection = calculateTrendDirection(trendData)
-            
-            // Atualizar estado
-            state = state.copy(
-                isLoading = false,
-                summary = mockSummary,
-                trendData = trendData,
-                trendDirection = trendDirection,
-                error = null
-            )
-        }
-    }
-    
-    /**
-     * Carrega o resumo para um mês específico - USANDO API (desativado temporariamente)
-     */
-    private fun loadSummaryFromApi(month: YearMonth) {
-        state = state.copy(isLoading = true, currentMonth = month)
+        Log.d(TAG, "🌐 Tentando carregar resumo mensal para ${month.toString()} da API")
         
         getMonthlySummaryUseCase(month)
             .onEach { result ->
                 result.fold(
                     onSuccess = { summary ->
-                        val trendData = getMockedTrendData()
+                        // Converter dados do resumo para dados de tendência
+                        val trendData = extractTrendDataFromSummary(summary)
                         val trendDirection = calculateTrendDirection(trendData)
+                        
+                        Log.d(TAG, "✅ Sucesso ao carregar resumo mensal da API")
                         
                         state = state.copy(
                             isLoading = false,
@@ -112,6 +80,8 @@ class EvolutionViewModel @Inject constructor(
                         )
                     },
                     onFailure = { exception ->
+                        Log.e(TAG, "❌ ERRO ao carregar resumo mensal: ${exception.message}", exception)
+                        
                         state = state.copy(
                             isLoading = false,
                             error = exception.message ?: "Erro ao carregar o resumo"
@@ -123,14 +93,22 @@ class EvolutionViewModel @Inject constructor(
     }
     
     /**
-     * Gera dados mockados de tendência
+     * Extrai dados de tendência a partir do resumo.
+     * Como a API não fornece dados semanais, essa é uma estimativa baseada nos dados mensais.
      */
-    private fun getMockedTrendData(): List<TrendData> {
+    private fun extractTrendDataFromSummary(summary: Summary): List<TrendData> {
+        // Essa é uma implementação simples que divide o mês em 4 semanas
+        // Em uma implementação real, poderia analisar dados reais por semana
+        
+        // Se não há dados suficientes, retorna uma lista vazia
+        if (summary.total < 4) return emptyList()
+        
+        // Simplificação: cada semana recebe o nível geral do mês
         return listOf(
-            TrendData("Semana 1", "NEUTRAL"),
-            TrendData("Semana 2", "BAD"),
-            TrendData("Semana 3", "NEUTRAL"),
-            TrendData("Semana 4", "GOOD")
+            TrendData("Semana 1", summary.overallLevel),
+            TrendData("Semana 2", summary.overallLevel),
+            TrendData("Semana 3", summary.overallLevel),
+            TrendData("Semana 4", summary.overallLevel)
         )
     }
     
@@ -164,7 +142,7 @@ class EvolutionViewModel @Inject constructor(
      */
     fun nextMonth() {
         val nextMonth = state.currentMonth.plusMonths(1)
-        loadMockedData(nextMonth)
+        loadSummary(nextMonth)
     }
     
     /**
@@ -172,7 +150,7 @@ class EvolutionViewModel @Inject constructor(
      */
     fun previousMonth() {
         val previousMonth = state.currentMonth.minusMonths(1)
-        loadMockedData(previousMonth)
+        loadSummary(previousMonth)
     }
     
     /**

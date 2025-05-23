@@ -56,7 +56,7 @@ fun EvolutionScreen(
                 CircularProgressIndicator()
             }
         } else if (state.error != null) {
-            ErrorContent(state.error, onRetry = { vm.loadMockedData(state.currentMonth) })
+            ErrorContent(state.error, onRetry = { vm.loadSummary(state.currentMonth) })
         } else {
             EvolutionContent(
                 modifier = Modifier.padding(padding),

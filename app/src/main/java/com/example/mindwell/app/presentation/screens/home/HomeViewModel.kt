@@ -1,5 +1,6 @@
 package com.example.mindwell.app.presentation.screens.home
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -12,8 +13,10 @@ import com.example.mindwell.app.data.network.ApiService
 import com.example.mindwell.app.domain.usecases.checkin.GetLastCheckinUseCase
 import com.example.mindwell.app.domain.usecases.form.GetPendingFormsUseCase
 import com.example.mindwell.app.domain.usecases.preference.GetUserPreferencesUseCase
+import com.example.mindwell.app.domain.usecases.feeling.GetFeelingsUseCase
 import com.example.mindwell.app.domain.entities.Checkin
 import com.example.mindwell.app.domain.entities.Form
+import com.example.mindwell.app.domain.entities.Feeling
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
@@ -30,8 +33,10 @@ class HomeViewModel @Inject constructor(
     private val getUserPreferences: GetUserPreferencesUseCase,
     private val getLastCheckin: GetLastCheckinUseCase,
     private val getPendingForms: GetPendingFormsUseCase,
+    private val getFeelings: GetFeelingsUseCase,
     private val apiService: ApiService
 ) : ViewModel() {
+    private val TAG = "HomeViewModel"
     
     // Eventos de navegação
     sealed class NavigationEvent {
@@ -54,7 +59,7 @@ class HomeViewModel @Inject constructor(
         val isLoading: Boolean = false,
         val userName: String = "Usuário",
         val lastCheckin: String = "",
-        val pendingForms: Int = 2,
+        val pendingForms: Int = 0,
         val streakCount: Int = 0,
         val error: String? = null,
         val showFeedbackDialog: Boolean = false,
@@ -69,7 +74,8 @@ class HomeViewModel @Inject constructor(
         val activeTooltip: String? = null,
         val customTips: List<CustomTip> = emptyList(),
         val greeting: String = "",
-        val greetingEmoji: String = ""
+        val greetingEmoji: String = "",
+        val feelings: List<Feeling> = emptyList()
     )
     
     // Estado atual da tela
@@ -116,20 +122,52 @@ class HomeViewModel @Inject constructor(
     private fun loadData() {
         state = state.copy(isLoading = true)
         
-        // Simulação de carregamento de dados
+        Log.d(TAG, "🌐 Tentando carregar dados da home da API")
+        
         viewModelScope.launch {
             try {
-                delay(500) // Simula requisição de rede
+                // Carregar dados do usuário
+                loadUserData()
+                
+                // Carregar último check-in
+                loadCheckinData()
+                
+                // Carregar formulários pendentes  
+                loadFormsData()
+                
+                // Carregar sentimentos
+                loadFeelingsData()
+                
+                Log.d(TAG, "✅ Sucesso ao carregar dados da home")
+                
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ ERRO ao carregar dados da home: ${e.message}", e)
                 state = state.copy(
                     isLoading = false,
-                    userName = "Karina Santos",
-                    pendingForms = 2
-                )
-            } catch (e: Exception) {
-                state = state.copy(
-                    isLoading = false
+                    error = "Erro ao carregar dados: ${e.message}"
                 )
             }
+        }
+    }
+    
+    private fun loadUserData() {
+        viewModelScope.launch {
+            getUserPreferences()
+                .catch { e ->
+                    Log.e(TAG, "❌ ERRO ao carregar preferências do usuário: ${e.message}", e)
+                    // Usar valores padrão se não conseguir carregar
+                    state = state.copy(userName = "Usuário")
+                }
+                .collect { result ->
+                    result.onSuccess { preferences ->
+                        Log.d(TAG, "✅ Preferências do usuário carregadas")
+                        state = state.copy(userName = preferences.name ?: "Usuário")
+                    }
+                    result.onFailure { e ->
+                        Log.e(TAG, "❌ ERRO ao carregar preferências: ${e.message}", e)
+                        state = state.copy(userName = "Usuário")
+                    }
+                }
         }
     }
     
@@ -157,36 +195,25 @@ class HomeViewModel @Inject constructor(
     
     /**
      * Atualiza a saudação baseada na hora do dia
-     * Método interno que implementa a lógica
      */
     private fun updateGreeting() {
-        // Obter a hora atual usando várias abordagens para garantir precisão
         val calendar = Calendar.getInstance()
         val hourOfDay = calendar.get(Calendar.HOUR_OF_DAY)
         
-        // Registra informações detalhadas para debug
-        println("HORA ATUAL: $hourOfDay")
-        println("CALENDAR COMPLETO: ${calendar.time}")
+        Log.d(TAG, "Atualizando saudação para hora: $hourOfDay")
         
-        // SOLUÇÃO TEMPORÁRIA: Forçar "Boa noite" apenas para teste
-        // Remover após testar e resolver o problema de horário
-        //val greeting = "Boa noite" 
-        
-        // Lógica normal com condições explícitas e claras
         val greeting = when {
             hourOfDay in 5..11 -> "Bom dia"
             hourOfDay in 12..17 -> "Boa tarde"
-            else -> "Boa noite"  // 18-23 e 0-4
+            else -> "Boa noite"
         }
         
         val greetingEmoji = when {
-            hourOfDay in 5..11 -> "☀️" // Sol para manhã
-            hourOfDay in 12..17 -> "🌤️" // Sol com nuvens para tarde
-            hourOfDay in 18..21 -> "🌆" // Pôr do sol para início da noite
-            else -> "🌙" // Lua para noite
+            hourOfDay in 5..11 -> "☀️"
+            hourOfDay in 12..17 -> "🌤️"
+            hourOfDay in 18..21 -> "🌆"
+            else -> "🌙"
         }
-        
-        println("SAUDAÇÃO SELECIONADA: $greeting $greetingEmoji para hora $hourOfDay")
         
         state = state.copy(
             greeting = greeting,
@@ -196,7 +223,6 @@ class HomeViewModel @Inject constructor(
     
     /**
      * Método público para atualizar a saudação
-     * Pode ser chamado de fora do ViewModel quando necessário
      */
     fun refreshGreeting() {
         updateGreeting()
@@ -211,50 +237,77 @@ class HomeViewModel @Inject constructor(
     
     private fun loadCheckinData() {
         viewModelScope.launch {
-            // Get last check-in
             getLastCheckin()
                 .catch { e: Throwable -> 
+                    Log.e(TAG, "❌ ERRO ao carregar último check-in: ${e.message}", e)
                     state = state.copy(
-                        isLoading = false,
-                        error = e.message
+                        lastCheckin = "",
+                        streakCount = 0
                     )
                 }
                 .collect { result ->
                     result.onSuccess { checkin: Checkin ->
+                        Log.d(TAG, "✅ Último check-in carregado")
                         state = state.copy(
                             lastCheckin = checkin.date,
                             streakCount = checkin.streak ?: 0
                         )
                     }
-                    
-                    // Continue with forms data
-                    loadFormsData()
+                    result.onFailure { e ->
+                        Log.e(TAG, "❌ ERRO ao carregar último check-in: ${e.message}", e)
+                        state = state.copy(
+                            lastCheckin = "",
+                            streakCount = 0
+                        )
+                    }
                 }
         }
     }
     
     private fun loadFormsData() {
         viewModelScope.launch {
-            // Get pending forms
             getPendingForms()
                 .catch { e: Throwable ->
+                    Log.e(TAG, "❌ ERRO ao carregar formulários pendentes: ${e.message}", e)
                     state = state.copy(
-                        isLoading = false,
-                        error = e.message
+                        pendingForms = 0,
+                        isLoading = false
                     )
                 }
                 .collect { result ->
                     result.onSuccess { forms: List<Form> ->
+                        Log.d(TAG, "✅ Formulários pendentes carregados: ${forms.size}")
                         state = state.copy(
                             pendingForms = forms.size,
                             isLoading = false
                         )
                     }
-                    result.onFailure { e: Throwable ->
+                    result.onFailure { e ->
+                        Log.e(TAG, "❌ ERRO ao carregar formulários pendentes: ${e.message}", e)
                         state = state.copy(
-                            isLoading = false,
-                            error = e.message
+                            pendingForms = 0,
+                            isLoading = false
                         )
+                    }
+                }
+        }
+    }
+    
+    private fun loadFeelingsData() {
+        viewModelScope.launch {
+            getFeelings()
+                .catch { e: Throwable ->
+                    Log.e(TAG, "❌ ERRO ao carregar sentimentos: ${e.message}", e)
+                    state = state.copy(feelings = emptyList())
+                }
+                .collect { result ->
+                    result.onSuccess { feelings: List<Feeling> ->
+                        Log.d(TAG, "✅ Sentimentos carregados: ${feelings.size}")
+                        state = state.copy(feelings = feelings)
+                    }
+                    result.onFailure { e ->
+                        Log.e(TAG, "❌ ERRO ao carregar sentimentos: ${e.message}", e)
+                        state = state.copy(feelings = emptyList())
                     }
                 }
         }
@@ -262,6 +315,13 @@ class HomeViewModel @Inject constructor(
     
     fun refresh() {
         loadData()
+    }
+    
+    /**
+     * Obtém a lista de sentimentos carregados
+     */
+    fun getFeelingsList(): List<Feeling> {
+        return state.feelings
     }
     
     /**
@@ -327,22 +387,29 @@ class HomeViewModel @Inject constructor(
             feedbackError = null
         )
         
-        // Simulação de envio
+        Log.d(TAG, "🌐 Tentando enviar feedback para API")
+        
         viewModelScope.launch {
             try {
-                delay(1500) // Simula requisição de rede
+                val reportDTO = ReportDTO(
+                    category = state.feedbackCategory,
+                    description = state.feedbackDescription,
+                    tags = emptyList() // Lista vazia por enquanto, pode ser expandida no futuro
+                )
+                
+                val response = apiService.submit_report(reportDTO)
+                Log.d(TAG, "✅ Feedback enviado com sucesso. Location: ${response.location}")
+                
                 state = state.copy(
                     isSubmittingFeedback = false,
                     feedbackSuccess = true
                 )
                 
-                // Fecha o diálogo após alguns segundos
-                delay(2000)
-                state = state.copy(showFeedbackDialog = false)
             } catch (e: Exception) {
+                Log.e(TAG, "❌ ERRO ao enviar feedback: ${e.message}", e)
                 state = state.copy(
                     isSubmittingFeedback = false,
-                    feedbackError = "Erro ao enviar feedback. Por favor, tente novamente."
+                    feedbackError = "Erro ao enviar feedback: ${e.message}"
                 )
             }
         }
@@ -352,20 +419,23 @@ class HomeViewModel @Inject constructor(
      * Enviar check-in com emoji e sentimento
      */
     fun submitCheckin(emoji: String, feeling: String) {
+        Log.d(TAG, "🌐 Tentando enviar check-in para API: emoji=$emoji, feeling=$feeling")
+        
         viewModelScope.launch {
             try {
-                // Simulação de envio
-                delay(1000)
+                // TODO: Implementar envio real para API
+                // Por enquanto apenas registra no log
+                Log.w(TAG, "⚠️ Envio de check-in não implementado - dados: emoji=$emoji, feeling=$feeling")
                 
-                // Sucesso
-                state = state.copy(
-                    checkInSuccess = true,
-                    checkInError = null
-                )
-            } catch (e: Exception) {
                 state = state.copy(
                     checkInSuccess = false,
-                    checkInError = "Erro ao enviar check-in. Tente novamente."
+                    checkInError = "Check-in não implementado ainda"
+                )
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ ERRO ao enviar check-in: ${e.message}", e)
+                state = state.copy(
+                    checkInSuccess = false,
+                    checkInError = "Erro ao enviar check-in: ${e.message}"
                 )
             }
         }
@@ -375,31 +445,27 @@ class HomeViewModel @Inject constructor(
      * Inicia um questionário específico
      */
     fun startQuestionnaire(code: String) {
+        Log.d(TAG, "Iniciando questionário: $code")
+        
         when (code) {
             "SELF_ASSESS" -> {
-                // Navegar para o formulário de auto-avaliação (assumindo ID 1)
                 navController?.let {
                     it.navigate(AppDestinations.formDetail(1))
                 } ?: run {
-                    // Se não temos NavController, emitimos um evento para navegação
                     state = state.copy(navigationEvent = NavigationEvent.ToForm(1))
                 }
             }
             "CLIMATE" -> {
-                // Navegar para o formulário de clima organizacional (assumindo ID 2)
                 navController?.let {
                     it.navigate(AppDestinations.formDetail(2))
                 } ?: run {
-                    // Se não temos NavController, emitimos um evento para navegação
                     state = state.copy(navigationEvent = NavigationEvent.ToForm(2))
                 }
             }
             else -> {
-                // Navegar para a lista de formulários
                 navController?.let {
                     it.navigate(AppDestinations.FORMS)
                 } ?: run {
-                    // Se não temos NavController, emitimos um evento para navegação
                     state = state.copy(navigationEvent = NavigationEvent.ToForms)
                 }
             }
@@ -410,8 +476,9 @@ class HomeViewModel @Inject constructor(
      * Seleciona formulário de relatório
      */
     fun selectReportForm(code: String) {
+        Log.d(TAG, "Selecionando formulário de relatório: $code")
+        
         if (code == "REPORT") {
-            // Mostrar diálogo de feedback para relatório
             showFeedbackDialog()
         }
     }

@@ -24,6 +24,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.mindwell.app.domain.entities.ResourceDetail
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -178,7 +179,7 @@ fun ErrorState(
 
 @Composable
 fun ResourceBanner(
-    resource: ResourceDetailModel,
+    resource: ResourceDetail,
     modifier: Modifier = Modifier
 ) {
     val (backgroundColor, icon) = when (resource.categoryId) {
@@ -262,7 +263,7 @@ fun ResourceBanner(
 }
 
 @Composable
-fun BreathingExerciseContent(resource: ResourceDetailModel) {
+fun BreathingExerciseContent(resource: ResourceDetail) {
     var isAnimating by remember { mutableStateOf(false) }
     
     Column {
@@ -322,7 +323,7 @@ fun BreathingAnimation() {
 }
 
 @Composable
-fun MeditationContent(resource: ResourceDetailModel) {
+fun MeditationContent(resource: ResourceDetail) {
     Column {
         SectionTitle(text = "Como meditar:")
         
@@ -344,7 +345,7 @@ fun MeditationContent(resource: ResourceDetailModel) {
 }
 
 @Composable
-fun JournalingContent(resource: ResourceDetailModel) {
+fun JournalingContent(resource: ResourceDetail) {
     Column {
         SectionTitle(text = "Perguntas para reflexão:")
         
@@ -366,7 +367,7 @@ fun JournalingContent(resource: ResourceDetailModel) {
 }
 
 @Composable
-fun ExerciseContent(resource: ResourceDetailModel) {
+fun ExerciseContent(resource: ResourceDetail) {
     Column {
         SectionTitle(text = "Exercícios recomendados:")
         
@@ -389,7 +390,7 @@ fun ExerciseContent(resource: ResourceDetailModel) {
 }
 
 @Composable
-fun SleepContent(resource: ResourceDetailModel) {
+fun SleepContent(resource: ResourceDetail) {
     Column {
         SectionTitle(text = "Dicas para melhorar o sono:")
         
@@ -413,7 +414,7 @@ fun SleepContent(resource: ResourceDetailModel) {
 }
 
 @Composable
-fun GenericResourceContent(resource: ResourceDetailModel) {
+fun GenericResourceContent(resource: ResourceDetail) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally

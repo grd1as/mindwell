@@ -12,16 +12,12 @@ import javax.inject.Singleton
 class FormRemoteDataSource @Inject constructor(
     private val api_service: ApiService
 ) {
-    // Flag para controlar o uso de dados mockados - DESABILITADO para testes
-    private val useMockData = false
-    
     /**
      * Obtém a lista de formulários disponíveis.
      * @param type Tipo opcional de formulário para filtrar
      * @return Lista de formulários
      */
     suspend fun get_forms(type: String? = null): List<FormDTO> {
-        // Forçar uso da API real - sem fallback para mock
         return api_service.get_forms(type)
     }
     
@@ -31,7 +27,6 @@ class FormRemoteDataSource @Inject constructor(
      * @return Detalhes do formulário com perguntas
      */
     suspend fun get_form_detail(form_id: Int): FormDetailDTO {
-        // Forçar uso da API real - sem fallback para mock
         return api_service.get_form_detail(form_id)
     }
     
@@ -42,7 +37,6 @@ class FormRemoteDataSource @Inject constructor(
      * @return ID da resposta extraído da URL retornada
      */
     suspend fun submit_form_responses(form_id: Int, request: FormResponseRequest): Int {
-        // Forçar uso da API real - sem fallback para mock
         val response = api_service.submit_form_responses(form_id, request)
         // Extrai o ID da resposta a partir da URL retornada (exemplo: /forms/1/responses/42)
         val locationPath = response.location ?: ""

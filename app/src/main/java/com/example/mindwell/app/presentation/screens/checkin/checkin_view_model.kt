@@ -7,13 +7,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mindwell.app.domain.usecases.checkin.GetCheckinsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
 import javax.inject.Inject
+import android.util.Log
 
 /**
  * Item de histórico de check-in para exibição na interface.
@@ -34,6 +34,8 @@ data class CheckinHistoryItem(
 class CheckinViewModel @Inject constructor(
     private val get_checkins_use_case: GetCheckinsUseCase
 ) : ViewModel() {
+    private val TAG = "CheckinViewModel"
+    
     // Estado da tela de histórico de check-ins
     data class CheckinHistoryState(
         val checkins: List<CheckinHistoryItem> = emptyList(),
@@ -58,94 +60,23 @@ class CheckinViewModel @Inject constructor(
     private val date_formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
         .withLocale(Locale("pt", "BR"))
     
-    // Mock data para teste de layout
-    private val mock_checkins = listOf(
-        CheckinHistoryItem(
-            id = 1,
-            date = "15 de junho de 2023",
-            emoji = "💚",
-            mood = "Bom",
-            note = "Foi um dia produtivo, consegui terminar várias tarefas pendentes.",
-            streak = 3
-        ),
-        CheckinHistoryItem(
-            id = 2,
-            date = "14 de junho de 2023",
-            emoji = "💚",
-            mood = "Bom",
-            note = "Dia tranquilo, tive uma reunião importante que foi bem sucedida.",
-            streak = 2
-        ),
-        CheckinHistoryItem(
-            id = 3,
-            date = "13 de junho de 2023",
-            emoji = "💛",
-            mood = "Normal",
-            note = "Dia comum, nada especial aconteceu.",
-            streak = 1
-        ),
-        CheckinHistoryItem(
-            id = 4,
-            date = "11 de junho de 2023",
-            emoji = "🧡",
-            mood = "Mal",
-            note = "Acordei me sentindo um pouco indisposto, tive dificuldade para me concentrar.",
-            streak = 0
-        ),
-        CheckinHistoryItem(
-            id = 5,
-            date = "10 de junho de 2023",
-            emoji = "💙",
-            mood = "Muito Bom",
-            note = "Dia excelente! Saí com amigos e me diverti bastante.",
-            streak = 2
-        ),
-        CheckinHistoryItem(
-            id = 6,
-            date = "9 de junho de 2023",
-            emoji = "💛",
-            mood = "Normal",
-            note = "",
-            streak = 1
-        ),
-        CheckinHistoryItem(
-            id = 7,
-            date = "7 de junho de 2023",
-            emoji = "❤️",
-            mood = "Muito Mal",
-            note = "Dia difícil, muitos problemas para resolver e pouco tempo.",
-            streak = 0
-        )
-    )
-    
     init {
-        load_checkins(use_mock_data = true) // Use mock data for layout testing
+        load_checkins()
     }
     
     /**
      * Carrega o histórico de check-ins.
-     * @param use_mock_data Se true, usa dados mockados para teste de layout
      */
-    fun load_checkins(use_mock_data: Boolean = true) {
+    fun load_checkins() {
         state = state.copy(is_loading = true, error_message = null)
         
-        if (use_mock_data) {
-            // Use mock data for testing
-            viewModelScope.launch {
-                // Simulate network delay
-                delay(800)
-                state = state.copy(
-                    checkins = mock_checkins,
-                    is_loading = false
-                )
-            }
-            return
-        }
+        Log.d(TAG, "🌐 Tentando carregar histórico de check-ins da API")
         
         // Real implementation with API
         viewModelScope.launch {
             get_checkins_use_case()
                 .catch { e ->
+                    Log.e(TAG, "❌ ERRO ao carregar histórico de check-ins: ${e.message}", e)
                     state = state.copy(
                         is_loading = false,
                         error_message = e.message ?: "Erro ao carregar histórico"
@@ -169,6 +100,8 @@ class CheckinViewModel @Inject constructor(
                             )
                         }
                         
+                        Log.d(TAG, "✅ Sucesso ao carregar ${checkin_items.size} check-ins da API")
+                        
                         state = state.copy(
                             checkins = checkin_items,
                             is_loading = false
@@ -176,6 +109,7 @@ class CheckinViewModel @Inject constructor(
                     }
                     
                     result.onFailure { e ->
+                        Log.e(TAG, "❌ ERRO ao carregar histórico de check-ins: ${e.message}", e)
                         state = state.copy(
                             is_loading = false,
                             error_message = e.message ?: "Erro ao carregar histórico"

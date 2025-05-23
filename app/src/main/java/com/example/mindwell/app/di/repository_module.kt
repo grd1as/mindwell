@@ -65,4 +65,16 @@ abstract class RepositoryModule {
     abstract fun bind_report_repository(
         impl: ReportRepositoryImpl
     ): ReportRepository
+    
+    @Binds
+    @Singleton
+    abstract fun bind_resource_repository(
+        impl: ResourceRepositoryImpl
+    ): ResourceRepository
+    
+    @Binds
+    @Singleton
+    abstract fun bind_feeling_repository(
+        impl: FeelingRepositoryImpl
+    ): FeelingRepository
 } 
