@@ -20,6 +20,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mindwell.app.domain.entities.Form
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 
 @Composable
 fun ModernQuestionnaires(
@@ -34,9 +37,7 @@ fun ModernQuestionnaires(
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         Column(
@@ -52,9 +53,7 @@ fun ModernQuestionnaires(
                 .padding(20.dp)
         ) {
             // Header com gradiente
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
                         .size(40.dp)
@@ -69,14 +68,11 @@ fun ModernQuestionnaires(
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "📋",
-                        fontSize = 20.sp
-                    )
+                    Text(text = "📋", fontSize = 20.sp)
                 }
-                
+
                 Spacer(modifier = Modifier.width(12.dp))
-                
+
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "Questionários",
@@ -92,7 +88,7 @@ fun ModernQuestionnaires(
                         color = Color(0xFF666666)
                     )
                 }
-                
+
                 Card(
                     modifier = Modifier
                         .size(40.dp)
@@ -116,7 +112,7 @@ fun ModernQuestionnaires(
                     }
                 }
             }
-            
+
             if (activeTooltip == "questionnaires_help") {
                 Spacer(modifier = Modifier.height(8.dp))
                 Card(
@@ -133,16 +129,15 @@ fun ModernQuestionnaires(
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             if (forms.isNotEmpty()) {
                 forms.forEach { form ->
                     ModernQuestionnaireItem(
                         form = form,
                         onClick = { onQuestionnaireClick(form) }
                     )
-                    
                     if (form != forms.last()) {
                         Spacer(modifier = Modifier.height(12.dp))
                     }
@@ -150,9 +145,7 @@ fun ModernQuestionnaires(
             } else {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFFF8FAFF)
-                    ),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFF)),
                     shape = RoundedCornerShape(16.dp)
                 ) {
                     Column(
@@ -161,10 +154,7 @@ fun ModernQuestionnaires(
                             .padding(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(
-                            text = "📝",
-                            fontSize = 32.sp
-                        )
+                        Text(text = "📝", fontSize = 32.sp)
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "Nenhum questionário disponível",
@@ -191,14 +181,30 @@ fun ModernQuestionnaireItem(
     form: Form,
     onClick: () -> Unit
 ) {
+    // Fuso GMT+3
+    val zone = ZoneId.of("GMT+3")
+    // Data de hoje em GMT+3
+    val today = LocalDate.now(zone)
+    // Converte nextAllowed para Instant, depois para LocalDate em GMT+3
+    val nextAllowedDate = form.nextAllowed
+        ?.toInstant()         // se for OffsetDateTime ou java.util.Date
+        ?.atZone(zone)
+        ?.toLocalDate()
+    // Se nextAllowedDate <= today, já pode ser considerado respondido
+    val isDisponivel = nextAllowedDate != null && !nextAllowedDate.isAfter(today)
+
+    val (statusText, statusColor) = if (isDisponivel) {
+        "Disponível" to Color(0xFF10B981)
+    } else {
+        "Novo" to Color(0xFF3B82F6)
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         border = BorderStroke(1.dp, Color(0xFFF3F4F6))
     ) {
@@ -230,13 +236,11 @@ fun ModernQuestionnaireItem(
                     modifier = Modifier.size(24.dp)
                 )
             }
-            
+
             Spacer(modifier = Modifier.width(16.dp))
-            
+
             // Conteúdo do questionário
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = form.name,
                     style = MaterialTheme.typography.titleMedium.copy(
@@ -244,9 +248,9 @@ fun ModernQuestionnaireItem(
                     ),
                     color = Color(0xFF1A1A1A)
                 )
-                
+
                 Spacer(modifier = Modifier.height(4.dp))
-                
+
                 Text(
                     text = form.description,
                     style = MaterialTheme.typography.bodyMedium,
@@ -254,39 +258,29 @@ fun ModernQuestionnaireItem(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
-                
+
                 Spacer(modifier = Modifier.height(6.dp))
-                
+
                 // Status
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    val (statusText, statusColor) = if (form.lastAnsweredAt != null) {
-                        "Respondido" to Color(0xFF10B981)
-                    } else {
-                        "Novo" to Color(0xFF3B82F6)
-                    }
-                    
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                statusColor.copy(alpha = 0.1f),
-                                RoundedCornerShape(6.dp)
-                            )
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = statusText,
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
-                            ),
-                            color = statusColor
+                Box(
+                    modifier = Modifier
+                        .background(
+                            statusColor.copy(alpha = 0.1f),
+                            RoundedCornerShape(6.dp)
                         )
-                    }
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = statusText,
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = statusColor
+                    )
                 }
             }
-            
+
             // Seta
             Icon(
                 imageVector = Icons.Filled.ArrowForward,
@@ -296,4 +290,4 @@ fun ModernQuestionnaireItem(
             )
         }
     }
-} 
+}
