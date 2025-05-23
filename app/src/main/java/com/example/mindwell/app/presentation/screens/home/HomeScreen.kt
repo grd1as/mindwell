@@ -32,7 +32,12 @@ fun HomeScreen(
     vm: HomeViewModel = hiltViewModel()
 ) {
     val state = vm.state
-    var selectedEmotion by remember { mutableStateOf(-1) }
+    var selectedEmoji by remember { mutableStateOf("") }
+    var selectedFeeling by remember { mutableStateOf("") }
+    var showFeelingDropdown by remember { mutableStateOf(false) }
+    
+    // Lista de sentimentos para o dropdown
+    val feelings = listOf("Muito bem", "Bem", "Normal", "Mal", "Muito mal", "Não sei dizer")
     
     // Mostrar o diálogo de feedback se necessário
     if (state.showFeedbackDialog) {
@@ -51,7 +56,18 @@ fun HomeScreen(
     }
     
     Scaffold(
-        // Removida a bottomBar personalizada
+        // FloatingActionButton para relatório
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { vm.selectReportForm("REPORT") },
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Warning, 
+                    contentDescription = "Enviar relatório"
+                )
+            }
+        }
     ) { padding ->
         if (state.isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -101,74 +117,134 @@ fun HomeScreen(
                     }
                 }
                 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(16.dp))
                 
-                // Mood selection
+                // First question - Emoji selection
                 Text(
-                    text = "Como você está se sentindo hoje?",
-                    style = MaterialTheme.typography.titleMedium
+                    text = "Escolha o seu emoji de hoje!",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
                 )
                 
+                // First row of emojis
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    EmotionItem(
-                        emoji = "❤️", 
-                        label = "Muito Mal", 
-                        isSelected = selectedEmotion == 0,
-                        onClick = { selectedEmotion = 0 }
+                    EmojiOption(
+                        emoji = "😢",
+                        label = "Triste",
+                        isSelected = selectedEmoji == "😢",
+                        onClick = { selectedEmoji = "😢" }
                     )
-                    EmotionItem(
-                        emoji = "🧡", 
-                        label = "Mal", 
-                        isSelected = selectedEmotion == 1,
-                        onClick = { selectedEmotion = 1 }
+                    EmojiOption(
+                        emoji = "😊",
+                        label = "Alegre",
+                        isSelected = selectedEmoji == "😊",
+                        onClick = { selectedEmoji = "😊" }
                     )
-                    EmotionItem(
-                        emoji = "💛", 
-                        label = "Normal", 
-                        isSelected = selectedEmotion == 2,
-                        onClick = { selectedEmotion = 2 }
-                    )
-                    EmotionItem(
-                        emoji = "💚", 
-                        label = "Bom", 
-                        isSelected = selectedEmotion == 3,
-                        onClick = { selectedEmotion = 3 }
-                    )
-                    EmotionItem(
-                        emoji = "💙", 
-                        label = "Muito Bom", 
-                        isSelected = selectedEmotion == 4,
-                        onClick = { selectedEmotion = 4 }
+                    EmojiOption(
+                        emoji = "😴",
+                        label = "Cansado",
+                        isSelected = selectedEmoji == "😴",
+                        onClick = { selectedEmoji = "😴" }
                     )
                 }
                 
-                // How do you feel today button
-                OutlinedButton(
-                    onClick = { nav.navigate(AppDestinations.CHECK_IN) },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.onSurface
-                    )
+                // Second row of emojis
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    Column(
-                        modifier = Modifier.padding(vertical = 8.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                    EmojiOption(
+                        emoji = "😰",
+                        label = "Ansioso",
+                        isSelected = selectedEmoji == "😰",
+                        onClick = { selectedEmoji = "😰" }
+                    )
+                    EmojiOption(
+                        emoji = "😨",
+                        label = "Medo",
+                        isSelected = selectedEmoji == "😨",
+                        onClick = { selectedEmoji = "😨" }
+                    )
+                    EmojiOption(
+                        emoji = "😡",
+                        label = "Raiva",
+                        isSelected = selectedEmoji == "😡",
+                        onClick = { selectedEmoji = "😡" }
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Second question - Feeling dropdown
+                Text(
+                    text = "Como você se sente hoje?",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                
+                // Dropdown para selecionar o sentimento
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                ) {
+                    OutlinedCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { showFeelingDropdown = true },
+                        shape = RoundedCornerShape(8.dp)
                     ) {
-                        Text(
-                            text = "Como você se sente hoje?",
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Nível 3 de 5",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray
-                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = selectedFeeling.ifEmpty { "Selecione como você se sente" },
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = "Expandir"
+                            )
+                        }
                     }
+                    
+                    DropdownMenu(
+                        expanded = showFeelingDropdown,
+                        onDismissRequest = { showFeelingDropdown = false },
+                        modifier = Modifier.fillMaxWidth(0.9f)
+                    ) {
+                        feelings.forEach { feeling ->
+                            DropdownMenuItem(
+                                text = { Text(feeling) },
+                                onClick = {
+                                    selectedFeeling = feeling
+                                    showFeelingDropdown = false
+                                }
+                            )
+                        }
+                    }
+                }
+                
+                // Submit button
+                Button(
+                    onClick = { vm.submitCheckin(selectedEmoji, selectedFeeling) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    enabled = selectedEmoji.isNotEmpty() && selectedFeeling.isNotEmpty()
+                ) {
+                    Text("Enviar Check-in")
                 }
                 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -190,6 +266,43 @@ fun HomeScreen(
                             text = "3 dias seguidos de check-in! 🔥",
                             style = MaterialTheme.typography.titleMedium,
                             color = Color(0xFFFF9800)
+                        )
+                    }
+                }
+                
+                // Available questionnaires
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFFFFF3E0)
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(
+                            text = "Questionários disponíveis",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color(0xFFFF9800)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        // Self Assessment questionnaire
+                        QuestionnaireItem(
+                            title = "Auto-avaliação",
+                            description = "Avalie como você está se sentindo hoje",
+                            code = "SELF_ASSESS",
+                            onClick = { vm.startQuestionnaire("SELF_ASSESS") }
+                        )
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        // Climate questionnaire
+                        QuestionnaireItem(
+                            title = "Clima organizacional",
+                            description = "Avalie o ambiente de trabalho",
+                            code = "CLIMATE",
+                            onClick = { vm.startQuestionnaire("CLIMATE") }
                         )
                     }
                 }
@@ -217,93 +330,9 @@ fun HomeScreen(
                     }
                 }
                 
-                // Resource boxes
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Card(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(100.dp)
-                            .clickable { nav.navigate(AppDestinations.RESOURCES) },
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color(0xFFF5F5F5)
-                        )
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "Exercícios de respiração",
-                                style = MaterialTheme.typography.bodyMedium,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
-                    
-                    Card(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(100.dp)
-                            .clickable { nav.navigate(AppDestinations.RESOURCES) },
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color(0xFFF5F5F5)
-                        )
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "Meditação guiada",
-                                style = MaterialTheme.typography.bodyMedium,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
-                }
-                
-                // Available questionnaires
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFFFFF3E0)
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        Text(
-                            text = "Questionários disponíveis",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color(0xFFFF9800)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        
-                        if (state.pendingForms > 0) {
-                            Button(
-                                onClick = { nav.navigate(AppDestinations.FORMS) },
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFFFF9800)
-                                )
-                            ) {
-                                Text("Ver ${state.pendingForms} formulários pendentes")
-                            }
-                        } else {
-                            Text(
-                                text = "Não há questionários disponíveis no momento.",
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
-                    }
-                }
-                
                 // Feedback channel
                 Button(
-                    onClick = { vm.showFeedbackDialog() },  // Atualizado para abrir o diálogo
+                    onClick = { vm.showFeedbackDialog() },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.White,
@@ -319,6 +348,98 @@ fun HomeScreen(
                 
                 Spacer(modifier = Modifier.height(80.dp))
             }
+        }
+    }
+}
+
+@Composable
+fun EmojiOption(
+    emoji: String,
+    label: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.padding(horizontal = 4.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(60.dp)
+                .clip(CircleShape)
+                .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
+                .border(
+                    width = 2.dp,
+                    color = if (isSelected) MaterialTheme.colorScheme.primary else Color.LightGray,
+                    shape = CircleShape
+                )
+                .clickable(onClick = onClick),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = emoji,
+                fontSize = 24.sp
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(4.dp))
+        
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+fun QuestionnaireItem(
+    title: String,
+    description: String,
+    code: String,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall
+                )
+                
+                Text(
+                    text = "Código: $code",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+            }
+            
+            Spacer(modifier = Modifier.weight(1f))
+            
+            Icon(
+                imageVector = Icons.Default.ArrowForward,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }
@@ -489,46 +610,5 @@ fun FeedbackDialog(
                 }
             }
         }
-    }
-}
-
-@Composable
-fun EmotionItem(
-    emoji: String,
-    label: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.padding(4.dp)
-    ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(44.dp)
-                .clip(CircleShape)
-                .border(
-                    width = if (isSelected) 2.dp else 1.dp,
-                    color = if (isSelected) MaterialTheme.colorScheme.primary else Color.LightGray,
-                    shape = CircleShape
-                )
-                .clickable(onClick = onClick)
-                .padding(8.dp)
-        ) {
-            Text(
-                text = emoji,
-                fontSize = 18.sp
-            )
-        }
-        
-        Spacer(modifier = Modifier.height(4.dp))
-        
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            textAlign = TextAlign.Center,
-            fontSize = 10.sp
-        )
     }
 } 
