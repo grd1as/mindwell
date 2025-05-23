@@ -26,6 +26,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import java.util.Calendar
 import javax.inject.Inject
 
@@ -533,8 +534,15 @@ class HomeViewModel @Inject constructor(
                             checkInError = null
                         )
                         
-                        // Recarregar dados da home para atualizar último check-in
-                        loadData()
+                        // Atualizar otimisticamente os dados semanais
+                        updateWeeklyDataOptimistically()
+                        
+                        // Sincronizar com servidor em background
+                        updateWeeklyDataAfterCheckin()
+                        
+                        // Recarregar outros dados da home em background
+                        loadCheckinData()
+                        loadFormsData()
                     }
                     
                     result.onFailure { exception ->
@@ -650,6 +658,45 @@ class HomeViewModel @Inject constructor(
                     "ERGONOMIA_INADEQUADA",
                     "OUTRO"
                 )
+            }
+        }
+    }
+    
+    /**
+     * Atualiza otimisticamente o marcador semanal para mostrar o check-in de hoje
+     */
+    private fun updateWeeklyDataOptimistically() {
+        val currentWeeklyData = state.weeklyCheckins
+        if (currentWeeklyData != null) {
+            val today = java.time.LocalDate.now().toString() // Formato YYYY-MM-DD
+            
+            val updatedDays = currentWeeklyData.days.map { day ->
+                if (day.date == today) {
+                    day.copy(hasCheckin = true)
+                } else {
+                    day
+                }
+            }
+            
+            val updatedWeeklyData = currentWeeklyData.copy(days = updatedDays)
+            state = state.copy(weeklyCheckins = updatedWeeklyData)
+            
+            Log.d(TAG, "✨ Atualização otimística aplicada para o dia $today")
+        }
+    }
+    
+    private fun updateWeeklyDataAfterCheckin() {
+        viewModelScope.launch {
+            try {
+                Log.d(TAG, "🔄 Atualizando dados semanais após check-in...")
+                
+                // Carregar dados atualizados do servidor
+                loadWeeklyCheckinData()
+                
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ ERRO ao atualizar dados semanais: ${e.message}", e)
+                // Se houver erro, manter a atualização otimística
+                Log.w(TAG, "🔧 Mantendo atualização otimística devido ao erro")
             }
         }
     }
