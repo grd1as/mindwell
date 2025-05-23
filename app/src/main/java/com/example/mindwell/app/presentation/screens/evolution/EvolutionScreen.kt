@@ -195,7 +195,11 @@ private fun EvolutionContent(
         )
         
         // Weekly mood chart with overall trend included
+<<<<<<< HEAD
         CompactWeeklyMoodChart(
+=======
+        ModernWeeklyMoodChart(
+>>>>>>> 8f2a110 ((wip) analysis layout)
             weeklyMood = monthlyTrend.weeklyMood,
             overallTrend = monthlyTrend.overallTrend,
             viewModel = viewModel
@@ -276,6 +280,7 @@ private fun CompactOverallTrendCard(
             .background(
                 brush = Brush.linearGradient(
                     colors = listOf(
+<<<<<<< HEAD
                         Color(0xFF1F2937),
                         Color(0xFF374151)
                     )
@@ -296,13 +301,38 @@ private fun CompactOverallTrendCard(
             )
             
             Spacer(modifier = Modifier.height(4.dp))
+=======
+                        Color(0xFF6366F1),
+                        Color(0xFF8B5CF6)
+                    )
+                ),
+                shape = RoundedCornerShape(16.dp)
+            )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = trend,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = Color.White.copy(alpha = 0.95f),
+                lineHeight = 20.sp
+            )
+            
+            Spacer(modifier = Modifier.height(6.dp))
+>>>>>>> 8f2a110 ((wip) analysis layout)
             
             Text(
                 text = tip,
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.White.copy(alpha = 0.8f),
+<<<<<<< HEAD
                 lineHeight = 14.sp,
                 fontSize = 11.sp
+=======
+                lineHeight = 18.sp
+>>>>>>> 8f2a110 ((wip) analysis layout)
             )
         }
     }
@@ -448,9 +478,15 @@ private fun CompactWeeklyMoodChart(
                 CompactTimelineView(weeklyMood, viewModel)
             }
             
+<<<<<<< HEAD
             Spacer(modifier = Modifier.height(12.dp))
             
             // Overall trend card (compact)
+=======
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Overall trend card (compact, no title)
+>>>>>>> 8f2a110 ((wip) analysis layout)
             CompactOverallTrendCard(
                 trend = overallTrend,
                 tip = viewModel.getTrendTip()
