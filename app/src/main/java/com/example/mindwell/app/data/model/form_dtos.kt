@@ -92,10 +92,10 @@ data class FormResponseRequest(
  */
 data class AnswerDTO(
     @SerializedName("questionId")
-    val question_id: Int,
+    val question_id: Long,
     
     @SerializedName("optionId")
-    val option_id: Int,
+    val option_id: Long,
     
     @SerializedName("value")
     val value: Double? = null,
