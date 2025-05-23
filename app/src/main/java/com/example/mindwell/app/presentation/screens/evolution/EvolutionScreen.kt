@@ -470,21 +470,12 @@ private fun CompactTimelineView(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(2.dp)
-                    .background(
-                        brush = Brush.horizontalGradient(
-                            colors = listOf(
-                                Color(0xFF10B981).copy(alpha = 0.3f),
-                                Color(0xFF10B981),
-                                Color(0xFF10B981),
-                                Color(0xFF10B981).copy(alpha = 0.3f)
-                            )
-                        )
-                    )
+                    .height(1.dp)
+                    .background(Color(0xFF10B981).copy(alpha = 0.4f))
             )
         }
         
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(6.dp))
         
         // Horizontal timeline items
         Row(
@@ -492,106 +483,11 @@ private fun CompactTimelineView(
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             weeklyMood.forEachIndexed { index, week ->
-                HorizontalTimelineItem(
+                CompactTimelineItem(
                     weekNumber = index + 1,
                     weekData = week,
                     viewModel = viewModel,
                     modifier = Modifier.weight(1f)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun HorizontalTimelineItem(
-    weekNumber: Int,
-    weekData: WeeklyMoodDTO,
-    viewModel: EvolutionViewModel,
-    modifier: Modifier
-) {
-    Column(
-        modifier = modifier.padding(horizontal = 4.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // Week indicator circle
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(CircleShape)
-                .background(
-                    brush = Brush.radialGradient(
-                        colors = listOf(
-                            Color(0xFF10B981),
-                            Color(0xFF059669)
-                        )
-                    )
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "S$weekNumber",
-                style = MaterialTheme.typography.labelMedium,
-                color = Color.White,
-                fontWeight = FontWeight.Bold
-            )
-        }
-        
-        Spacer(modifier = Modifier.height(12.dp))
-        
-        // Content card
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // Emoji with background
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(
-                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = viewModel.getEmojiFromOptionId(weekData.predominantEmoji.optionId),
-                        fontSize = 20.sp
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                // Emoji label
-                Text(
-                    text = weekData.predominantEmoji.label,
-                    style = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    textAlign = TextAlign.Center,
-                    maxLines = 2,
-                    lineHeight = 14.sp
-                )
-                
-                Spacer(modifier = Modifier.height(4.dp))
-                
-                // Sentiment
-                Text(
-                    text = weekData.predominantSentiment.label,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                    maxLines = 2,
-                    lineHeight = 12.sp,
-                    fontSize = 11.sp
                 )
             }
         }
