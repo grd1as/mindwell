@@ -326,7 +326,7 @@ private fun WeeklyMoodChart(
                 Spacer(modifier = Modifier.width(12.dp))
                 
                 Text(
-                    text = "Acompanhamento Semanal",
+                    text = "Linha do Tempo Semanal",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF4CAF50)
@@ -344,15 +344,48 @@ private fun WeeklyMoodChart(
                     textAlign = TextAlign.Center
                 )
             } else {
-                weeklyMood.forEachIndexed { index, week ->
-                    WeeklyMoodItem(
-                        weekNumber = index + 1,
-                        weekData = week,
-                        viewModel = viewModel
-                    )
+                // Timeline horizontal
+                Column {
+                    // Linha conectora da timeline
+                    if (weeklyMood.size > 1) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            weeklyMood.forEachIndexed { index, _ ->
+                                Box(
+                                    modifier = Modifier.weight(1f),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (index < weeklyMood.size - 1) {
+                                        Box(
+                                            modifier = Modifier
+                                                .height(2.dp)
+                                                .fillMaxWidth(0.8f)
+                                                .background(Color(0xFF4CAF50).copy(alpha = 0.3f))
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
                     
-                    if (index < weeklyMood.size - 1) {
-                        Spacer(modifier = Modifier.height(12.dp))
+                    // Items da timeline
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        weeklyMood.forEachIndexed { index, week ->
+                            WeeklyTimelineItem(
+                                weekNumber = index + 1,
+                                weekData = week,
+                                viewModel = viewModel,
+                                isLast = index == weeklyMood.size - 1,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
                     }
                 }
             }
@@ -361,64 +394,72 @@ private fun WeeklyMoodChart(
 }
 
 @Composable
-private fun WeeklyMoodItem(
+private fun WeeklyTimelineItem(
     weekNumber: Int,
     weekData: WeeklyMoodDTO,
-    viewModel: EvolutionViewModel
+    viewModel: EvolutionViewModel,
+    isLast: Boolean,
+    modifier: Modifier
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(
+        // Week circle indicator
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .size(48.dp)
+                .clip(CircleShape)
+                .background(Color(0xFF4CAF50)),
+            contentAlignment = Alignment.Center
         ) {
-            // Week indicator
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFF4CAF50)),
-                contentAlignment = Alignment.Center
+            Text(
+                text = "S$weekNumber",
+                style = MaterialTheme.typography.labelMedium,
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        // Timeline content
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    text = "S$weekNumber",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            
-            Spacer(modifier = Modifier.width(16.dp))
-            
-            Column(modifier = Modifier.weight(1f)) {
                 // Emoji predominante
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = viewModel.getEmojiFromOptionId(weekData.predominantEmoji.optionId),
-                        fontSize = 20.sp
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = weekData.predominantEmoji.label,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
+                Text(
+                    text = viewModel.getEmojiFromOptionId(weekData.predominantEmoji.optionId),
+                    fontSize = 24.sp
+                )
                 
                 Spacer(modifier = Modifier.height(4.dp))
                 
+                Text(
+                    text = weekData.predominantEmoji.label,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Medium,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1
+                )
+                
+                Spacer(modifier = Modifier.height(6.dp))
+                
                 // Sentimento predominante
                 Text(
-                    text = "Sentimento: ${weekData.predominantSentiment.label}",
+                    text = weekData.predominantSentiment.label,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1
                 )
             }
         }
@@ -452,7 +493,7 @@ private fun DailySummaryChart(
                 Spacer(modifier = Modifier.width(12.dp))
                 
                 Text(
-                    text = "Check-ins por Dia da Semana",
+                    text = "Check-ins por Dia da Semana (Mês Atual)",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF2196F3)

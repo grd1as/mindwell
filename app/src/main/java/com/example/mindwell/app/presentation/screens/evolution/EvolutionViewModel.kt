@@ -51,6 +51,7 @@ class EvolutionViewModel @Inject constructor(
         
         viewModelScope.launch {
             try {
+                // A API já filtra automaticamente os dados para o mês especificado
                 val monthlyTrend = apiService.get_monthly_trend(
                     year = month.year,
                     month = month.monthValue
