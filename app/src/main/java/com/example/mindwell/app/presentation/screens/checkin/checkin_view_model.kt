@@ -43,13 +43,13 @@ class CheckinViewModel @Inject constructor(
         val error_message: String? = null
     )
     
-    // Mapeamento de emojis para níveis de humor
+    // Mapeamento de emojis para níveis de humor (corrigindo para valores 1-5 da API)
     private val mood_emojis = mapOf(
-        0 to Pair("❤️", "Muito Mal"),
-        1 to Pair("🧡", "Mal"),
-        2 to Pair("💛", "Normal"),
-        3 to Pair("💚", "Bom"),
-        4 to Pair("💙", "Muito Bom")
+        1 to Pair("😭", "Muito Mal"),
+        2 to Pair("😢", "Mal"), 
+        3 to Pair("😐", "Normal"),
+        4 to Pair("🙂", "Bom"),
+        5 to Pair("😄", "Muito Bom")
     )
     
     // Estado atual da tela
@@ -84,18 +84,43 @@ class CheckinViewModel @Inject constructor(
                 }
                 .collect { result ->
                     result.onSuccess { checkin_page ->
+                        Log.d(TAG, "📦 Dados recebidos da API: ${checkin_page.items.size} check-ins")
+                        
                         // Mapear os check-ins do domínio para o modelo de UI
-                        val checkin_items = checkin_page.items.map { checkin ->
-                            // Obter o valor da emoção
-                            val emotion_value = checkin.emotion.value
-                            val mood_pair = mood_emojis[emotion_value] ?: Pair("😐", "Normal")
+                        val checkin_items = checkin_page.items.mapIndexed { index, checkin ->
+                            // Usar dados diretos da API em vez do mapeamento hardcoded
+                            val emotion_emoji = checkin.emotion.emoji
+                            val emotion_name = checkin.emotion.name
+                            val feeling_text = checkin.note ?: ""
+                            
+                            // Formatar a data de forma mais bonita
+                            val formatted_date = try {
+                                val parsed_date = java.time.LocalDateTime.parse(checkin.date.replace("T00:00:00", "T00:00:00.000"))
+                                parsed_date.format(date_formatter)
+                            } catch (e: Exception) {
+                                try {
+                                    val parsed_date = java.time.LocalDate.parse(checkin.date.split("T")[0])
+                                    parsed_date.format(date_formatter)
+                                } catch (e2: Exception) {
+                                    Log.w(TAG, "Erro ao formatar data: ${checkin.date}")
+                                    checkin.date.split("T")[0] // Fallback para apenas a data
+                                }
+                            }
+                            
+                            Log.d(TAG, "🔍 Check-in #$index:")
+                            Log.d(TAG, "   ID: ${checkin.id}")
+                            Log.d(TAG, "   Date: ${checkin.date}")
+                            Log.d(TAG, "   Emotion Name (título): $emotion_name")
+                            Log.d(TAG, "   Emotion Emoji: $emotion_emoji")
+                            Log.d(TAG, "   Feeling Text (nota): $feeling_text")
+                            Log.d(TAG, "   Streak: ${checkin.streak}")
                             
                             CheckinHistoryItem(
                                 id = checkin.id.toInt(),
-                                date = checkin.date,
-                                emoji = mood_pair.first,
-                                mood = mood_pair.second,
-                                note = checkin.note ?: "",
+                                date = formatted_date,
+                                emoji = emotion_emoji,
+                                mood = emotion_name, // Título: nome da emoção da pergunta 1
+                                note = feeling_text, // Texto do sentimento da pergunta 2
                                 streak = checkin.streak ?: 0
                             )
                         }

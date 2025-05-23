@@ -100,7 +100,7 @@ fun HomeScreen(
             bottomSheetState = bottomSheetState
         )
     }
-
+    
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -127,7 +127,7 @@ fun HomeScreen(
                     greetingEmoji = state.greetingEmoji,
                     onSettingsClick = { nav.navigate(AppDestinations.SETTINGS) },
                     onTooltipRequest = { vm.showTooltip("settings") },
-                    showTooltip = state.activeTooltip == "settings",
+                            showTooltip = state.activeTooltip == "settings",
                     onDismissTooltip = { vm.hideTooltip() }
                 )
                 

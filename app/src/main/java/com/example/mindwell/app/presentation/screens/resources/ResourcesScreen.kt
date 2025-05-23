@@ -214,9 +214,9 @@ fun ResourcesScreen(
                                 SectionHeader(
                                     title = "📚 $categoryName",
                                     subtitle = "Recursos especializados"
-                                )
-                            }
-                            
+                    )
+                }
+                
                             items(filteredResources) { resource ->
                                 ModernPersonalizedResourceCard(
                         resource = resource,
@@ -234,7 +234,7 @@ fun ResourcesScreen(
                 
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
-                }
+            }
             }
         }
     }

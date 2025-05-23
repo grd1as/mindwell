@@ -82,31 +82,61 @@ class CheckinRepositoryImpl @Inject constructor(
         try {
             // Tenta obter dados da API
             val response = api_service.get_checkins(page, size, from?.toString(), to?.toString())
+            android.util.Log.d("CheckinRepo", "🔍 API Response: ${response.items.size} items")
+            
             return CheckinPage(
                 page = response.page,
                 size = response.size,
                 total_pages = response.total_pages,
                 total_items = response.total_items,
-                items = response.items.map { dto ->
-                    // Tenta extrair a emoção das respostas (assumindo que a primeira resposta contém a emoção)
-                    val emotionAnswer = dto.answers.firstOrNull()
-                    val emotionValue = emotionAnswer?.value?.toIntOrNull() ?: 3 // Valor padrão se não encontrar
+                items = response.items.mapIndexed { index, dto ->
+                    android.util.Log.d("CheckinRepo", "📋 DTO #$index:")
+                    android.util.Log.d("CheckinRepo", "   Checkin ID: ${dto.checkin_id}")
+                    android.util.Log.d("CheckinRepo", "   Timestamp: ${dto.timestamp}")
+                    android.util.Log.d("CheckinRepo", "   Answers count: ${dto.answers.size}")
                     
-                    // Mapeamento baseado no valor da emoção
-                    val emotion = when (emotionValue) {
-                        1 -> Emotion(id = 1, name = "Muito mal", emoji = "😭", value = 1)
-                        2 -> Emotion(id = 2, name = "Mal", emoji = "😢", value = 2)
-                        3 -> Emotion(id = 3, name = "Normal", emoji = "😐", value = 3)
-                        4 -> Emotion(id = 4, name = "Bem", emoji = "🙂", value = 4)
-                        5 -> Emotion(id = 5, name = "Muito bem", emoji = "😄", value = 5)
-                        else -> Emotion(id = 3, name = "Normal", emoji = "😐", value = 3)
+                    // Extrair ambas as respostas do check-in
+                    // Pergunta 1 (questionId=1): "Escolha o seu emoji de hoje!" - vai no título
+                    // Pergunta 2 (questionId=2): "Como você se sente hoje?" - vai na descrição da emoção
+                    val emojiAnswer = dto.answers.find { it.question_id == 1 }
+                    val feelingAnswer = dto.answers.find { it.question_id == 2 }
+                    
+                    android.util.Log.d("CheckinRepo", "   Emoji Answer (Q1): question_id=${emojiAnswer?.question_id}, option_id=${emojiAnswer?.option_id}, value=${emojiAnswer?.value}")
+                    android.util.Log.d("CheckinRepo", "   Feeling Answer (Q2): question_id=${feelingAnswer?.question_id}, option_id=${feelingAnswer?.option_id}, value=${feelingAnswer?.value}")
+                    
+                    // Mapear a pergunta 1 (emoji) para título e emoji
+                    val emotion = when (emojiAnswer?.value?.uppercase()) {
+                        "TRISTE" -> Emotion(id = 1, name = "Triste", emoji = "😢", value = 1)
+                        "ALEGRE" -> Emotion(id = 2, name = "Alegre", emoji = "😊", value = 2)
+                        "CANSADO" -> Emotion(id = 3, name = "Cansado", emoji = "😴", value = 3)
+                        "ANSIOSO" -> Emotion(id = 4, name = "Ansioso", emoji = "😰", value = 4)
+                        "MEDO" -> Emotion(id = 5, name = "Medo", emoji = "😨", value = 5)
+                        "RAIVA" -> Emotion(id = 6, name = "Raiva", emoji = "😡", value = 6)
+                        else -> {
+                            // Fallback: mapear baseado no option_id se o value não bater
+                            when (emojiAnswer?.option_id) {
+                                1 -> Emotion(id = 1, name = "Triste", emoji = "😢", value = 1)
+                                2 -> Emotion(id = 2, name = "Alegre", emoji = "😊", value = 2)
+                                3 -> Emotion(id = 3, name = "Cansado", emoji = "😴", value = 3)
+                                4 -> Emotion(id = 4, name = "Ansioso", emoji = "😰", value = 4)
+                                5 -> Emotion(id = 5, name = "Medo", emoji = "😨", value = 5)
+                                6 -> Emotion(id = 6, name = "Raiva", emoji = "😡", value = 6)
+                                else -> Emotion(id = 3, name = "Cansado", emoji = "😴", value = 3) // Padrão
+                            }
+                        }
                     }
+                    
+                    // Extrair o texto da pergunta 2 (feeling) para mostrar na descrição
+                    val feelingText = feelingAnswer?.value ?: "Não informado"
+                    
+                    android.util.Log.d("CheckinRepo", "   Final Emotion: ${emotion.emoji} ${emotion.name} (value=${emotion.value})")
+                    android.util.Log.d("CheckinRepo", "   Feeling Text: $feelingText")
                     
                     Checkin(
                         id = dto.checkin_id.toLong(),
                         date = dto.timestamp,
                         emotion = emotion,
-                        note = null, // Não disponível no DTO atual
+                        note = feelingText,
                         streak = dto.streak
                     )
                 },
