@@ -1,6 +1,7 @@
 package com.example.mindwell.app.presentation.screens.evolution
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -21,8 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.mindwell.app.data.model.WeekdayTotalDTO
-import com.example.mindwell.app.data.model.WeeklyMoodDTO
+import com.example.mindwell.app.data.model.*
 import com.example.mindwell.app.presentation.screens.evolution.components.MonthlySummaryCard
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -33,58 +33,82 @@ fun EvolutionScreen(
 ) {
     val state = vm.state
     
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { 
-                    Text(
-                        "Análise de Evolução",
-                        fontWeight = FontWeight.SemiBold
-                    ) 
-                },
-                navigationIcon = {
-                    IconButton(onClick = { nav.navigateUp() }) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Voltar"
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { vm.refresh() }) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Atualizar"
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    titleContentColor = MaterialTheme.colorScheme.onBackground,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onBackground
-                )
-            )
-        }
-    ) { padding ->
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF8FAFF))
+    ) {
         if (state.is_loading) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(
-                    color = MaterialTheme.colorScheme.primary,
-                    strokeWidth = 3.dp
-                )
-            }
+            ModernLoadingState()
         } else if (state.error != null) {
-            ErrorContent(state.error, onRetry = { vm.refresh() })
+            ModernErrorState(state.error, onRetry = { vm.refresh() })
         } else {
-            EvolutionContent(
-                modifier = Modifier.padding(padding),
-                monthLabel = vm.format_current_month(),
-                monthlyTrend = state.monthly_trend,
-                monthlySummary = state.monthly_summary,
-                viewModel = vm,
-                onPreviousMonth = { vm.previous_month() },
-                onNextMonth = { vm.next_month() }
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+            ) {
+                // Header moderno com gradiente
+                ModernEvolutionHeader(onBackClick = { nav.navigateUp() })
+                
+                // Conteúdo em cards modernos
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Seletor de mês
+                    ModernMonthSelector(
+                        monthLabel = vm.format_current_month(),
+                        onPreviousMonth = { vm.previous_month() },
+                        onNextMonth = { vm.next_month() }
+                    )
+                    
+                    // Resumo mensal
+                    state.monthly_summary?.let { summary ->
+                        MonthlySummaryCard(
+                            summary = summary,
+                            get_emoji_from_option_id = vm::get_emoji_from_option_id,
+                            get_trend_icon = vm::get_trend_icon,
+                            format_workload_change = vm::format_workload_change,
+                            get_workload_change_color = vm::get_workload_change_color
+                        )
+                    }
+                    
+                    // Gráfico de distribuição de humor (NOVO)
+                    state.mood_distribution?.let { moodData ->
+                        ModernMoodDistributionCard(moodData = moodData)
+                    }
+                    
+                    // Timeline semanal
+                    state.monthly_trend?.let { trend ->
+                        ModernWeeklyMoodChart(
+                            weeklyMood = trend.weeklyMood,
+                            overallTrend = trend.overallTrend,
+                            viewModel = vm
+                        )
+                    }
+                    
+                    // Alertas de carga de trabalho (NOVO)
+                    state.workload_alerts?.let { workloadData ->
+                        ModernWorkloadAlertsCard(workloadData = workloadData)
+                    }
+                    
+                    // Diagnóstico de clima organizacional (NOVO)
+                    state.climate_diagnosis?.let { climateData ->
+                        ModernClimateDiagnosisCard(climateData = climateData)
+                    }
+                    
+                    // Atividade combinada
+                    state.monthly_trend?.let { trend ->
+                        CombinedActivityCard(
+                            dailySummary = trend.dailySummary,
+                            viewModel = vm
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.height(80.dp))
+                }
+            }
         }
     }
 }
@@ -235,49 +259,104 @@ private fun ModernMonthSelector(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp),
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFFF8FAFF),
+                            Color(0xFFFFFFFF)
+                        )
+                    )
+                )
+                .padding(20.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            FilledIconButton(
-                onClick = onPreviousMonth,
-                colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+            Card(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clickable { onPreviousMonth() },
+                shape = CircleShape,
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.Transparent
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
-                Icon(
-                    Icons.Default.ArrowBack, 
-                    contentDescription = "Mês anterior"
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            brush = Brush.linearGradient(
+                                colors = listOf(
+                                    Color(0xFF6366F1),
+                                    Color(0xFF8B5CF6)
+                                )
+                            ),
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.ArrowBack,
+                        contentDescription = "Mês anterior",
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+            
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "📅",
+                    fontSize = 24.sp
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = monthLabel,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1A1A1A)
                 )
             }
             
-            Text(
-                text = monthLabel,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            
-            FilledIconButton(
-                onClick = onNextMonth,
-                colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+            Card(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clickable { onNextMonth() },
+                shape = CircleShape,
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.Transparent
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
-                Icon(
-                    Icons.Default.ArrowForward, 
-                    contentDescription = "Próximo mês"
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            brush = Brush.linearGradient(
+                                colors = listOf(
+                                    Color(0xFF6366F1),
+                                    Color(0xFF8B5CF6)
+                                )
+                            ),
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.ArrowForward,
+                        contentDescription = "Próximo mês",
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
     }
@@ -736,5 +815,713 @@ private fun EmptyStateMessage(message: String) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
+    }
+}
+
+@Composable
+private fun ModernLoadingState() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Card(
+            modifier = Modifier.padding(24.dp),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                CircularProgressIndicator(
+                    color = Color(0xFF6366F1),
+                    strokeWidth = 3.dp,
+                    modifier = Modifier.size(48.dp)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Analisando seus dados...",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF1A1A1A)
+                )
+                Text(
+                    text = "Carregando insights personalizados",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF666666)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ModernErrorState(
+    errorMessage: String,
+    onRetry: () -> Unit
+) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Card(
+            modifier = Modifier.padding(24.dp),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "📊",
+                    fontSize = 48.sp
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Text(
+                    text = "Ops! Algo deu errado",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1A1A1A),
+                    textAlign = TextAlign.Center
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Text(
+                    text = errorMessage,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF666666),
+                    textAlign = TextAlign.Center
+                )
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                Button(
+                    onClick = onRetry,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent
+                    ),
+                    contentPadding = PaddingValues(0.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                brush = Brush.horizontalGradient(
+                                    colors = listOf(Color(0xFF6366F1), Color(0xFF8B5CF6))
+                                ),
+                                shape = RoundedCornerShape(12.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Tentar novamente",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ModernEvolutionHeader(onBackClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp)
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFF6366F1),
+                        Color(0xFF8B5CF6),
+                        Color(0xFFF8FAFF)
+                    )
+                )
+            )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            // Barra de navegação
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Card(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clickable { onBackClick() },
+                    shape = CircleShape,
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White.copy(alpha = 0.2f)
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Voltar",
+                            tint = Color.White,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+            }
+            
+            Spacer(modifier = Modifier.weight(1f))
+            
+            // Conteúdo do header
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Ícone emoji
+                Box(
+                    modifier = Modifier
+                        .size(60.dp)
+                        .background(
+                            brush = Brush.linearGradient(
+                                colors = listOf(
+                                    Color.White.copy(alpha = 0.3f),
+                                    Color.White.copy(alpha = 0.1f)
+                                )
+                            ),
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "📈",
+                        fontSize = 28.sp
+                    )
+                }
+                
+                Spacer(modifier = Modifier.width(16.dp))
+                
+                Column {
+                    Text(
+                        text = "Evolução Pessoal",
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = Color.White
+                    )
+                    
+                    Spacer(modifier = Modifier.height(4.dp))
+                    
+                    Text(
+                        text = "Sua jornada de bem-estar",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.8f)
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(20.dp))
+        }
+    }
+}
+
+@Composable
+private fun ModernMoodDistributionCard(moodData: MoodDistributionDTO) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFFF0F9FF),
+                            Color(0xFFFFFFFF)
+                        )
+                    )
+                )
+                .padding(20.dp)
+        ) {
+            // Header
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(
+                            brush = Brush.linearGradient(
+                                colors = listOf(
+                                    Color(0xFF3B82F6),
+                                    Color(0xFF1D4ED8)
+                                )
+                            ),
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "😊",
+                        fontSize = 20.sp
+                    )
+                }
+                
+                Spacer(modifier = Modifier.width(12.dp))
+                
+                Column {
+                    Text(
+                        text = "Distribuição de Humor",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1A1A1A)
+                    )
+                    Text(
+                        text = "Como você se sentiu em ${moodData.period}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF666666)
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            // Gráficos das questões
+            moodData.questions.forEach { question ->
+                MoodQuestionChart(question = question)
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun MoodQuestionChart(question: MoodQuestionDTO) {
+    Column {
+        Text(
+            text = question.text,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+            color = Color(0xFF1A1A1A)
+        )
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        Text(
+            text = "${question.totalResponses} respostas",
+            style = MaterialTheme.typography.bodySmall,
+            color = Color(0xFF666666)
+        )
+        
+        Spacer(modifier = Modifier.height(12.dp))
+        
+        // Barra de percentual para cada opção
+        question.options.forEach { option ->
+            MoodOptionBar(option = option)
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+    }
+}
+
+@Composable
+private fun MoodOptionBar(option: MoodOptionDTO) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Emoji da opção
+        Text(
+            text = getEmojiFromOptionId(option.optionId),
+            fontSize = 16.sp,
+            modifier = Modifier.width(24.dp)
+        )
+        
+        Spacer(modifier = Modifier.width(8.dp))
+        
+        // Nome da opção
+        Text(
+            text = option.label,
+            style = MaterialTheme.typography.bodySmall,
+            color = Color(0xFF1A1A1A),
+            modifier = Modifier.width(80.dp)
+        )
+        
+        Spacer(modifier = Modifier.width(8.dp))
+        
+        // Barra de progresso
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(12.dp)
+                .background(
+                    color = Color(0xFFE5E7EB),
+                    shape = RoundedCornerShape(6.dp)
+                )
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(fraction = (option.percent / 100).toFloat())
+                    .background(
+                        color = getColorFromLevel(option.level),
+                        shape = RoundedCornerShape(6.dp)
+                    )
+            )
+        }
+        
+        Spacer(modifier = Modifier.width(8.dp))
+        
+        // Percentual
+        Text(
+            text = "${option.percent.toInt()}%",
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.SemiBold,
+            color = Color(0xFF1A1A1A),
+            modifier = Modifier.width(32.dp)
+        )
+    }
+}
+
+@Composable
+private fun ModernWorkloadAlertsCard(workloadData: WorkloadAlertsDTO) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFFFEF3F2),
+                            Color(0xFFFFFFFF)
+                        )
+                    )
+                )
+                .padding(20.dp)
+        ) {
+            // Header
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(
+                            brush = Brush.linearGradient(
+                                colors = listOf(
+                                    Color(0xFFEF4444),
+                                    Color(0xFFDC2626)
+                                )
+                            ),
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "⚠️",
+                        fontSize = 18.sp
+                    )
+                }
+                
+                Spacer(modifier = Modifier.width(12.dp))
+                
+                Column {
+                    Text(
+                        text = "Alertas de Carga de Trabalho",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1A1A1A)
+                    )
+                    Text(
+                        text = "Últimos ${workloadData.months.size} meses",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF666666)
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            // Timeline dos meses
+            workloadData.months.forEach { month ->
+                WorkloadMonthItem(month = month)
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun WorkloadMonthItem(month: WorkloadMonthDTO) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Período
+        Text(
+            text = month.period,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = Color(0xFF1A1A1A),
+            modifier = Modifier.width(80.dp)
+        )
+        
+        Spacer(modifier = Modifier.width(16.dp))
+        
+        // Carga média
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "Carga: ${String.format("%.1f", month.workloadAvg)}/5",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF666666)
+            )
+            
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(6.dp)
+                    .background(
+                        color = Color(0xFFE5E7EB),
+                        shape = RoundedCornerShape(3.dp)
+                    )
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(fraction = (month.workloadAvg / 5).toFloat())
+                        .background(
+                            color = getWorkloadColor(month.workloadAvg),
+                            shape = RoundedCornerShape(3.dp)
+                        )
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.width(16.dp))
+        
+        // Alertas
+        Card(
+            shape = RoundedCornerShape(8.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = if (month.alertCount > 0) Color(0xFFEF4444) else Color(0xFF10B981)
+            )
+        ) {
+            Text(
+                text = "${month.alertCount}",
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun ModernClimateDiagnosisCard(climateData: ClimateDiagnosisDTO) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFFF0FDF4),
+                            Color(0xFFFFFFFF)
+                        )
+                    )
+                )
+                .padding(20.dp)
+        ) {
+            // Header
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(
+                            brush = Brush.linearGradient(
+                                colors = listOf(
+                                    Color(0xFF10B981),
+                                    Color(0xFF059669)
+                                )
+                            ),
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "🏢",
+                        fontSize = 18.sp
+                    )
+                }
+                
+                Spacer(modifier = Modifier.width(12.dp))
+                
+                Column {
+                    Text(
+                        text = "Clima Organizacional",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1A1A1A)
+                    )
+                    Text(
+                        text = "Diagnóstico de ${climateData.period}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF666666)
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            // Dimensões
+            climateData.dimensions.forEach { dimension ->
+                ClimateDimensionItem(dimension = dimension)
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun ClimateDimensionItem(dimension: ClimateDimensionDTO) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Nome da dimensão
+        Text(
+            text = dimension.name.capitalize(),
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = Color(0xFF1A1A1A),
+            modifier = Modifier.width(100.dp)
+        )
+        
+        Spacer(modifier = Modifier.width(16.dp))
+        
+        // Score visual
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "${String.format("%.1f", dimension.score)}/5.0",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF666666)
+            )
+            
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .background(
+                        color = Color(0xFFE5E7EB),
+                        shape = RoundedCornerShape(4.dp)
+                    )
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(fraction = (dimension.score / 5).toFloat())
+                        .background(
+                            color = getClimateStatusColor(dimension.status),
+                            shape = RoundedCornerShape(4.dp)
+                        )
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.width(16.dp))
+        
+        // Status
+        Card(
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = getClimateStatusColor(dimension.status).copy(alpha = 0.1f)
+            )
+        ) {
+            Text(
+                text = dimension.status,
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.SemiBold,
+                color = getClimateStatusColor(dimension.status),
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+            )
+        }
+    }
+}
+
+// Funções auxiliares para cores e emojis
+private fun getEmojiFromOptionId(optionId: Int): String {
+    return when (optionId) {
+        1 -> "😢" // TRISTE
+        2 -> "😊" // ALEGRE
+        3 -> "😴" // CANSADO
+        4 -> "😰" // ANSIOSO
+        5 -> "😨" // MEDO
+        6 -> "😡" // RAIVA
+        else -> "😐" // NEUTRO
+    }
+}
+
+private fun getColorFromLevel(level: String): Color {
+    return when (level.lowercase()) {
+        "baixo" -> Color(0xFF10B981)
+        "moderado" -> Color(0xFFEAB308)
+        "alto" -> Color(0xFFEF4444)
+        else -> Color(0xFF6B7280)
+    }
+}
+
+private fun getWorkloadColor(workload: Double): Color {
+    return when {
+        workload <= 2.0 -> Color(0xFF10B981)
+        workload <= 3.5 -> Color(0xFFEAB308)
+        else -> Color(0xFFEF4444)
+    }
+}
+
+private fun getClimateStatusColor(status: String): Color {
+    return when (status.lowercase()) {
+        "saudável" -> Color(0xFF10B981)
+        "atenção" -> Color(0xFFEAB308)
+        "alerta" -> Color(0xFFEF4444)
+        else -> Color(0xFF6B7280)
     }
 } 

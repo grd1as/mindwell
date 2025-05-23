@@ -63,10 +63,8 @@ fun ModernQuickCheckin(
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Header do check-in com gradiente
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            // Header com gradiente
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
                         .size(40.dp)
@@ -89,7 +87,7 @@ fun ModernQuickCheckin(
                 
                 Spacer(modifier = Modifier.width(12.dp))
                 
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "Check-in Diário",
                         style = MaterialTheme.typography.headlineSmall.copy(
@@ -104,6 +102,38 @@ fun ModernQuickCheckin(
                         color = Color(0xFF666666)
                     )
                 }
+
+                Card(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clickable { onTooltipRequest("checkin_help") },
+                    shape = CircleShape,
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFFFF6B6B).copy(alpha = 0.1f)
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Info,
+                            contentDescription = "Ajuda",
+                            tint = Color(0xFFFF6B6B),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+            }
+
+            // Tooltip para check-in
+            if (activeTooltip == "checkin_help") {
+                Tooltip(
+                    tooltipText = "Registre como você está se sentindo hoje para acompanhar seu bem-estar ao longo do tempo",
+                    showTooltip = true,
+                    onDismiss = onDismissTooltip
+                )
             }
             
             // Seleção de emoji moderna com animações

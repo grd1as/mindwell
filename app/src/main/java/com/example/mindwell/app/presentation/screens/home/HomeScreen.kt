@@ -161,7 +161,10 @@ fun HomeScreen(
                     
                     // Progress semanal moderno
                     ModernWeeklyProgress(
-                        weeklyData = state.weeklyCheckins
+                        weeklyData = state.weeklyCheckins,
+                        onTooltipRequest = { tooltipId -> vm.showTooltip(tooltipId) },
+                        activeTooltip = state.activeTooltip,
+                        onDismissTooltip = { vm.hideTooltip() }
                     )
                     
                     // Dicas personalizadas modernas
@@ -169,7 +172,10 @@ fun HomeScreen(
                         tips = state.customTips,
                         isLoading = state.isLoadingTips,
                         onTipClick = { nav.navigate(AppDestinations.RESOURCES) },
-                        onRefresh = { vm.refreshPersonalizedTips() }
+                        onRefresh = { vm.refreshPersonalizedTips() },
+                        onTooltipRequest = { tooltipId -> vm.showTooltip(tooltipId) },
+                        activeTooltip = state.activeTooltip,
+                        onDismissTooltip = { vm.hideTooltip() }
                     )
                     
                     // Questionários modernos

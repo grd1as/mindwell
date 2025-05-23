@@ -26,6 +26,9 @@ data class EvolutionState(
     val current_month: YearMonth = YearMonth.now(),
     val monthly_trend: MonthlyTrendDTO? = null,
     val monthly_summary: MonthlySummary? = null,
+    val mood_distribution: com.example.mindwell.app.data.model.MoodDistributionDTO? = null,
+    val workload_alerts: com.example.mindwell.app.data.model.WorkloadAlertsDTO? = null,
+    val climate_diagnosis: com.example.mindwell.app.data.model.ClimateDiagnosisDTO? = null,
     val error: String? = null
 )
 
@@ -61,6 +64,15 @@ class EvolutionViewModel @Inject constructor(
                 
                 // Carrega análise de tendência (mantendo a API existente)
                 load_monthly_trend(month)
+                
+                // Carrega distribuição de humor
+                load_mood_distribution(month.year, month.monthValue)
+                
+                // Carrega alertas de carga de trabalho (últimos 3 meses)
+                load_workload_alerts()
+                
+                // Carrega diagnóstico de clima organizacional
+                load_climate_diagnosis()
                 
             } catch (e: Exception) {
                 Log.e(TAG, "❌ ERRO ao carregar dados mensais: ${e.message}", e)
@@ -132,6 +144,84 @@ class EvolutionViewModel @Inject constructor(
                 is_loading = false,
                 error = "Erro ao carregar análise: ${e.message}"
             )
+        }
+    }
+    
+    /**
+     * Carrega distribuição de humor para um mês específico
+     */
+    private suspend fun load_mood_distribution(year: Int, month: Int) {
+        try {
+            val mood_distribution = api_service.get_mood_distribution(
+                year = year,
+                month = month
+            )
+            
+            Log.d(TAG, "✅ Distribuição de humor carregada com sucesso!")
+            Log.d(TAG, "   - Período: ${mood_distribution.period}")
+            Log.d(TAG, "   - Questões analisadas: ${mood_distribution.questions.size}")
+            
+            mood_distribution.questions.forEach { question ->
+                Log.d(TAG, "   - Questão ${question.ordinal}: ${question.text}")
+                Log.d(TAG, "     Total respostas: ${question.totalResponses}")
+                question.options.forEach { option ->
+                    Log.d(TAG, "     ${option.label}: ${option.count} (${option.percent}%) - ${option.level}")
+                }
+            }
+            
+            state = state.copy(
+                mood_distribution = mood_distribution
+            )
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ ERRO ao carregar distribuição de humor: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Carrega alertas de carga de trabalho dos últimos meses
+     */
+    private suspend fun load_workload_alerts() {
+        try {
+            val workload_alerts = api_service.get_workload_alerts(months = 3)
+            
+            Log.d(TAG, "✅ Alertas de carga de trabalho carregados com sucesso!")
+            Log.d(TAG, "   - Meses analisados: ${workload_alerts.months.size}")
+            
+            workload_alerts.months.forEach { month ->
+                Log.d(TAG, "   - ${month.period}: Carga média ${month.workloadAvg}, ${month.alertCount} alertas")
+            }
+            
+            state = state.copy(
+                workload_alerts = workload_alerts
+            )
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ ERRO ao carregar alertas de carga de trabalho: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Carrega diagnóstico de clima organizacional
+     */
+    private suspend fun load_climate_diagnosis() {
+        try {
+            val climate_diagnosis = api_service.get_climate_diagnosis()
+            
+            Log.d(TAG, "✅ Diagnóstico de clima organizacional carregado com sucesso!")
+            Log.d(TAG, "   - Período: ${climate_diagnosis.period}")
+            Log.d(TAG, "   - Dimensões analisadas: ${climate_diagnosis.dimensions.size}")
+            
+            climate_diagnosis.dimensions.forEach { dimension ->
+                Log.d(TAG, "   - ${dimension.name}: ${dimension.score} (${dimension.status})")
+            }
+            
+            state = state.copy(
+                climate_diagnosis = climate_diagnosis
+            )
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ ERRO ao carregar diagnóstico de clima: ${e.message}", e)
         }
     }
     

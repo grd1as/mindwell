@@ -41,6 +41,7 @@ class FormsViewModel @Inject constructor(
      * Carrega a lista de formulários.
      * Exclui checkin (fica só na home) e report (canal de escuta no botão flutuante).
      * Mostra apenas questionários: SELF_ASSESSMENT, CLIMATE, etc.
+     * Remove questionários já respondidos.
      */
     fun loadForms() {
         state = state.copy(isLoading = true, error = null)
@@ -51,14 +52,21 @@ class FormsViewModel @Inject constructor(
                 if (result.isSuccess) {
                     val allForms = result.getOrNull() ?: emptyList()
                     
-                    // Filtrar apenas questionários válidos (excluir CHECKIN e REPORT)
-                    val questionnairesForms = allForms.filter { form ->
-                        form.type != "CHECKIN" && form.type != "REPORT"
+                    // Filtrar apenas questionários válidos e não respondidos
+                    val availableForms = allForms.filter { form ->
+                        // Excluir CHECKIN e REPORT
+                        val isValidType = form.type != "CHECKIN" && form.type != "REPORT"
+                        // Excluir questionários já respondidos
+                        val notCompleted = form.lastAnsweredAt == null
+                        
+                        isValidType && notCompleted
                     }
                     
-                    Log.d(TAG, "✅ Carregados ${allForms.size} formulários, ${questionnairesForms.size} questionários válidos")
+                    Log.d(TAG, "✅ Carregados ${allForms.size} formulários total")
+                    Log.d(TAG, "📋 Questionários disponíveis (não respondidos): ${availableForms.size}")
+                    
                     state = state.copy(
-                        forms = questionnairesForms,
+                        forms = availableForms,
                         isLoading = false
                     )
                 } else {

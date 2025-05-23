@@ -1,8 +1,10 @@
 package com.example.mindwell.app.presentation.screens.resources
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -17,11 +19,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.mindwell.app.domain.entities.ResourceDetail
@@ -39,84 +43,59 @@ fun ResourceDetailScreen(
         vm.loadResource(resourceId)
     }
     
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(state.resource?.title ?: "Carregando...") },
-                navigationIcon = {
-                    IconButton(onClick = { nav.navigateUp() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Voltar")
-                    }
-                }
-            )
-        }
-    ) { padding ->
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF8FAFF))
+    ) {
         if (state.isLoading) {
-            LoadingState(modifier = Modifier.padding(padding))
+            LoadingState()
         } else if (state.error != null) {
             ErrorState(
                 error = state.error,
-                onRetry = { vm.loadResource(resourceId) },
-                modifier = Modifier.padding(padding)
+                onRetry = { vm.loadResource(resourceId) }
             )
         } else if (state.resource != null) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding)
                     .verticalScroll(rememberScrollState())
             ) {
-                // Banner colorido no topo
-                ResourceBanner(
+                // Header moderno com gradiente
+                ModernHeader(
                     resource = state.resource,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
+                    onBackClick = { nav.navigateUp() }
                 )
                 
-                // Conteúdo específico baseado no tipo
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
+                // Conteúdo em cards modernos
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
+                    // Conteúdo específico baseado no tipo
                     when (state.resource.categoryId) {
-                        "breathing" -> BreathingExerciseContent(resource = state.resource)
-                        "meditation" -> MeditationContent(resource = state.resource)
-                        "journaling" -> JournalingContent(resource = state.resource)
-                        "exercise" -> ExerciseContent(resource = state.resource)
-                        "sleep" -> SleepContent(resource = state.resource)
-                        else -> GenericResourceContent(resource = state.resource)
+                        "breathing" -> ModernBreathingContent(resource = state.resource)
+                        "meditation" -> ModernMeditationContent(resource = state.resource)
+                        "journaling" -> ModernJournalingContent(resource = state.resource)
+                        "exercise" -> ModernExerciseContent(resource = state.resource)
+                        "sleep" -> ModernSleepContent(resource = state.resource)
+                        else -> ModernGenericContent(resource = state.resource)
                     }
+                    
+                    // Botão de conclusão moderno
+                    ModernCompletionButton()
+                    
+                    Spacer(modifier = Modifier.height(80.dp))
                 }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // Botão de conclusão
-                Button(
-                    onClick = { /* Implementar ação para marcar como concluído */ },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
-                ) {
-                    Icon(Icons.Default.Check, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Marcar como concluído")
-                }
-                
-                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }
 }
 
 @Composable
-fun LoadingState(modifier: Modifier = Modifier) {
+fun LoadingState() {
     Box(
-        modifier = modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -135,11 +114,10 @@ fun LoadingState(modifier: Modifier = Modifier) {
 @Composable
 fun ErrorState(
     error: String,
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier
+    onRetry: () -> Unit
 ) {
     Box(
-        modifier = modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -178,45 +156,88 @@ fun ErrorState(
 }
 
 @Composable
-fun ResourceBanner(
+fun ModernHeader(
     resource: ResourceDetail,
-    modifier: Modifier = Modifier
+    onBackClick: () -> Unit
 ) {
-    val (backgroundColor, icon) = when (resource.categoryId) {
-        "breathing" -> Pair(Color(0xFF90CAF9), Icons.Default.Favorite)
-        "meditation" -> Pair(Color(0xFFBBDEFB), Icons.Default.Favorite)
-        "journaling" -> Pair(Color(0xFFB39DDB), Icons.Default.Create)
-        "exercise" -> Pair(Color(0xFFA5D6A7), Icons.Default.Favorite)
-        "sleep" -> Pair(Color(0xFF80DEEA), Icons.Default.Star)
-        else -> Pair(Color(0xFFE0E0E0), Icons.Default.Info)
+    val (gradientColors, emoji) = when (resource.categoryId) {
+        "breathing" -> Pair(listOf(Color(0xFF10B981), Color(0xFF34D399)), "🫁")
+        "meditation" -> Pair(listOf(Color(0xFF8B5CF6), Color(0xFFA78BFA)), "🧘")
+        "journaling" -> Pair(listOf(Color(0xFFEAB308), Color(0xFFFBBF24)), "📝")
+        "exercise" -> Pair(listOf(Color(0xFFEF4444), Color(0xFFF87171)), "💪")
+        "sleep" -> Pair(listOf(Color(0xFF6366F1), Color(0xFF818CF8)), "😴")
+        else -> Pair(listOf(Color(0xFF6366F1), Color(0xFF8B5CF6)), "✨")
     }
     
-    ElevatedCard(
-        modifier = modifier,
-        elevation = CardDefaults.elevatedCardElevation(
-            defaultElevation = 4.dp
-        )
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(280.dp)
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = gradientColors + Color(0xFFF8FAFF)
+                )
+            )
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .padding(16.dp)
         ) {
+            // Barra de navegação
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Card(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clickable { onBackClick() },
+                    shape = CircleShape,
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White.copy(alpha = 0.2f)
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Voltar",
+                            tint = Color.White,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+            }
+            
+            Spacer(modifier = Modifier.weight(1f))
+            
+            // Conteúdo do header
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // Ícone emoji
                 Box(
                     modifier = Modifier
-                        .size(56.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(backgroundColor.copy(alpha = 0.2f)),
+                        .size(60.dp)
+                        .background(
+                            brush = Brush.linearGradient(
+                                colors = listOf(
+                                    Color.White.copy(alpha = 0.3f),
+                                    Color.White.copy(alpha = 0.1f)
+                                )
+                            ),
+                            shape = CircleShape
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        modifier = Modifier.size(32.dp),
-                        tint = backgroundColor
+                    Text(
+                        text = emoji,
+                        fontSize = 28.sp
                     )
                 }
                 
@@ -225,8 +246,11 @@ fun ResourceBanner(
                 Column {
                     Text(
                         text = resource.title,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = Color.White
                     )
                     
                     Spacer(modifier = Modifier.height(4.dp))
@@ -238,7 +262,7 @@ fun ResourceBanner(
                             imageVector = Icons.Default.Info,
                             contentDescription = null,
                             modifier = Modifier.size(16.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = Color.White.copy(alpha = 0.8f)
                         )
                         
                         Spacer(modifier = Modifier.width(4.dp))
@@ -246,193 +270,522 @@ fun ResourceBanner(
                         Text(
                             text = "${resource.durationMinutes} minutos",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = Color.White.copy(alpha = 0.8f)
                         )
                     }
                 }
             }
             
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            // Descrição
+            Text(
+                text = resource.description,
+                style = MaterialTheme.typography.bodyLarge,
+                color = Color.White.copy(alpha = 0.9f)
+            )
+            
+            Spacer(modifier = Modifier.height(20.dp))
+        }
+    }
+}
+
+@Composable
+fun ModernBreathingContent(resource: ResourceDetail) {
+    var isAnimating by remember { mutableStateOf(false) }
+    
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFFF0FDF4),
+                            Color(0xFFFFFFFF)
+                        )
+                    )
+                )
+                .padding(20.dp)
+        ) {
+            ModernSectionTitle(text = "Como praticar:", emoji = "🌬️")
+            
+            resource.steps.forEachIndexed { index, step ->
+                ModernStepItem(index = index + 1, text = step)
+            }
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            ModernSectionTitle(text = "Benefícios:", emoji = "✨")
+            
+            ModernBulletPoint(text = "Redução da ansiedade e estresse")
+            ModernBulletPoint(text = "Melhora da concentração")
+            ModernBulletPoint(text = "Promoção do relaxamento")
+            ModernBulletPoint(text = "Auxílio para adormecer")
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            ModernActionButton(
+                text = if (isAnimating) "Pausar prática guiada" else "Iniciar prática guiada",
+                icon = if (isAnimating) Icons.Default.Close else Icons.Default.PlayArrow,
+                colors = listOf(Color(0xFF10B981), Color(0xFF34D399)),
+                onClick = { isAnimating = !isAnimating }
+            )
+            
+            if (isAnimating) {
+                Spacer(modifier = Modifier.height(16.dp))
+                ModernBreathingAnimation()
+            }
+        }
+    }
+}
+
+@Composable
+fun ModernBreathingAnimation() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF10B981).copy(alpha = 0.1f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(120.dp)
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "🫁",
+                    fontSize = 32.sp
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Respire fundo...",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    color = Color(0xFF10B981)
+                )
+                Text(
+                    text = "Inspire por 4 segundos, segure por 7, expire por 8",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF666666),
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ModernMeditationContent(resource: ResourceDetail) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFFF3F4F6),
+                            Color(0xFFFFFFFF)
+                        )
+                    )
+                )
+                .padding(20.dp)
+        ) {
+            ModernSectionTitle(text = "Como meditar:", emoji = "🧘")
+            
+            resource.steps.forEachIndexed { index, step ->
+                ModernStepItem(index = index + 1, text = step)
+            }
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            ModernActionButton(
+                text = "Iniciar meditação guiada",
+                icon = Icons.Default.PlayArrow,
+                colors = listOf(Color(0xFF8B5CF6), Color(0xFFA78BFA)),
+                onClick = { /* Implementar para iniciar áudio guiado */ }
+            )
+        }
+    }
+}
+
+@Composable
+fun ModernJournalingContent(resource: ResourceDetail) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFFFEF3C7),
+                            Color(0xFFFFFFFF)
+                        )
+                    )
+                )
+                .padding(20.dp)
+        ) {
+            ModernSectionTitle(text = "Perguntas para reflexão:", emoji = "📝")
+            
+            resource.steps.forEachIndexed { index, step ->
+                ModernStepItem(index = index + 1, text = step)
+            }
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            ModernActionButton(
+                text = "Abrir meu diário",
+                icon = Icons.Default.Edit,
+                colors = listOf(Color(0xFFEAB308), Color(0xFFFBBF24)),
+                onClick = { /* Implementar para abrir bloco de anotações */ }
+            )
+        }
+    }
+}
+
+@Composable
+fun ModernExerciseContent(resource: ResourceDetail) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFFFEE2E2),
+                            Color(0xFFFFFFFF)
+                        )
+                    )
+                )
+                .padding(20.dp)
+        ) {
+            ModernSectionTitle(text = "Exercícios recomendados:", emoji = "💪")
+            
+            ModernBulletPoint(text = "Caminhada de 10 minutos ao ar livre")
+            ModernBulletPoint(text = "Alongamentos suaves para relaxamento")
+            ModernBulletPoint(text = "Yoga para iniciantes - posturas básicas")
+            ModernBulletPoint(text = "Exercícios de respiração com movimento")
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            ModernActionButton(
+                text = "Ver demonstração",
+                icon = Icons.Default.PlayArrow,
+                colors = listOf(Color(0xFFEF4444), Color(0xFFF87171)),
+                onClick = { /* Implementar para abrir vídeo de demonstração */ }
+            )
+        }
+    }
+}
+
+@Composable
+fun ModernSleepContent(resource: ResourceDetail) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFFEEF2FF),
+                            Color(0xFFFFFFFF)
+                        )
+                    )
+                )
+                .padding(20.dp)
+        ) {
+            ModernSectionTitle(text = "Dicas para melhorar o sono:", emoji = "😴")
+            
+            ModernBulletPoint(text = "Mantenha um horário regular para dormir e acordar")
+            ModernBulletPoint(text = "Evite telas pelo menos 1 hora antes de dormir")
+            ModernBulletPoint(text = "Crie um ambiente escuro, silencioso e fresco")
+            ModernBulletPoint(text = "Pratique um ritual relaxante antes de dormir")
+            ModernBulletPoint(text = "Evite cafeína e álcool próximo à hora de dormir")
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            ModernActionButton(
+                text = "Sons relaxantes para dormir",
+                icon = Icons.Default.PlayArrow,
+                colors = listOf(Color(0xFF6366F1), Color(0xFF818CF8)),
+                onClick = { /* Implementar para abrir sons relaxantes */ }
+            )
+        }
+    }
+}
+
+@Composable
+fun ModernGenericContent(resource: ResourceDetail) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFFF8FAFF),
+                            Color(0xFFFFFFFF)
+                        )
+                    )
+                )
+                .padding(40.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "🚀",
+                fontSize = 48.sp
+            )
+            
             Spacer(modifier = Modifier.height(16.dp))
             
             Text(
-                text = resource.description,
-                style = MaterialTheme.typography.bodyLarge
+                text = "Conteúdo em desenvolvimento",
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight.Bold
+                ),
+                color = Color(0xFF1A1A1A),
+                textAlign = TextAlign.Center
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = "Conteúdo detalhado estará disponível em breve.",
+                style = MaterialTheme.typography.bodyLarge,
+                color = Color(0xFF666666),
+                textAlign = TextAlign.Center
             )
         }
     }
 }
 
 @Composable
-fun BreathingExerciseContent(resource: ResourceDetail) {
-    var isAnimating by remember { mutableStateOf(false) }
-    
-    Column {
-        SectionTitle(text = "Como praticar:")
-        
-        resource.steps.forEachIndexed { index, step ->
-            StepItem(index = index + 1, text = step)
-        }
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        SectionTitle(text = "Benefícios:")
-        
-        BulletPoint(text = "Redução da ansiedade e estresse")
-        BulletPoint(text = "Melhora da concentração")
-        BulletPoint(text = "Promoção do relaxamento")
-        BulletPoint(text = "Auxílio para adormecer")
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        OutlinedButton(
-            onClick = { isAnimating = !isAnimating },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Icon(
-                imageVector = if (isAnimating) Icons.Default.Close else Icons.Default.PlayArrow,
-                contentDescription = null
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(if (isAnimating) "Pausar prática guiada" else "Iniciar prática guiada")
-        }
-        
-        if (isAnimating) {
-            Spacer(modifier = Modifier.height(16.dp))
-            BreathingAnimation()
-        }
-    }
-}
-
-@Composable
-fun BreathingAnimation() {
-    // Implementação simplificada da animação
-    Box(
+fun ModernCompletionButton() {
+    Button(
+        onClick = { /* Implementar ação para marcar como concluído */ },
         modifier = Modifier
             .fillMaxWidth()
-            .height(120.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.primaryContainer),
-        contentAlignment = Alignment.Center
+            .height(56.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color.Transparent
+        ),
+        contentPadding = PaddingValues(0.dp)
     ) {
-        Text(
-            text = "Respire fundo...",
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onPrimaryContainer
-        )
-    }
-}
-
-@Composable
-fun MeditationContent(resource: ResourceDetail) {
-    Column {
-        SectionTitle(text = "Como meditar:")
-        
-        resource.steps.forEachIndexed { index, step ->
-            StepItem(index = index + 1, text = step)
-        }
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        OutlinedButton(
-            onClick = { /* Implementar para iniciar áudio guiado */ },
-            modifier = Modifier.fillMaxWidth()
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(Color(0xFF10B981), Color(0xFF34D399))
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                ),
+            contentAlignment = Alignment.Center
         ) {
-            Icon(Icons.Default.PlayArrow, contentDescription = null)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Iniciar meditação guiada")
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Marcar como concluído",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
         }
     }
 }
 
 @Composable
-fun JournalingContent(resource: ResourceDetail) {
-    Column {
-        SectionTitle(text = "Perguntas para reflexão:")
-        
-        resource.steps.forEachIndexed { index, step ->
-            StepItem(index = index + 1, text = step)
-        }
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        OutlinedButton(
-            onClick = { /* Implementar para abrir bloco de anotações */ },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Icon(Icons.Default.Edit, contentDescription = null)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Abrir meu diário")
-        }
-    }
-}
-
-@Composable
-fun ExerciseContent(resource: ResourceDetail) {
-    Column {
-        SectionTitle(text = "Exercícios recomendados:")
-        
-        BulletPoint(text = "Caminhada de 10 minutos ao ar livre")
-        BulletPoint(text = "Alongamentos suaves para relaxamento")
-        BulletPoint(text = "Yoga para iniciantes - posturas básicas")
-        BulletPoint(text = "Exercícios de respiração com movimento")
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        OutlinedButton(
-            onClick = { /* Implementar para abrir vídeo de demonstração */ },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Icon(Icons.Default.PlayArrow, contentDescription = null)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Ver demonstração")
-        }
-    }
-}
-
-@Composable
-fun SleepContent(resource: ResourceDetail) {
-    Column {
-        SectionTitle(text = "Dicas para melhorar o sono:")
-        
-        BulletPoint(text = "Mantenha um horário regular para dormir e acordar")
-        BulletPoint(text = "Evite telas pelo menos 1 hora antes de dormir")
-        BulletPoint(text = "Crie um ambiente escuro, silencioso e fresco")
-        BulletPoint(text = "Pratique um ritual relaxante antes de dormir")
-        BulletPoint(text = "Evite cafeína e álcool próximo à hora de dormir")
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        OutlinedButton(
-            onClick = { /* Implementar para abrir sons relaxantes */ },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Icon(Icons.Default.PlayArrow, contentDescription = null)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Sons relaxantes para dormir")
-        }
-    }
-}
-
-@Composable
-fun GenericResourceContent(resource: ResourceDetail) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
+fun ModernSectionTitle(text: String, emoji: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(bottom = 16.dp)
     ) {
-        Icon(
-            imageVector = Icons.Default.Info,
-            contentDescription = null,
-            modifier = Modifier.size(48.dp),
-            tint = MaterialTheme.colorScheme.primary
-        )
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            Color(0xFF6366F1),
+                            Color(0xFF8B5CF6)
+                        )
+                    ),
+                    shape = CircleShape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = emoji,
+                fontSize = 16.sp
+            )
+        }
         
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.width(12.dp))
         
         Text(
-            text = "Conteúdo detalhado estará disponível em breve.",
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center
+            text = text,
+            style = MaterialTheme.typography.titleLarge.copy(
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            ),
+            color = Color(0xFF1A1A1A)
         )
+    }
+}
+
+@Composable
+fun ModernStepItem(index: Int, text: String) {
+    Row(
+        modifier = Modifier.padding(vertical = 8.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        Box(
+            modifier = Modifier
+                .size(28.dp)
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            Color(0xFF6366F1),
+                            Color(0xFF8B5CF6)
+                        )
+                    ),
+                    shape = CircleShape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = index.toString(),
+                style = MaterialTheme.typography.bodySmall.copy(
+                    fontWeight = FontWeight.Bold
+                ),
+                color = Color.White
+            )
+        }
+        
+        Spacer(modifier = Modifier.width(12.dp))
+        
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color(0xFF2D3748),
+            modifier = Modifier.padding(top = 4.dp)
+        )
+    }
+}
+
+@Composable
+fun ModernBulletPoint(text: String) {
+    Row(
+        modifier = Modifier.padding(vertical = 6.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .background(
+                    color = Color(0xFF6366F1),
+                    shape = CircleShape
+                )
+                .padding(top = 6.dp)
+        )
+        
+        Spacer(modifier = Modifier.width(12.dp))
+        
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color(0xFF2D3748)
+        )
+    }
+}
+
+@Composable
+fun ModernActionButton(
+    text: String,
+    icon: ImageVector,
+    colors: List<Color>,
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(52.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color.Transparent
+        ),
+        contentPadding = PaddingValues(0.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.horizontalGradient(colors),
+                    shape = RoundedCornerShape(16.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+        }
     }
 }
 

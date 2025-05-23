@@ -95,7 +95,7 @@ data class AnswerDTO(
     val question_id: Long,
     
     @SerializedName("optionId")
-    val option_id: Long,
+    val option_id: Long? = null,
     
     @SerializedName("value")
     val value: Double? = null,

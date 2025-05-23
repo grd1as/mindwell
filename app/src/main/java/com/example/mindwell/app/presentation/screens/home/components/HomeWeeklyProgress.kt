@@ -2,6 +2,7 @@ package com.example.mindwell.app.presentation.screens.home.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,7 +24,10 @@ import java.util.Locale
 
 @Composable
 fun ModernWeeklyProgress(
-    weeklyData: WeeklyCheckinDTO?
+    weeklyData: WeeklyCheckinDTO?,
+    onTooltipRequest: (String) -> Unit,
+    activeTooltip: String?,
+    onDismissTooltip: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -50,45 +54,83 @@ fun ModernWeeklyProgress(
         ) {
             // Header com gradiente
             Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(
+                                brush = Brush.linearGradient(
+                                    colors = listOf(
+                                        Color(0xFFFF9500),
+                                        Color(0xFFFFB84D)
+                                    )
+                                ),
+                                shape = CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "🏆",
+                            fontSize = 20.sp
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.width(12.dp))
+                    
+                    Column {
+                        Text(
+                            text = "Progresso Semanal",
+                            style = MaterialTheme.typography.headlineSmall.copy(
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = Color(0xFF1A1A1A)
+                        )
+                        Text(
+                            text = "Sua jornada de bem-estar",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color(0xFF666666)
+                        )
+                    }
+                }
+
+                Card(
                     modifier = Modifier
                         .size(40.dp)
-                        .background(
-                            brush = Brush.linearGradient(
-                                colors = listOf(
-                                    Color(0xFFFF9500),
-                                    Color(0xFFFFB84D)
-                                )
-                            ),
-                            shape = CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
+                        .clickable { onTooltipRequest("progress_help") },
+                    shape = CircleShape,
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFFFF9500).copy(alpha = 0.1f)
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
-                    Text(
-                        text = "🏆",
-                        fontSize = 20.sp
-                    )
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Info,
+                            contentDescription = "Ajuda",
+                            tint = Color(0xFFFF9500),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
-                
-                Spacer(modifier = Modifier.width(12.dp))
-                
-                Column {
-                    Text(
-                        text = "Progresso Semanal",
-                        style = MaterialTheme.typography.headlineSmall.copy(
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = Color(0xFF1A1A1A)
-                    )
-                    Text(
-                        text = "Sua jornada de bem-estar",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF666666)
-                    )
-                }
+            }
+
+            // Tooltip para progresso semanal
+            if (activeTooltip == "progress_help") {
+                Tooltip(
+                    tooltipText = "Acompanhe seus check-ins diários da semana para manter a consistência",
+                    showTooltip = true,
+                    onDismiss = onDismissTooltip
+                )
             }
             
             Spacer(modifier = Modifier.height(20.dp))

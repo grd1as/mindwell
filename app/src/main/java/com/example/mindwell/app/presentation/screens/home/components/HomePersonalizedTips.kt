@@ -26,7 +26,10 @@ fun ModernPersonalizedTips(
     tips: List<HomeViewModel.CustomTip>,
     isLoading: Boolean,
     onTipClick: (HomeViewModel.CustomTip) -> Unit,
-    onRefresh: () -> Unit
+    onRefresh: () -> Unit,
+    onTooltipRequest: (String) -> Unit,
+    activeTooltip: String?,
+    onDismissTooltip: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -120,6 +123,31 @@ fun ModernPersonalizedTips(
                         )
                     }
                 }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Card(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clickable { onTooltipRequest("tips_help") },
+                    shape = CircleShape,
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFF3B82F6).copy(alpha = 0.1f)
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Info,
+                            contentDescription = "Ajuda",
+                            tint = Color(0xFF3B82F6),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
             }
             
             Spacer(modifier = Modifier.height(16.dp))
@@ -159,6 +187,15 @@ fun ModernPersonalizedTips(
                         )
                     }
                 }
+            }
+
+            // Tooltip para dicas personalizadas
+            if (activeTooltip == "tips_help") {
+                Tooltip(
+                    tooltipText = "Dicas personalizadas criadas por IA baseadas no seu histórico e preferências",
+                    showTooltip = true,
+                    onDismiss = onDismissTooltip
+                )
             }
         }
     }

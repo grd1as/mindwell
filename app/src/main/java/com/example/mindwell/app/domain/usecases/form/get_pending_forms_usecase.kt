@@ -12,6 +12,7 @@ import javax.inject.Inject
 interface GetPendingFormsUseCase {
     /**
      * Obtém a lista de formulários pendentes para o usuário.
+     * Retorna apenas questionários (SELF_ASSESSMENT, CLIMATE) que ainda não foram respondidos.
      * @return Flow com o resultado contendo a lista de formulários pendentes
      */
     operator fun invoke(): Flow<Result<List<Form>>>
@@ -28,7 +29,12 @@ class GetPendingFormsUseCaseImpl @Inject constructor(
             // Buscar todos os formulários disponíveis e filtrar apenas SELF_ASSESS e CLIMATE
             val all_forms = form_repository.get_forms(type = null)
             val filtered_forms = all_forms.filter { form ->
-                form.type == "SELF_ASSESSMENT" || form.type == "CLIMATE"
+                // Filtrar apenas tipos válidos
+                val isValidType = form.type == "SELF_ASSESSMENT" || form.type == "CLIMATE"
+                // Excluir questionários já respondidos
+                val notCompleted = form.lastAnsweredAt == null
+                
+                isValidType && notCompleted
             }
             emit(Result.success(filtered_forms))
         } catch (e: Exception) {

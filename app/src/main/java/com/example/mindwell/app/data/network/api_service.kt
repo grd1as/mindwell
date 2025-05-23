@@ -159,4 +159,33 @@ interface ApiService {
         @Query("year") year: Int,
         @Query("month") month: Int
     ): MonthlySummaryDTO
+    
+    /**
+     * Obtém distribuição de humor por mês.
+     * @param year Ano
+     * @param month Mês de 1-12
+     * @return Distribuição de humor no período
+     */
+    @GET("checkins/mood-distribution")
+    suspend fun get_mood_distribution(
+        @Query("year") year: Int,
+        @Query("month") month: Int
+    ): MoodDistributionDTO
+    
+    /**
+     * Obtém alertas de carga de trabalho por período.
+     * @param months Número de meses para analisar (padrão: 3)
+     * @return Dados de carga de trabalho e alertas
+     */
+    @GET("analysis/workload-alerts")
+    suspend fun get_workload_alerts(
+        @Query("months") months: Int = 3
+    ): WorkloadAlertsDTO
+    
+    /**
+     * Obtém diagnóstico de clima organizacional.
+     * @return Análise das dimensões do clima organizacional
+     */
+    @GET("analysis/climate-diagnosis")
+    suspend fun get_climate_diagnosis(): ClimateDiagnosisDTO
 } 

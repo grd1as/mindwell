@@ -5,5 +5,6 @@ package com.example.mindwell.app.domain.entities
  */
 data class Answer(
     val question_id: Int,
-    val option_id: Int
+    val option_id: Int? = null,     // Nullable para perguntas de texto
+    val text_response: String? = null  // Para perguntas de texto livre
 ) 

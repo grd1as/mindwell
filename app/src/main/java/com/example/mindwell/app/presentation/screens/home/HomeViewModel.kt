@@ -8,22 +8,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.example.mindwell.app.common.navigation.AppDestinations
-import com.example.mindwell.app.data.model.ReportDTO
-import com.example.mindwell.app.data.model.WeeklyCheckinDTO
-import com.example.mindwell.app.data.model.DayCheckinDTO
-import com.example.mindwell.app.data.network.ApiService
+import com.example.mindwell.app.data.model.*
 import com.example.mindwell.app.data.services.GeminiService
 import com.example.mindwell.app.data.services.PersonalizedTip
 import com.example.mindwell.app.data.services.UserProfileData
-import com.example.mindwell.app.domain.usecases.checkin.GetLastCheckinUseCase
-import com.example.mindwell.app.domain.usecases.form.GetPendingFormsUseCase
-import com.example.mindwell.app.domain.usecases.preference.GetUserPreferencesUseCase
+import com.example.mindwell.app.domain.entities.*
+import com.example.mindwell.app.domain.usecases.checkin.*
 import com.example.mindwell.app.domain.usecases.feeling.GetFeelingsUseCase
-import com.example.mindwell.app.domain.entities.Checkin
-import com.example.mindwell.app.domain.entities.Form
-import com.example.mindwell.app.domain.entities.Feeling
-import com.example.mindwell.app.domain.entities.Answer
-import com.example.mindwell.app.domain.usecases.form.SubmitFormResponsesUseCase
+import com.example.mindwell.app.domain.usecases.form.*
+import com.example.mindwell.app.domain.usecases.preference.GetUserPreferencesUseCase
+import com.example.mindwell.app.data.network.ApiService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
@@ -519,7 +513,7 @@ class HomeViewModel @Inject constructor(
     }
     
     /**
-     * Envia o feedback para a API
+     * Envia o feedback para a API usando o sistema de formulários (ID 4)
      */
     fun submitFeedback() {
         if (state.feedbackCategory.isEmpty()) {
@@ -541,30 +535,74 @@ class HomeViewModel @Inject constructor(
             feedbackError = null
         )
         
-        Log.d(TAG, "🌐 Tentando enviar feedback para API")
+        Log.d(TAG, "🌐 Tentando enviar feedback via formulário ID 4")
         
         viewModelScope.launch {
             try {
-                val reportDTO = ReportDTO(
-                    category = state.feedbackCategory,
-                    description = state.feedbackDescription,
-                    tags = emptyList() // Lista vazia por enquanto, pode ser expandida no futuro
-                )
+                // Buscar os detalhes do formulário 4 para mapear categorias para option_ids
+                val formDetail = apiService.get_form_detail(4)
                 
-                val response = apiService.submit_report(reportDTO)
-                val locationHeader = response.headers()["Location"] ?: ""
-                Log.d(TAG, "✅ Feedback enviado com sucesso. Location: $locationHeader")
+                // Encontrar a pergunta de categoria (primeira pergunta)
+                val categoryQuestion = formDetail.questions.firstOrNull()
+                if (categoryQuestion == null) {
+                    throw Exception("Formulário de denúncia não tem perguntas configuradas")
+                }
                 
-                state = state.copy(
-                    isSubmittingFeedback = false,
-                    feedbackSuccess = true
-                )
+                // Encontrar o option_id correspondente à categoria selecionada
+                val selectedOption = categoryQuestion.options.find { it.value == state.feedbackCategory }
+                if (selectedOption == null) {
+                    throw Exception("Categoria selecionada não encontrada no formulário")
+                }
+                
+                // Encontrar a pergunta de descrição (segunda pergunta, se existir)
+                val descriptionQuestion = formDetail.questions.getOrNull(1)
+                
+                // Montar as respostas
+                val answers = mutableListOf<Answer>()
+                
+                // Resposta para categoria (pergunta obrigatória)
+                answers.add(Answer(
+                    question_id = categoryQuestion.id,
+                    option_id = selectedOption.id
+                ))
+                
+                // Se há pergunta de descrição, adicionar resposta de texto
+                if (descriptionQuestion != null) {
+                    // Para perguntas de texto, usar option_id = null e text_response
+                    answers.add(Answer(
+                        question_id = descriptionQuestion.id,
+                        option_id = null,
+                        text_response = state.feedbackDescription
+                    ))
+                }
+                
+                Log.d(TAG, "🔄 Enviando denúncia: categoria=${state.feedbackCategory} (option_id=${selectedOption.id})")
+                
+                // Usar o use case existente para envio de respostas do formulário
+                submitFormResponsesUseCase(4, answers).collect { result ->
+                    result.onSuccess { responseId ->
+                        Log.d(TAG, "✅ Denúncia enviada com sucesso! Response ID: $responseId")
+                        state = state.copy(
+                            isSubmittingFeedback = false,
+                            feedbackSuccess = true
+                        )
+                    }
+                    
+                    result.onFailure { exception ->
+                        val errorMsg = exception.message ?: "Erro ao enviar denúncia"
+                        Log.e(TAG, "❌ ERRO ao enviar denúncia: $errorMsg", exception)
+                        state = state.copy(
+                            isSubmittingFeedback = false,
+                            feedbackError = "Erro ao enviar denúncia: $errorMsg"
+                        )
+                    }
+                }
                 
             } catch (e: Exception) {
-                Log.e(TAG, "❌ ERRO ao enviar feedback: ${e.message}", e)
+                Log.e(TAG, "❌ ERRO ao processar denúncia: ${e.message}", e)
                 state = state.copy(
                     isSubmittingFeedback = false,
-                    feedbackError = "Erro ao enviar feedback: ${e.message}"
+                    feedbackError = "Erro ao processar denúncia: ${e.message}"
                 )
             }
         }

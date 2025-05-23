@@ -69,8 +69,7 @@ fun FormsScreen(
             ) {
                 // Header moderno com gradiente
                 ModernHeaderSection(
-                    totalForms = state.forms.size,
-                    completedForms = state.forms.count { it.lastAnsweredAt != null }
+                    totalForms = state.forms.size
                 )
                 
                 if (state.isLoading) {
@@ -107,8 +106,7 @@ fun FormsScreen(
 
 @Composable
 fun ModernHeaderSection(
-    totalForms: Int,
-    completedForms: Int
+    totalForms: Int
 ) {
     Card(
         modifier = Modifier
@@ -138,7 +136,7 @@ fun ModernHeaderSection(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "📋 Questionários Disponíveis",
+                        text = "📋 Questionários Pendentes",
                         style = MaterialTheme.typography.headlineSmall.copy(
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
@@ -147,7 +145,7 @@ fun ModernHeaderSection(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Complete os questionários para acompanhar seu bem-estar",
+                        text = "Complete para acompanhar seu bem-estar",
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color.White.copy(alpha = 0.9f)
                     )
@@ -166,14 +164,14 @@ fun ModernHeaderSection(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "$completedForms/$totalForms",
+                            text = "$totalForms",
                             style = MaterialTheme.typography.titleLarge.copy(
                                 fontWeight = FontWeight.Bold
                             ),
                             color = Color.White
                         )
                         Text(
-                            text = "Completos",
+                            text = "Pendentes",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.White.copy(alpha = 0.9f)
                         )
@@ -191,7 +189,6 @@ fun ModernFormItem(
     onClick: () -> Unit
 ) {
     val (emoji, color) = getFormTypeInfo(form.type)
-    val isCompleted = form.lastAnsweredAt != null
     
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -251,45 +248,9 @@ fun ModernFormItem(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                // Status row
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    if (isCompleted) {
-                        Icon(
-                            Icons.Default.CheckCircle,
-                            contentDescription = "Completo",
-                            tint = Color(0xFF10B981),
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text(
-                            text = "Completo",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                fontWeight = FontWeight.Medium
-                            ),
-                            color = Color(0xFF10B981)
-                        )
-                    } else {
-                        Icon(
-                            Icons.Default.Info,
-                            contentDescription = "Pendente",
-                            tint = Color(0xFFFF9500),
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text(
-                            text = "Pendente",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                fontWeight = FontWeight.Medium
-                            ),
-                            color = Color(0xFFFF9500)
-                        )
-                    }
-                }
             }
+            
+            Spacer(modifier = Modifier.width(12.dp))
             
             // Chip de categoria
             Card(
@@ -409,12 +370,12 @@ fun ModernEmptyState() {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "📋",
+                    text = "✅",
                     fontSize = 64.sp
                 )
                 Spacer(modifier = Modifier.height(20.dp))
                 Text(
-                    text = "Nenhum questionário disponível",
+                    text = "Tudo em dia!",
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Bold
                     ),
@@ -423,7 +384,7 @@ fun ModernEmptyState() {
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = "Questionários aparecerão aqui quando estiverem disponíveis para você.",
+                    text = "Parabéns! Você completou todos os questionários disponíveis. Volte amanhã para novos questionários.",
                     style = MaterialTheme.typography.bodyLarge,
                     color = Color(0xFF666666),
                     textAlign = TextAlign.Center,

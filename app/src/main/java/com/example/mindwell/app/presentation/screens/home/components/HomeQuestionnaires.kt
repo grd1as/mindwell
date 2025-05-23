@@ -114,21 +114,13 @@ fun ModernQuestionnaires(
                 }
             }
 
+            // Tooltip usando o componente próprio
             if (activeTooltip == "questionnaires_help") {
-                Spacer(modifier = Modifier.height(8.dp))
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFFEF4444).copy(alpha = 0.1f)
-                    ),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(
-                        text = "Questionários para avaliar seu bem-estar e acompanhar seu progresso",
-                        modifier = Modifier.padding(12.dp),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF666666)
-                    )
-                }
+                Tooltip(
+                    tooltipText = "Questionários para avaliar seu bem-estar e acompanhar seu progresso",
+                    showTooltip = true,
+                    onDismiss = onDismissTooltip
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
