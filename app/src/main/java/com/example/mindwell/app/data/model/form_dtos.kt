@@ -102,12 +102,4 @@ data class AnswerDTO(
     
     @SerializedName("text")
     val text: String? = null
-)
-
-/**
- * DTO para resposta de API com localização no cabeçalho
- */
-data class ResponseWithLocation(
-    @SerializedName("location")
-    val location: String? = null
 ) 

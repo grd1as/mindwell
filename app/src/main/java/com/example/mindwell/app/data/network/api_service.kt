@@ -1,6 +1,7 @@
 package com.example.mindwell.app.data.network
 
 import com.example.mindwell.app.data.model.*
+import retrofit2.Response
 import retrofit2.http.*
 
 /**
@@ -41,13 +42,13 @@ interface ApiService {
      * Envia respostas para um formulário.
      * @param formId ID do formulário
      * @param request Dados das respostas
-     * @return Resposta da API (Created 201)
+     * @return Resposta da API (Created 201) com headers
      */
     @POST("forms/{formId}/responses")
     suspend fun submit_form_responses(
         @Path("formId") form_id: Int,
         @Body request: FormResponseRequest
-    ): ResponseWithLocation
+    ): Response<Void>
     
     /**
      * Obtém o resumo dos check-ins por período.
@@ -103,7 +104,7 @@ interface ApiService {
      * @return Resposta da API (Created 201)
      */
     @POST("reports")
-    suspend fun submit_report(@Body report: ReportDTO): ResponseWithLocation
+    suspend fun submit_report(@Body report: ReportDTO): Response<Void>
     
     /**
      * Obtém a lista de recursos disponíveis.

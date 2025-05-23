@@ -38,8 +38,8 @@ class FormRemoteDataSource @Inject constructor(
      */
     suspend fun submit_form_responses(form_id: Int, request: FormResponseRequest): Int {
         val response = api_service.submit_form_responses(form_id, request)
-        // Extrai o ID da resposta a partir da URL retornada (exemplo: /forms/1/responses/42)
-        val locationPath = response.location ?: ""
-        return locationPath.substringAfterLast("/").toIntOrNull() ?: -1
+        // Extrai o ID da resposta a partir do header Location (exemplo: /forms/1/responses/42)
+        val locationHeader = response.headers()["Location"] ?: ""
+        return locationHeader.substringAfterLast("/").toIntOrNull() ?: -1
     }
 } 

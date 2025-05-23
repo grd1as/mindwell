@@ -405,7 +405,8 @@ class HomeViewModel @Inject constructor(
                 )
                 
                 val response = apiService.submit_report(reportDTO)
-                Log.d(TAG, "✅ Feedback enviado com sucesso. Location: ${response.location}")
+                val locationHeader = response.headers()["Location"] ?: ""
+                Log.d(TAG, "✅ Feedback enviado com sucesso. Location: $locationHeader")
                 
                 state = state.copy(
                     isSubmittingFeedback = false,
@@ -430,25 +431,46 @@ class HomeViewModel @Inject constructor(
         
         viewModelScope.launch {
             try {
-                // Mapear feeling para option_id da primeira pergunta do formulário de check-in
-                val optionId = when (feeling.lowercase()) {
-                    "muito mal", "péssimo", "triste" -> 1
-                    "mal", "chateado" -> 2
-                    "neutro", "normal", "ok" -> 3
-                    "bem", "bom", "feliz" -> 4
-                    "muito bem", "ótimo", "excelente" -> 5
-                    else -> 3 // Valor padrão: neutro
+                // Mapear emoji para option_id da pergunta 1 (IDs 1-6)
+                val emojiOptionId = when (emoji.lowercase()) {
+                    "😢", "triste", "sad" -> 1  // TRISTE
+                    "😊", "alegre", "happy" -> 2  // ALEGRE  
+                    "😴", "cansado", "tired" -> 3  // CANSADO
+                    "😰", "ansioso", "anxious" -> 4  // ANSIOSO
+                    "😨", "medo", "scared" -> 5  // MEDO
+                    "😡", "raiva", "angry" -> 6  // RAIVA
+                    else -> 1 // Valor padrão: TRISTE
                 }
                 
-                // Criar resposta para o formulário de check-in (ID = 1)
+                // Mapear feeling para option_id da pergunta 2 (IDs 7-12)
+                val feelingOptionId = when (feeling.lowercase()) {
+                    "motivado", "motivated" -> 7  // MOTIVADO
+                    "cansado", "tired" -> 8  // CANSADO
+                    "preocupado", "worried" -> 9  // PREOCUPADO
+                    "estressado", "stressed" -> 10  // ESTRESSADO
+                    "animado", "excited" -> 11  // ANIMADO
+                    "satisfeito", "satisfied" -> 12  // SATISFEITO
+                    "muito mal", "péssimo", "triste" -> 8  // CANSADO (melhor match)
+                    "mal", "chateado" -> 9  // PREOCUPADO (melhor match)
+                    "neutro", "normal", "ok" -> 12  // SATISFEITO (melhor match)
+                    "bem", "bom", "feliz" -> 11  // ANIMADO (melhor match)
+                    "muito bem", "ótimo", "excelente" -> 7  // MOTIVADO (melhor match)
+                    else -> 12 // Valor padrão: SATISFEITO
+                }
+                
+                // Criar respostas para ambas as perguntas do formulário de check-in
                 val answers = listOf(
                     Answer(
-                        question_id = 1, // Primeira pergunta do formulário de check-in
-                        option_id = optionId
+                        question_id = 1, // Pergunta 1: "Escolha o seu emoji de hoje!"
+                        option_id = emojiOptionId
+                    ),
+                    Answer(
+                        question_id = 2, // Pergunta 2: "Como você se sente hoje?"
+                        option_id = feelingOptionId
                     )
                 )
                 
-                Log.d(TAG, "🔄 Enviando check-in como resposta do formulário 1, opção $optionId")
+                Log.d(TAG, "🔄 Enviando check-in com emoji (pergunta 1, opção $emojiOptionId) e feeling (pergunta 2, opção $feelingOptionId)")
                 
                 // Usar o use case existente para envio de respostas
                 submitFormResponsesUseCase(1, answers).collect { result ->
