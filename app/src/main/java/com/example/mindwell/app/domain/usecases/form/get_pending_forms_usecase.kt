@@ -25,10 +25,12 @@ class GetPendingFormsUseCaseImpl @Inject constructor(
 ) : GetPendingFormsUseCase {
     override operator fun invoke(): Flow<Result<List<Form>>> = flow {
         try {
-            // Buscar todos os formulários disponíveis para o usuário
-            // Não filtramos por tipo para mostrar todos os questionários disponíveis
-            val pending_forms = form_repository.get_forms(type = null)
-            emit(Result.success(pending_forms))
+            // Buscar todos os formulários disponíveis e filtrar apenas SELF_ASSESS e CLIMATE
+            val all_forms = form_repository.get_forms(type = null)
+            val filtered_forms = all_forms.filter { form ->
+                form.type == "SELF_ASSESSMENT" || form.type == "CLIMATE"
+            }
+            emit(Result.success(filtered_forms))
         } catch (e: Exception) {
             emit(Result.failure(e))
         }
