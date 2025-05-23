@@ -23,6 +23,7 @@ import com.example.mindwell.app.domain.entities.Form
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun ModernQuestionnaires(
@@ -185,13 +186,22 @@ fun ModernQuestionnaireItem(
     val zone = ZoneId.of("GMT+3")
     // Data de hoje em GMT+3
     val today = LocalDate.now(zone)
+    // Formatter para exibir data
+    val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+
     // Converte nextAllowed para Instant, depois para LocalDate em GMT+3
     val nextAllowedDate = form.nextAllowed
-        ?.toInstant()         // se for OffsetDateTime ou java.util.Date
+        ?.toInstant()
         ?.atZone(zone)
         ?.toLocalDate()
-    // Se nextAllowedDate <= today, já pode ser considerado respondido
+    // Se nextAllowedDate <= today, já pode ser considerado respondido/disponível
     val isDisponivel = nextAllowedDate != null && !nextAllowedDate.isAfter(today)
+
+    // Converte lastAnsweredAt para String formatada
+    val lastSentText = form.lastAnsweredAt
+        ?.toInstant()
+        ?.atZone(zone)
+        ?.format(formatter)
 
     val (statusText, statusColor) = if (isDisponivel) {
         "Disponível" to Color(0xFF10B981)
@@ -258,6 +268,18 @@ fun ModernQuestionnaireItem(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
+
+                // Último envio, se disponível
+                lastSentText?.let { date ->
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "Último envio: $date",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontSize = 12.sp
+                        ),
+                        color = Color(0xFF9CA3AF)
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(6.dp))
 
