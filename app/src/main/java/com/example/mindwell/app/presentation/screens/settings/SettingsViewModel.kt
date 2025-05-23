@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mindwell.app.domain.entities.Preference
+import com.example.mindwell.app.domain.usecases.auth.LogoutUseCase
 import com.example.mindwell.app.domain.usecases.preference.GetPreferencesUseCase
 import com.example.mindwell.app.domain.usecases.preference.UpdatePreferencesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -32,7 +33,8 @@ data class SettingsState(
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val getPreferencesUseCase: GetPreferencesUseCase,
-    private val updatePreferencesUseCase: UpdatePreferencesUseCase
+    private val updatePreferencesUseCase: UpdatePreferencesUseCase,
+    private val logoutUseCase: LogoutUseCase
 ) : ViewModel() {
     
     var state by mutableStateOf(SettingsState())
@@ -150,7 +152,24 @@ class SettingsViewModel @Inject constructor(
         state = state.copy(privacyMode = enabled)
     }
     
-    fun logout() {
-        // Implementar a lógica de logout
+    /**
+     * Realiza logout do usuário.
+     * Esta função utiliza LogoutUseCase para fazer logout completo,
+     * incluindo limpar tokens JWT e revogar acesso Google.
+     * 
+     * @param onComplete Callback chamado após o logout ser concluído
+     */
+    fun logout(onComplete: () -> Unit = {}) {
+        viewModelScope.launch {
+            logoutUseCase()
+                .catch { e ->
+                    // Ignora erros, apenas completa o fluxo
+                    onComplete()
+                }
+                .collect { result ->
+                    // Independente do resultado, completa o fluxo
+                    onComplete()
+                }
+        }
     }
 } 

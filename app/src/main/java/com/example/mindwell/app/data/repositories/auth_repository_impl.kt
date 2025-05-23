@@ -5,6 +5,8 @@ import android.content.SharedPreferences
 import com.example.mindwell.app.data.datasources.remote.AuthRemoteDataSource
 import com.example.mindwell.app.domain.entities.User
 import com.example.mindwell.app.domain.repositories.AuthRepository
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -46,19 +48,40 @@ class AuthRepositoryImpl @Inject constructor(
     }
     
     /**
-     * Realiza logout.
+     * Realiza logout completo do usuário.
+     * 1. Faz logout no servidor
+     * 2. Remove tokens JWT locais
+     * 3. Revoga o acesso do Google
      * @return true se o logout foi bem-sucedido
      */
     override suspend fun logout(): Boolean {
-        val success = remoteDataSource.logout()
-        if (success) {
-            // Remove o token JWT das preferências
-            prefs.edit()
-                .remove("jwt")
-                .remove("expiration")
-                .apply()
+        // 1. Tenta fazer logout no servidor
+        val serverLogoutSuccess = try {
+            remoteDataSource.logout()
+        } catch (e: Exception) {
+            // Se falhar no servidor, continuamos com o logout local
+            false
         }
-        return success
+        
+        // 2. Remove tokens locais independentemente do resultado do servidor
+        prefs.edit()
+            .remove("jwt")
+            .remove("expiration")
+            .apply()
+        
+        // 3. Revoga o acesso do Google
+        try {
+            val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).build()
+            val googleSignInClient = GoogleSignIn.getClient(context, gso)
+            googleSignInClient.signOut()
+            googleSignInClient.revokeAccess()
+        } catch (e: Exception) {
+            // Se falhar na revogação do Google, já fizemos o logout local,
+            // então ainda consideramos o logout como parcialmente bem-sucedido
+        }
+        
+        // Considera-se bem-sucedido se o token local foi removido
+        return true
     }
     
     /**

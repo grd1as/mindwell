@@ -51,40 +51,7 @@ fun HomeScreen(
     }
     
     Scaffold(
-        bottomBar = {
-            NavigationBar {
-                NavigationBarItem(
-                    selected = true,
-                    onClick = { },
-                    icon = { Icon(Icons.Default.Home, contentDescription = "Início") },
-                    label = { Text("Início") }
-                )
-                NavigationBarItem(
-                    selected = false,
-                    onClick = { nav.navigate(AppDestinations.CHECK_IN) },
-                    icon = { Icon(Icons.Default.Add, contentDescription = "Check-in") },
-                    label = { Text("Check-in") }
-                )
-                NavigationBarItem(
-                    selected = false,
-                    onClick = { nav.navigate(AppDestinations.FORMS) },
-                    icon = { Icon(Icons.Default.List, contentDescription = "Quest") },
-                    label = { Text("Quest") }
-                )
-                NavigationBarItem(
-                    selected = false,
-                    onClick = { nav.navigate(AppDestinations.RESOURCES) },
-                    icon = { Icon(Icons.Default.Settings, contentDescription = "Guias") },
-                    label = { Text("Guias") }
-                )
-                NavigationBarItem(
-                    selected = false,
-                    onClick = { nav.navigate(AppDestinations.EVOLUTION) },
-                    icon = { Icon(Icons.Default.Info, contentDescription = "Resultados") },
-                    label = { Text("Resultados") }
-                )
-            }
-        }
+        // Removida a bottomBar personalizada
     ) { padding ->
         if (state.isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -350,7 +317,7 @@ fun HomeScreen(
                     )
                 }
                 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(80.dp))
             }
         }
     }

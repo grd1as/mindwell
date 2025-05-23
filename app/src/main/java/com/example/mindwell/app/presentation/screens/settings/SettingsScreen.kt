@@ -169,7 +169,16 @@ fun SettingsScreen(
                 
                 // Botão Sair/Logout
                 OutlinedButton(
-                    onClick = { viewModel.logout() },
+                    onClick = { 
+                        viewModel.logout(
+                            onComplete = {
+                                // Navega para a tela de login após logout
+                                navController.navigate(AppDestinations.LOGIN) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            }
+                        )
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = MaterialTheme.colorScheme.error
@@ -184,7 +193,8 @@ fun SettingsScreen(
                     Text("Sair da conta")
                 }
                 
-                Spacer(modifier = Modifier.height(24.dp))
+                // Adiciona um espaço no final para não sobrepor com a bottom bar
+                Spacer(modifier = Modifier.height(80.dp))
             }
         }
     }

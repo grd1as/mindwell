@@ -35,45 +35,20 @@ fun EvolutionScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Resultados") },
+                navigationIcon = {
+                    IconButton(onClick = { nav.navigateUp() }) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Voltar"
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    containerColor = Color.Transparent,
+                    titleContentColor = MaterialTheme.colorScheme.onBackground,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onBackground
                 )
             )
-        },
-        bottomBar = {
-            NavigationBar {
-                NavigationBarItem(
-                    selected = false,
-                    onClick = { nav.navigate(AppDestinations.HOME) },
-                    icon = { Icon(Icons.Default.Home, contentDescription = "Início") },
-                    label = { Text("Início") }
-                )
-                NavigationBarItem(
-                    selected = false,
-                    onClick = { nav.navigate(AppDestinations.CHECK_IN) },
-                    icon = { Icon(Icons.Default.Add, contentDescription = "Check-in") },
-                    label = { Text("Check-in") }
-                )
-                NavigationBarItem(
-                    selected = false,
-                    onClick = { nav.navigate(AppDestinations.FORMS) },
-                    icon = { Icon(Icons.Default.List, contentDescription = "Quest") },
-                    label = { Text("Quest") }
-                )
-                NavigationBarItem(
-                    selected = false,
-                    onClick = { nav.navigate(AppDestinations.RESOURCES) },
-                    icon = { Icon(Icons.Default.Settings, contentDescription = "Guias") },
-                    label = { Text("Guias") }
-                )
-                NavigationBarItem(
-                    selected = true,
-                    onClick = { },
-                    icon = { Icon(Icons.Default.Info, contentDescription = "Resultados") },
-                    label = { Text("Resultados") }
-                )
-            }
         }
     ) { padding ->
         if (state.isLoading) {
@@ -173,8 +148,8 @@ private fun EvolutionContent(
             trendTip = trendTip
         )
         
-        // Spacer at the bottom for better UX with the bottom navigation bar
-        Spacer(modifier = Modifier.height(16.dp))
+        // Espaço maior na parte inferior para não sobrepor com a barra de navegação
+        Spacer(modifier = Modifier.height(80.dp))
     }
 }
 
