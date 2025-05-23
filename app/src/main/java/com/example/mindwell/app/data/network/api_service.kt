@@ -22,12 +22,16 @@ interface ApiService {
     suspend fun logout(): Map<String, String>
     
     /**
-     * Obtém a lista de formulários disponíveis.
+     * Obtém a lista de formulários disponíveis para um usuário específico.
+     * @param userId ID do usuário (padrão 1)
      * @param type Tipo opcional de formulário para filtrar
      * @return Lista de formulários
      */
     @GET("forms")
-    suspend fun get_forms(@Query("type") type: String? = null): List<FormDTO>
+    suspend fun get_forms(
+        @Query("userId") user_id: Int = 1,
+        @Query("type") type: String? = null
+    ): List<FormDTO>
     
     /**
      * Obtém os detalhes de um formulário específico.
