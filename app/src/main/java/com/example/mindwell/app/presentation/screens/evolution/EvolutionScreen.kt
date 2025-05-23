@@ -1259,93 +1259,253 @@ private fun ModernWorkloadAlertsCard(workloadData: WorkloadAlertsDTO) {
                 
                 Column {
                     Text(
-                        text = "Alertas de Carga de Trabalho",
+                        text = "Carga de Trabalho X Sinais de Alerta",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF1A1A1A)
                     )
                     Text(
-                        text = "Últimos ${workloadData.months.size} meses",
+                        text = "Comparação evolutiva dos últimos ${workloadData.months.size} meses",
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFF666666)
                     )
                 }
             }
             
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Descrição
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFFEF3F2).copy(alpha = 0.3f)
+                )
+            ) {
+                Text(
+                    text = "Este gráfico mostra a evolução da carga média de trabalho (linha) comparada com a quantidade de sinais de alerta identificados (barras). Uma correlação entre alta carga e mais alertas pode indicar sobrecarga organizacional.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF666666),
+                    lineHeight = 18.sp,
+                    modifier = Modifier.padding(12.dp)
+                )
+            }
+            
             Spacer(modifier = Modifier.height(20.dp))
             
-            // Timeline dos meses
-            workloadData.months.forEach { month ->
-                WorkloadMonthItem(month = month)
+            // Gráfico dual-axis
+            WorkloadAlertsChart(workloadData.months)
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Legenda
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                LegendItem(
+                    color = Color(0xFF10B981),
+                    label = "Carga Média",
+                    type = "line"
+                )
+                LegendItem(
+                    color = Color(0xFFEF4444),
+                    label = "Alertas",
+                    type = "bar"
+                )
+            }
+            
+            // Data de referência
+            if (workloadData.months.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
+                Divider(color = Color(0xFFE5E7EB), thickness = 0.5.dp)
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Text(
+                    text = "Última data de referência: ${workloadData.months.last().period}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF9CA3AF),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     }
 }
 
 @Composable
-private fun WorkloadMonthItem(month: WorkloadMonthDTO) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Período
-        Text(
-            text = month.period,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = Color(0xFF1A1A1A),
-            modifier = Modifier.width(80.dp)
-        )
-        
-        Spacer(modifier = Modifier.width(16.dp))
-        
-        // Carga média
-        Column(modifier = Modifier.weight(1f)) {
+private fun WorkloadAlertsChart(months: List<WorkloadMonthDTO>) {
+    if (months.isEmpty()) return
+    
+    val maxWorkload = months.maxOfOrNull { it.workloadAvg } ?: 5.0
+    val maxAlerts = months.maxOfOrNull { it.alertCount } ?: 1
+    
+    Column {
+        // Eixo Y direito (Alertas)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End
+        ) {
             Text(
-                text = "Carga: ${String.format("%.1f", month.workloadAvg)}/5",
+                text = "Alertas",
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF666666)
+                color = Color(0xFFEF4444),
+                fontWeight = FontWeight.SemiBold
             )
-            
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(6.dp)
-                    .background(
-                        color = Color(0xFFE5E7EB),
-                        shape = RoundedCornerShape(3.dp)
-                    )
-            ) {
+        }
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        // Área do gráfico
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(120.dp)
+        ) {
+            // Grid de fundo
+            repeat(5) { index ->
+                val y = (index * 24).dp
                 Box(
                     modifier = Modifier
-                        .fillMaxHeight()
-                        .fillMaxWidth(fraction = (month.workloadAvg / 5).toFloat())
+                        .fillMaxWidth()
+                        .height(0.5.dp)
+                        .offset(y = y)
+                        .background(Color(0xFFE5E7EB).copy(alpha = 0.5f))
+                )
+            }
+            
+            // Barras de alertas
+            Row(
+                modifier = Modifier.fillMaxSize(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.Bottom
+            ) {
+                months.forEach { month ->
+                    val barHeight = if (maxAlerts > 0) {
+                        ((month.alertCount.toFloat() / maxAlerts) * 100).dp
+                    } else 0.dp
+                    
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        // Barra
+                        Box(
+                            modifier = Modifier
+                                .width(24.dp)
+                                .height(barHeight.coerceAtLeast(4.dp))
+                                .background(
+                                    color = Color(0xFFEF4444).copy(alpha = 0.7f),
+                                    shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
+                                )
+                        )
+                        
+                        Spacer(modifier = Modifier.height(4.dp))
+                        
+                        // Label do mês
+                        Text(
+                            text = month.period.take(3),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFF666666),
+                            fontSize = 10.sp
+                        )
+                    }
+                }
+            }
+            
+            // Linha de carga de trabalho
+            Row(
+                modifier = Modifier.fillMaxSize(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.Bottom
+            ) {
+                months.forEachIndexed { index, month ->
+                    val lineY = if (maxWorkload > 0) {
+                        (120 - (month.workloadAvg / maxWorkload * 100)).dp
+                    } else 60.dp
+                    
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .offset(y = lineY - 60.dp)
+                            .background(
+                                color = Color(0xFF10B981),
+                                shape = CircleShape
+                            )
+                    )
+                    
+                    // Conectar pontos com linha (aproximação)
+                    if (index < months.size - 1) {
+                        val nextMonth = months[index + 1]
+                        val nextLineY = if (maxWorkload > 0) {
+                            (120 - (nextMonth.workloadAvg / maxWorkload * 100)).dp
+                        } else 60.dp
+                        
+                        Box(
+                            modifier = Modifier
+                                .width(2.dp)
+                                .height(kotlin.math.abs(nextLineY.value - lineY.value).dp)
+                                .offset(y = lineY - 60.dp)
+                                .background(Color(0xFF10B981))
+                        )
+                    }
+                }
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        // Eixo Y esquerdo (Carga)
+        Row(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = "Carga (0-5)",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF10B981),
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+    }
+}
+
+@Composable
+private fun LegendItem(
+    color: Color,
+    label: String,
+    type: String
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        when (type) {
+            "line" -> {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .background(color, CircleShape)
+                )
+            }
+            "bar" -> {
+                Box(
+                    modifier = Modifier
+                        .width(12.dp)
+                        .height(8.dp)
                         .background(
-                            color = getWorkloadColor(month.workloadAvg),
-                            shape = RoundedCornerShape(3.dp)
+                            color.copy(alpha = 0.7f),
+                            RoundedCornerShape(2.dp)
                         )
                 )
             }
         }
         
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(6.dp))
         
-        // Alertas
-        Card(
-            shape = RoundedCornerShape(8.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = if (month.alertCount > 0) Color(0xFFEF4444) else Color(0xFF10B981)
-            )
-        ) {
-            Text(
-                text = "${month.alertCount}",
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-            )
-        }
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = Color(0xFF666666)
+        )
     }
 }
 
@@ -1403,49 +1563,155 @@ private fun ModernClimateDiagnosisCard(climateData: ClimateDiagnosisDTO) {
                         color = Color(0xFF1A1A1A)
                     )
                     Text(
-                        text = "Diagnóstico de ${climateData.period}",
+                        text = "Análise das dimensões organizacionais",
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFF666666)
                     )
                 }
             }
             
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Descrição
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFF0FDF4).copy(alpha = 0.3f)
+                )
+            ) {
+                Text(
+                    text = "O clima organizacional é avaliado através de múltiplas dimensões mapeadas pelos questionários. Cada dimensão representa aspectos específicos do ambiente de trabalho, com scores calculados pela média das respostas e classificados em thresholds de saúde organizacional.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF666666),
+                    lineHeight = 18.sp,
+                    modifier = Modifier.padding(12.dp)
+                )
+            }
+            
             Spacer(modifier = Modifier.height(20.dp))
             
-            // Dimensões
+            // Média geral
+            val averageScore = climateData.dimensions.map { it.score }.average()
+            
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = getClimateStatusColor(getOverallClimateStatus(averageScore)).copy(alpha = 0.1f)
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "Média Geral",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF1A1A1A)
+                        )
+                        Text(
+                            text = "${String.format("%.1f", averageScore)}/5.0",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = getClimateStatusColor(getOverallClimateStatus(averageScore))
+                        )
+                    }
+                    
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = getClimateStatusColor(getOverallClimateStatus(averageScore))
+                        )
+                    ) {
+                        Text(
+                            text = getOverallClimateStatus(averageScore),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        )
+                    }
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Dimensões detalhadas
+            Text(
+                text = "Dimensões Avaliadas",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF1A1A1A)
+            )
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
             climateData.dimensions.forEach { dimension ->
-                ClimateDimensionItem(dimension = dimension)
+                EnhancedClimateDimensionItem(dimension = dimension)
                 Spacer(modifier = Modifier.height(12.dp))
             }
+            
+            // Data de referência
+            Spacer(modifier = Modifier.height(8.dp))
+            Divider(color = Color(0xFFE5E7EB), thickness = 0.5.dp)
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = "Período de referência: ${climateData.period}",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF9CA3AF),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }
 
 @Composable
-private fun ClimateDimensionItem(dimension: ClimateDimensionDTO) {
-    Row(
+private fun EnhancedClimateDimensionItem(dimension: ClimateDimensionDTO) {
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFFF8FAFC)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        // Nome da dimensão
-        Text(
-            text = dimension.name.capitalize(),
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = Color(0xFF1A1A1A),
-            modifier = Modifier.width(100.dp)
-        )
-        
-        Spacer(modifier = Modifier.width(16.dp))
-        
-        // Score visual
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = "${String.format("%.1f", dimension.score)}/5.0",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF666666)
-            )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            // Nome e score
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = dimension.name.capitalize(),
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF1A1A1A)
+                )
+                
+                Text(
+                    text = "${String.format("%.1f", dimension.score)}/5.0",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = getClimateStatusColor(dimension.status)
+                )
+            }
             
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Barra de progresso
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1460,30 +1726,49 @@ private fun ClimateDimensionItem(dimension: ClimateDimensionDTO) {
                         .fillMaxHeight()
                         .fillMaxWidth(fraction = (dimension.score / 5).toFloat())
                         .background(
-                            color = getClimateStatusColor(dimension.status),
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(
+                                    getClimateStatusColor(dimension.status).copy(alpha = 0.7f),
+                                    getClimateStatusColor(dimension.status)
+                                )
+                            ),
                             shape = RoundedCornerShape(4.dp)
                         )
                 )
             }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Status
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Card(
+                    shape = RoundedCornerShape(8.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = getClimateStatusColor(dimension.status).copy(alpha = 0.1f)
+                    )
+                ) {
+                    Text(
+                        text = dimension.status,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = getClimateStatusColor(dimension.status),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+            }
         }
-        
-        Spacer(modifier = Modifier.width(16.dp))
-        
-        // Status
-        Card(
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = getClimateStatusColor(dimension.status).copy(alpha = 0.1f)
-            )
-        ) {
-            Text(
-                text = dimension.status,
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.SemiBold,
-                color = getClimateStatusColor(dimension.status),
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
-            )
-        }
+    }
+}
+
+// Função para determinar status geral do clima
+private fun getOverallClimateStatus(averageScore: Double): String {
+    return when {
+        averageScore >= 4.0 -> "Saudável"
+        averageScore >= 3.0 -> "Atenção"
+        else -> "Alerta"
     }
 }
 
