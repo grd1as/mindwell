@@ -103,22 +103,10 @@ class HomeViewModel @Inject constructor(
     }
 
     /**
-     * Lista de categorias de feedback disponíveis
+     * Lista de categorias de feedback disponíveis - será carregada da API
      */
-    val feedbackCategories = listOf(
-        "ASSÉDIO_MORAL",
-        "ASSÉDIO_SEXUAL",
-        "DISCRIMINAÇÃO_RACIAL",
-        "DISCRIMINAÇÃO_DE_GÊNERO",
-        "VIOLÊNCIA_FÍSICA",
-        "VIOLÊNCIA_VERBAL",
-        "CONFLITO_INTERPESSOAL",
-        "SAÚDE_E_SEGURANÇA",
-        "INFRAESTRUTURA_INADEQUADA",
-        "EQUIPAMENTO_QUEBRADO",
-        "ERGONOMIA_INADEQUADA",
-        "OUTRO"
-    )
+    var feedbackCategories = listOf<String>()
+        private set
     
     /**
      * Carrega dados para a tela home.
@@ -141,6 +129,9 @@ class HomeViewModel @Inject constructor(
                 
                 // Carregar sentimentos
                 loadFeelingsData()
+                
+                // Carregar categorias de feedback
+                loadFeedbackCategories()
                 
                 Log.d(TAG, "✅ Sucesso ao carregar dados da home")
                 
@@ -556,6 +547,45 @@ class HomeViewModel @Inject constructor(
         } ?: run {
             // Se não temos NavController, emitimos um evento para navegação
             state = state.copy(navigationEvent = NavigationEvent.ToResource(resourceId))
+        }
+    }
+    
+    /**
+     * Carrega as categorias de feedback da API usando o formulário REPORT (ID 4)
+     */
+    private fun loadFeedbackCategories() {
+        viewModelScope.launch {
+            try {
+                Log.d(TAG, "🌐 Tentando carregar categorias de feedback do formulário ID 4")
+                
+                // Buscar o formulário REPORT (ID 4) para obter as categorias
+                val formDetail = apiService.get_form_detail(4)
+                
+                // As categorias estão na primeira pergunta (índice 0) como opções
+                val categoriesFromApi = formDetail.questions.firstOrNull()?.options?.map { it.value } ?: emptyList()
+                
+                feedbackCategories = categoriesFromApi
+                
+                Log.d(TAG, "✅ Categorias de feedback carregadas: ${categoriesFromApi.size} categorias")
+                
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ ERRO ao carregar categorias de feedback: ${e.message}", e)
+                // Usar categorias padrão em caso de erro
+                feedbackCategories = listOf(
+                    "ASSÉDIO_MORAL",
+                    "ASSÉDIO_SEXUAL", 
+                    "DISCRIMINAÇÃO_RACIAL",
+                    "DISCRIMINAÇÃO_DE_GÊNERO",
+                    "VIOLÊNCIA_FÍSICA",
+                    "VIOLÊNCIA_VERBAL",
+                    "CONFLITO_INTERPESSOAL",
+                    "SAÚDE_E_SEGURANÇA",
+                    "INFRAESTRUTURA_INADEQUADA",
+                    "EQUIPAMENTO_QUEBRADO",
+                    "ERGONOMIA_INADEQUADA",
+                    "OUTRO"
+                )
+            }
         }
     }
 } 
