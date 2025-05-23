@@ -15,8 +15,5 @@ data class LoginRequest(
  */
 data class LoginResponse(
     @SerializedName("jwt")
-    val jwt: String,
-    
-    @SerializedName("exp")
-    val expiresIn: Long
+    val jwt: String
 ) 

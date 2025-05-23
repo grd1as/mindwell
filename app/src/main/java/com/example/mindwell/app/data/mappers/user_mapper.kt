@@ -13,9 +13,13 @@ object UserMapper {
      * @return Entidade de domínio User
      */
     fun mapToDomain(response: LoginResponse): User {
+        // Como o backend não retorna expiresIn, usamos um padrão de 24 horas
+        val defaultExpirationHours = 24L
+        val expiresIn = defaultExpirationHours * 3600 // 24 horas em segundos
+        
         return User(
             jwt = response.jwt,
-            expiresIn = response.expiresIn
+            expiresIn = expiresIn
         )
     }
 } 

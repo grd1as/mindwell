@@ -32,17 +32,23 @@ class AuthRepositoryImpl @Inject constructor(
             val response = remoteDataSource.login(idToken)
             
             android.util.Log.d("AuthRepository", "🔑 Login bem-sucedido, salvando JWT: ${response.jwt.take(20)}...")
-            android.util.Log.d("AuthRepository", "⏰ Token expira em: ${response.expiresIn} segundos")
+            
+            // Como o backend não retorna expiresIn, usamos um padrão de 24 horas (86400 segundos)
+            // O JWT próprio contém a informação de expiração que será validada pelo backend
+            val defaultExpirationHours = 24L
+            val expiresIn = defaultExpirationHours * 3600 // 24 horas em segundos
+            
+            android.util.Log.d("AuthRepository", "⏰ Usando expiração padrão de $defaultExpirationHours horas ($expiresIn segundos)")
             
             // Salva o token JWT no TokenStorage
-            tokenStorage.saveJwtToken(response.jwt, response.expiresIn)
+            tokenStorage.saveJwtToken(response.jwt, expiresIn)
             
             android.util.Log.d("AuthRepository", "✅ Token salvo no TokenStorage")
                 
             // Retorna um usuário com o token JWT
             User(
                 jwt = response.jwt,
-                expiresIn = response.expiresIn
+                expiresIn = expiresIn
             )
         } catch (e: Exception) {
             android.util.Log.e("AuthRepository", "❌ Erro no login: ${e.message}", e)
