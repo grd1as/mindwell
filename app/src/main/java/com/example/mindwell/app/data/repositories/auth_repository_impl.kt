@@ -30,8 +30,14 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun login(idToken: String): User? {
         return try {
             val response = remoteDataSource.login(idToken)
+            
+            android.util.Log.d("AuthRepository", "🔑 Login bem-sucedido, salvando JWT: ${response.jwt.take(20)}...")
+            android.util.Log.d("AuthRepository", "⏰ Token expira em: ${response.expiresIn} segundos")
+            
             // Salva o token JWT no TokenStorage
             tokenStorage.saveJwtToken(response.jwt, response.expiresIn)
+            
+            android.util.Log.d("AuthRepository", "✅ Token salvo no TokenStorage")
                 
             // Retorna um usuário com o token JWT
             User(
@@ -39,6 +45,7 @@ class AuthRepositoryImpl @Inject constructor(
                 expiresIn = response.expiresIn
             )
         } catch (e: Exception) {
+            android.util.Log.e("AuthRepository", "❌ Erro no login: ${e.message}", e)
             null
         }
     }
