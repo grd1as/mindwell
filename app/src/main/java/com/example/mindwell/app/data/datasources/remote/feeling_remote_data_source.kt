@@ -14,9 +14,21 @@ class FeelingRemoteDataSource @Inject constructor(
 ) {
     /**
      * Obtém a lista de sentimentos disponíveis para check-in.
+     * Os sentimentos vêm do formulário com ID 1.
      * @return Lista de sentimentos
      */
     suspend fun get_feelings(): List<FeelingDTO> {
-        return api_service.get_feelings()
+        // Busca os sentimentos através do formulário de check-in (ID 1)
+        val formDetail = api_service.get_form_detail(1)
+        
+        // Extrai os sentimentos das opções da primeira pergunta do formulário
+        return formDetail.questions.firstOrNull()?.options?.map { option ->
+            FeelingDTO(
+                id = option.id.toString(),
+                label = option.label,
+                emoji = null, // OptionDTO não tem emoji, mantemos null
+                value = option.value.toIntOrNull() // Converte String para Int
+            )
+        } ?: emptyList()
     }
 } 

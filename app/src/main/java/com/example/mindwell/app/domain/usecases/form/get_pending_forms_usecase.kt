@@ -25,9 +25,9 @@ class GetPendingFormsUseCaseImpl @Inject constructor(
 ) : GetPendingFormsUseCase {
     override operator fun invoke(): Flow<Result<List<Form>>> = flow {
         try {
-            // Buscar todos os formulários e filtrar os pendentes
-            // Utilizamos o parâmetro "pending" para indicar que queremos apenas formulários pendentes
-            val pending_forms = form_repository.get_forms(type = "pending")
+            // Buscar formulários do tipo CHECKIN que estão disponíveis para responder
+            // Utilizamos o parâmetro "CHECKIN" conforme documentação da API
+            val pending_forms = form_repository.get_forms(type = "CHECKIN")
             emit(Result.success(pending_forms))
         } catch (e: Exception) {
             emit(Result.failure(e))

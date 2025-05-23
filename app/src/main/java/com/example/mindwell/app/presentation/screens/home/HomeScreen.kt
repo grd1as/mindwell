@@ -561,25 +561,51 @@ fun HomeScreen(
                         
                         Spacer(modifier = Modifier.height(8.dp))
                         
-                        // Self Assessment questionnaire
-                        QuestionnaireItem(
-                            title = "Auto-avaliação",
-                            description = "Avalie como você está se sentindo hoje",
-                            code = "SELF_ASSESS",
-                            onClick = { vm.startQuestionnaire("SELF_ASSESS") },
-                            viewModel = vm
-                        )
-                        
-                        Spacer(modifier = Modifier.height(8.dp))
-                        
-                        // Climate questionnaire
-                        QuestionnaireItem(
-                            title = "Clima organizacional",
-                            description = "Avalie o ambiente de trabalho",
-                            code = "CLIMATE",
-                            onClick = { vm.startQuestionnaire("CLIMATE") },
-                            viewModel = vm
-                        )
+                        // Mostrar formulários disponíveis da API
+                        if (state.availableForms.isNotEmpty()) {
+                            state.availableForms.forEach { form ->
+                                QuestionnaireItem(
+                                    title = form.name,
+                                    description = form.description,
+                                    code = form.code,
+                                    onClick = { vm.startQuestionnaire(form.code, form.id) },
+                                    viewModel = vm,
+                                    lastAnswered = form.lastAnsweredAt?.let { 
+                                        try {
+                                            it.toLocalDate().toString()
+                                        } catch (e: Exception) {
+                                            it.toString()
+                                        }
+                                    },
+                                    nextAllowed = form.nextAllowed?.let { 
+                                        try {
+                                            it.toLocalDate().toString()
+                                        } catch (e: Exception) {
+                                            it.toString()
+                                        }
+                                    }
+                                )
+                                
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+                        } else {
+                            // Mensagem quando não há formulários disponíveis
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                )
+                            ) {
+                                Text(
+                                    text = "Nenhum questionário disponível no momento",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.padding(16.dp),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
                     }
                 }
                 
@@ -634,7 +660,9 @@ fun QuestionnaireItem(
     description: String,
     code: String,
     onClick: () -> Unit,
-    viewModel: HomeViewModel
+    viewModel: HomeViewModel,
+    lastAnswered: String? = null,
+    nextAllowed: String? = null
 ) {
     val tooltipId = "questionnaire_${code.lowercase()}"
     
@@ -673,6 +701,23 @@ fun QuestionnaireItem(
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray
                 )
+                
+                // Mostrar informações adicionais se disponíveis
+                lastAnswered?.let {
+                    Text(
+                        text = "Última resposta: $it",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray
+                    )
+                }
+                
+                nextAllowed?.let {
+                    Text(
+                        text = "Próxima disponível: $it",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray
+                    )
+                }
             }
             
             Spacer(modifier = Modifier.weight(1f))

@@ -60,6 +60,7 @@ class HomeViewModel @Inject constructor(
         val userName: String = "Usuário",
         val lastCheckin: String = "",
         val pendingForms: Int = 0,
+        val availableForms: List<Form> = emptyList(),
         val streakCount: Int = 0,
         val error: String? = null,
         val showFeedbackDialog: Boolean = false,
@@ -271,6 +272,7 @@ class HomeViewModel @Inject constructor(
                     Log.e(TAG, "❌ ERRO ao carregar formulários pendentes: ${e.message}", e)
                     state = state.copy(
                         pendingForms = 0,
+                        availableForms = emptyList(),
                         isLoading = false
                     )
                 }
@@ -279,6 +281,7 @@ class HomeViewModel @Inject constructor(
                         Log.d(TAG, "✅ Formulários pendentes carregados: ${forms.size}")
                         state = state.copy(
                             pendingForms = forms.size,
+                            availableForms = forms,
                             isLoading = false
                         )
                     }
@@ -286,6 +289,7 @@ class HomeViewModel @Inject constructor(
                         Log.e(TAG, "❌ ERRO ao carregar formulários pendentes: ${e.message}", e)
                         state = state.copy(
                             pendingForms = 0,
+                            availableForms = emptyList(),
                             isLoading = false
                         )
                     }
@@ -444,31 +448,21 @@ class HomeViewModel @Inject constructor(
     /**
      * Inicia um questionário específico
      */
-    fun startQuestionnaire(code: String) {
-        Log.d(TAG, "Iniciando questionário: $code")
+    fun startQuestionnaire(code: String, formId: Int? = null) {
+        Log.d(TAG, "Iniciando questionário: $code, ID: $formId")
         
-        when (code) {
-            "SELF_ASSESS" -> {
-                navController?.let {
-                    it.navigate(AppDestinations.formDetail(1))
-                } ?: run {
-                    state = state.copy(navigationEvent = NavigationEvent.ToForm(1))
-                }
-            }
-            "CLIMATE" -> {
-                navController?.let {
-                    it.navigate(AppDestinations.formDetail(2))
-                } ?: run {
-                    state = state.copy(navigationEvent = NavigationEvent.ToForm(2))
-                }
-            }
-            else -> {
-                navController?.let {
-                    it.navigate(AppDestinations.FORMS)
-                } ?: run {
-                    state = state.copy(navigationEvent = NavigationEvent.ToForms)
-                }
-            }
+        // Se temos um ID específico da API, usamos ele
+        val targetFormId = formId ?: when (code) {
+            "CHECKIN" -> 1 // ID padrão para check-in
+            "SELF_ASSESS" -> 2 // ID padrão para auto-avaliação
+            "CLIMATE" -> 3 // ID padrão para clima organizacional
+            else -> 1 // Fallback para o primeiro formulário
+        }
+        
+        navController?.let {
+            it.navigate(AppDestinations.formDetail(targetFormId))
+        } ?: run {
+            state = state.copy(navigationEvent = NavigationEvent.ToForm(targetFormId))
         }
     }
     

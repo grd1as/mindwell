@@ -18,7 +18,7 @@ class FormRemoteDataSource @Inject constructor(
      * @return Lista de formulários
      */
     suspend fun get_forms(type: String? = null): List<FormDTO> {
-        return api_service.get_forms(user_id = 1, type = type)
+        return api_service.get_forms(type = type)
     }
     
     /**
