@@ -2,22 +2,41 @@ package com.example.mindwell.app.presentation.screens.login
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.example.mindwell.app.R
 import com.example.mindwell.app.common.navigation.AppDestinations
+import kotlin.math.cos
+import kotlin.math.sin
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,7 +45,20 @@ fun LoginScreen(
     vm: LoginViewModel = hiltViewModel()
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
-    val coroutineScope    = rememberCoroutineScope()
+    val coroutineScope = rememberCoroutineScope()
+    var showLogoAnimation by remember { mutableStateOf(false) }
+    var showContentAnimation by remember { mutableStateOf(false) }
+    var showButtonsAnimation by remember { mutableStateOf(false) }
+    
+    // Animações sequenciadas
+    LaunchedEffect(Unit) {
+        delay(100)
+        showLogoAnimation = true
+        delay(400)
+        showContentAnimation = true
+        delay(200)
+        showButtonsAnimation = true
+    }
 
     val launcher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -44,98 +76,255 @@ fun LoginScreen(
         )
     }
 
+    // Cores para usar nos elementos de design
+    val primaryLight = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+    val primaryMedium = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+    val secondaryLight = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f)
+    val tertiaryLight = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f)
+
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Login") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            )
-        },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+                .background(MaterialTheme.colorScheme.background)
         ) {
-            // Logo ou ícone do app
-            Image(
-                painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                contentDescription = "MindWell Logo",
-                modifier = Modifier
-                    .size(120.dp)
-                    .padding(bottom = 24.dp)
-            )
-            
-            // Título do app
-            Text(
-                text = "MindWell",
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-            
-            // Subtítulo ou descrição
-            Text(
-                text = "Cuide da sua saúde mental",
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(bottom = 32.dp)
-            )
-            
-            Text(
-                text = "Escolha como deseja continuar",
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-            
-            // Botão de login com o Google
-            OutlinedButton(
-                onClick = { launcher.launch(vm.signInIntent()) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 32.dp, vertical = 4.dp),
-                shape = RoundedCornerShape(24.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                ) {
-                    // Ícone do Google
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_google),
-                        contentDescription = "Google",
-                        modifier = Modifier.size(24.dp)
+            // Background shapes
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                // Círculo grande no canto superior esquerdo
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(primaryLight, Color.Transparent),
+                        center = Offset(size.width * 0.1f, size.height * 0.1f),
+                        radius = size.width * 0.6f
+                    ),
+                    center = Offset(size.width * 0.1f, size.height * 0.1f),
+                    radius = size.width * 0.6f
+                )
+                
+                // Círculo no canto inferior direito
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(secondaryLight, Color.Transparent),
+                        center = Offset(size.width * 0.9f, size.height * 0.85f),
+                        radius = size.width * 0.4f
+                    ),
+                    center = Offset(size.width * 0.9f, size.height * 0.85f),
+                    radius = size.width * 0.4f
+                )
+                
+                // Forma abstrata no meio
+                val path = Path().apply {
+                    val centerX = size.width * 0.6f
+                    val centerY = size.height * 0.45f
+                    val radius = size.width * 0.3f
+                    
+                    moveTo(
+                        centerX + radius * cos(0f),
+                        centerY + radius * sin(0f)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Continuar com o Google",
-                        style = MaterialTheme.typography.bodyLarge
-                    )
+                    
+                    for (i in 1..7) {
+                        val angle = i * (2 * Math.PI / 7)
+                        val r = radius * (0.8f + 0.2f * i % 3)
+                        lineTo(
+                            centerX + r * cos(angle).toFloat(),
+                            centerY + r * sin(angle).toFloat()
+                        )
+                    }
+                    
+                    close()
                 }
+                
+                drawPath(
+                    path = path,
+                    brush = Brush.radialGradient(
+                        colors = listOf(tertiaryLight, Color.Transparent),
+                        center = Offset(size.width * 0.6f, size.height * 0.45f),
+                        radius = size.width * 0.3f
+                    )
+                )
             }
             
-            // Botão de pular
-            TextButton(
-                onClick = {
-                    nav.navigate(AppDestinations.HOME) { popUpTo(0) }
-                },
-                modifier = Modifier.padding(top = 16.dp)
+            // Conteúdo principal
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 24.dp),
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = "Explorar sem conta",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                // Área superior - Logo e título
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(top = 60.dp),
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    // Logo animado
+                    AnimatedVisibility(
+                        visible = showLogoAnimation,
+                        enter = fadeIn(tween(1000)) + 
+                                slideInVertically(tween(1000), initialOffsetY = { -it })
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Start,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            // Logo com círculo
+                            Box(
+                                modifier = Modifier
+                                    .size(72.dp)
+                                    .background(
+                                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f),
+                                        CircleShape
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                                    contentDescription = "MindWell Logo",
+                                    modifier = Modifier.size(50.dp),
+                                    contentScale = ContentScale.Fit
+                                )
+                            }
+                            
+                            Spacer(modifier = Modifier.width(16.dp))
+                            
+                            // Título ao lado do logo
+                            Text(
+                                text = "MindWell",
+                                style = MaterialTheme.typography.headlineMedium.copy(
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(40.dp))
+                    
+                    // Textos descritivos
+                    AnimatedVisibility(
+                        visible = showContentAnimation,
+                        enter = fadeIn(tween(1000)) + 
+                                slideInVertically(tween(1000), initialOffsetY = { it / 2 })
+                    ) {
+                        Column {
+                            Text(
+                                text = "Bem-vindo ao seu espaço de saúde mental",
+                                style = MaterialTheme.typography.headlineLarge.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 36.sp,
+                                    lineHeight = 44.sp
+                                ),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                            
+                            Spacer(modifier = Modifier.height(16.dp))
+                            
+                            Text(
+                                text = "Um lugar para cuidar do seu bem-estar e encontrar equilíbrio emocional no dia a dia",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+                
+                // Área inferior - Botões
+                AnimatedVisibility(
+                    visible = showButtonsAnimation,
+                    enter = fadeIn(tween(1200)) + 
+                            slideInVertically(tween(1200), initialOffsetY = { it / 2 })
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 40.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // Botão de login com o Google
+                        Button(
+                            onClick = { launcher.launch(vm.signInIntent()) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(60.dp),
+                            shape = RoundedCornerShape(30.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            ),
+                            elevation = ButtonDefaults.buttonElevation(
+                                defaultElevation = 6.dp,
+                                pressedElevation = 8.dp
+                            )
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                // Ícone do Google em um círculo
+                                Box(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .background(Color.White, CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.ic_google),
+                                        contentDescription = "Google",
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                                
+                                Spacer(modifier = Modifier.width(16.dp))
+                                
+                                Text(
+                                    text = "Continuar com o Google",
+                                    style = MaterialTheme.typography.bodyLarge.copy(
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                )
+                            }
+                        }
+                        
+                        // Botão explorar
+                        OutlinedButton(
+                            onClick = {
+                                nav.navigate(AppDestinations.HOME) { popUpTo(0) }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(60.dp),
+                            shape = RoundedCornerShape(30.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.onBackground
+                            )
+                        ) {
+                            Text(
+                                text = "Explorar sem conta",
+                                style = MaterialTheme.typography.bodyLarge.copy(
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            )
+                        }
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        // Texto de termos e políticas
+                        Text(
+                            text = "Ao continuar, você concorda com nossos Termos de Uso e Política de Privacidade",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                    }
+                }
             }
         }
     }

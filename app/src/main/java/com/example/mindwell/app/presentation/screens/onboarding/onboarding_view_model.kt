@@ -21,7 +21,13 @@ data class OnboardingUiState(
     val pages: List<OnboardingPage> = emptyList(),
     val currentPage: Int = 0,
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val confirmationCheckboxes: Map<String, Boolean> = mapOf(
+        "termsAccepted" to false,
+        "dataCollection" to false,
+        "notifications" to false
+    ),
+    val allRequiredConfirmed: Boolean = false
 )
 
 /**
@@ -48,8 +54,20 @@ class OnboardingViewModel @Inject constructor(
             getOnboardingPagesUseCase().collectLatest { result ->
                 result.fold(
                     onSuccess = { pages ->
-                        // Limitamos a apenas 2 páginas de onboarding
-                        val onboardingPages = if (pages.size > 2) pages.take(2) else pages
+                        // Adicionamos uma página para os termos e confirmações
+                        val onboardingPages = ArrayList(pages)
+                        // Adicionamos uma página específica para confirmações se não existir
+                        if (onboardingPages.none { it.id == 999 }) {
+                            onboardingPages.add(
+                                OnboardingPage(
+                                    id = 999, // Usando um ID numérico único
+                                    title = "Antes de começar",
+                                    description = "Por favor, confirme que você está ciente dos seguintes termos antes de continuar.",
+                                    imageResource = "confirmations"
+                                )
+                            )
+                        }
+                        
                         _uiState.update { state ->
                             state.copy(
                                 pages = onboardingPages,
@@ -79,7 +97,15 @@ class OnboardingViewModel @Inject constructor(
         val currentPage = _uiState.value.currentPage
         val pagesCount = _uiState.value.pages.size
         
+        // Verificar se estamos na página de confirmações e se todas as confirmações necessárias foram feitas
         if (currentPage < pagesCount - 1) {
+            val currentPageId = _uiState.value.pages.getOrNull(currentPage)?.id
+            
+            // Se estamos na página de confirmações, verificar se todas as confirmações necessárias foram feitas
+            if (currentPageId == 999 && !_uiState.value.allRequiredConfirmed) {
+                return false
+            }
+            
             _uiState.update { state ->
                 state.copy(currentPage = currentPage + 1)
             }
@@ -103,6 +129,28 @@ class OnboardingViewModel @Inject constructor(
         }
         
         return false
+    }
+    
+    /**
+     * Atualiza o estado de uma checkbox de confirmação.
+     * @param key Chave da checkbox
+     * @param isChecked Novo estado (marcada ou não)
+     */
+    fun updateConfirmationCheckbox(key: String, isChecked: Boolean) {
+        val updatedCheckboxes = _uiState.value.confirmationCheckboxes.toMutableMap().apply {
+            put(key, isChecked)
+        }
+        
+        // Verificar se todas as confirmações obrigatórias foram feitas
+        val requiredKeys = listOf("termsAccepted", "dataCollection")
+        val allRequiredConfirmed = requiredKeys.all { updatedCheckboxes[it] == true }
+        
+        _uiState.update { state ->
+            state.copy(
+                confirmationCheckboxes = updatedCheckboxes,
+                allRequiredConfirmed = allRequiredConfirmed
+            )
+        }
     }
     
     /**
