@@ -1,9 +1,11 @@
 package com.example.mindwell.app.presentation.screens.home
 
 import androidx.compose.animation.*
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -35,8 +37,15 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.mindwell.app.common.navigation.AppDestinations
+import com.example.mindwell.app.data.model.WeeklyCheckinDTO
+import com.example.mindwell.app.data.model.DayCheckinDTO
+import com.example.mindwell.app.BuildConfig
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
+import java.util.Locale
 
 @Composable
 fun Tooltip(
@@ -73,7 +82,7 @@ fun Tooltip(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
     nav: NavController,
@@ -443,23 +452,53 @@ fun HomeScreen(
                 }
                 
                 // Streak section
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFFFFF3E0)
-                    )
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "3 dias seguidos de check-in! 🔥",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color(0xFFFF9800)
+                WeeklyStreakMarker(
+                    weeklyData = state.weeklyCheckins,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                
+                // DEBUG: Botão para testar dados semanais (remover em produção)
+                if (BuildConfig.DEBUG) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color(0xFFFFEBEE)
                         )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            Text(
+                                text = "Debug - Dados Semanais",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFD32F2F)
+                            )
+                            
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            Button(
+                                onClick = { vm.refreshWeeklyData() },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFD32F2F)
+                                )
+                            ) {
+                                Text("Atualizar Dados Semanais", color = Color.White)
+                            }
+                            
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            Text(
+                                text = if (state.weeklyCheckins != null) {
+                                    "Dados carregados: ${state.weeklyCheckins?.startDate} até ${state.weeklyCheckins?.endDate}"
+                                } else {
+                                    "Nenhum dado carregado"
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFFD32F2F)
+                            )
+                        }
                     }
                 }
                 
@@ -640,6 +679,7 @@ fun EmojiOption(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun QuestionnaireItem(
     title: String,
@@ -975,7 +1015,7 @@ fun FeedbackBottomSheet(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun Modifier.combinedClickable(
     onClick: () -> Unit,
@@ -1047,6 +1087,159 @@ fun CustomTipButton(
                     modifier = Modifier.size(16.dp)
                 )
             }
+        }
+    }
+}
+
+/**
+ * Componente do marcador semanal de check-ins (estilo Duolingo)
+ */
+@Composable
+fun WeeklyStreakMarker(
+    weeklyData: WeeklyCheckinDTO?,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFFFFF3E0)
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Seu progresso semanal 🔥",
+                style = MaterialTheme.typography.titleMedium,
+                color = Color(0xFFFF9800),
+                textAlign = TextAlign.Center
+            )
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            if (weeklyData != null) {
+                // Mostrar os dias da semana
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    weeklyData.days.forEach { day ->
+                        DayMarker(
+                            date = day.date,
+                            hasCheckin = day.hasCheckin
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // Mostrar estatística
+                val completedDays = weeklyData.days.count { it.hasCheckin }
+                Text(
+                    text = "$completedDays/7 dias desta semana",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFFFF9800).copy(alpha = 0.8f)
+                )
+            } else {
+                // Estado de carregamento
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    repeat(7) {
+                        DayMarker(
+                            date = "",
+                            hasCheckin = false,
+                            isLoading = true
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Marcador individual para cada dia
+ */
+@Composable
+fun DayMarker(
+    date: String,
+    hasCheckin: Boolean,
+    isLoading: Boolean = false,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+    ) {
+        if (isLoading) {
+            // Estado de carregamento
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(Color.Gray.copy(alpha = 0.3f)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(16.dp),
+                    strokeWidth = 2.dp,
+                    color = Color(0xFFFF9800)
+                )
+            }
+            
+            Text(
+                text = "...",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray
+            )
+        } else {
+            // Parsear a data para obter o dia da semana
+            val dayOfWeek = try {
+                val localDate = LocalDate.parse(date)
+                localDate.dayOfWeek.getDisplayName(TextStyle.NARROW, Locale.getDefault())
+            } catch (e: Exception) {
+                "?"
+            }
+            
+            // Círculo indicador
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(
+                        if (hasCheckin) Color(0xFF4CAF50) 
+                        else Color.Gray.copy(alpha = 0.3f)
+                    )
+                    .border(
+                        width = if (hasCheckin) 2.dp else 1.dp,
+                        color = if (hasCheckin) Color(0xFF2E7D32) 
+                               else Color.Gray.copy(alpha = 0.5f),
+                        shape = CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                if (hasCheckin) {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = "Check-in realizado",
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            // Letra do dia da semana
+            Text(
+                text = dayOfWeek,
+                style = MaterialTheme.typography.bodySmall,
+                color = if (hasCheckin) Color(0xFF4CAF50) else Color.Gray,
+                fontWeight = if (hasCheckin) FontWeight.Bold else FontWeight.Normal
+            )
         }
     }
 } 

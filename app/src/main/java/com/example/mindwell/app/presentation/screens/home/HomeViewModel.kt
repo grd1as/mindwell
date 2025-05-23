@@ -9,6 +9,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.example.mindwell.app.common.navigation.AppDestinations
 import com.example.mindwell.app.data.model.ReportDTO
+import com.example.mindwell.app.data.model.WeeklyCheckinDTO
+import com.example.mindwell.app.data.model.DayCheckinDTO
 import com.example.mindwell.app.data.network.ApiService
 import com.example.mindwell.app.domain.usecases.checkin.GetLastCheckinUseCase
 import com.example.mindwell.app.domain.usecases.form.GetPendingFormsUseCase
@@ -65,6 +67,7 @@ class HomeViewModel @Inject constructor(
         val pendingForms: Int = 0,
         val availableForms: List<Form> = emptyList(),
         val streakCount: Int = 0,
+        val weeklyCheckins: WeeklyCheckinDTO? = null,
         val error: String? = null,
         val showFeedbackDialog: Boolean = false,
         val feedbackCategory: String = "",
@@ -123,6 +126,9 @@ class HomeViewModel @Inject constructor(
                 
                 // Carregar último check-in
                 loadCheckinData()
+                
+                // Carregar dados semanais de check-in
+                loadWeeklyCheckinData()
                 
                 // Carregar formulários pendentes  
                 loadFormsData()
@@ -259,6 +265,65 @@ class HomeViewModel @Inject constructor(
         }
     }
     
+    private fun loadWeeklyCheckinData() {
+        viewModelScope.launch {
+            try {
+                Log.d(TAG, "🌐 Tentando carregar dados semanais de check-in")
+                val weeklyData = apiService.get_weekly_checkins()
+                
+                Log.d(TAG, "✅ Dados semanais carregados com sucesso!")
+                Log.d(TAG, "   - Período: ${weeklyData.startDate} até ${weeklyData.endDate}")
+                Log.d(TAG, "   - Total de dias: ${weeklyData.days.size}")
+                weeklyData.days.forEachIndexed { index, day ->
+                    Log.d(TAG, "   - Dia ${index + 1}: ${day.date} - Check-in: ${if (day.hasCheckin) "✅" else "❌"}")
+                }
+                
+                state = state.copy(weeklyCheckins = weeklyData)
+                
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ ERRO ao carregar dados semanais: ${e.message}", e)
+                Log.w(TAG, "🔧 Usando dados padrão da semana atual como fallback")
+                
+                // Em caso de erro, criamos dados padrão para a semana atual
+                val defaultData = createDefaultWeeklyData()
+                Log.d(TAG, "📅 Dados padrão criados: ${defaultData.startDate} até ${defaultData.endDate}")
+                
+                state = state.copy(weeklyCheckins = defaultData)
+            }
+        }
+    }
+    
+    /**
+     * Cria dados padrão para a semana atual quando a API não está disponível
+     */
+    private fun createDefaultWeeklyData(): WeeklyCheckinDTO {
+        val calendar = Calendar.getInstance()
+        
+        // Pegar primeiro dia da semana (domingo)
+        calendar.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
+        val startDate = "${calendar.get(Calendar.YEAR)}-${String.format("%02d", calendar.get(Calendar.MONTH) + 1)}-${String.format("%02d", calendar.get(Calendar.DAY_OF_MONTH))}"
+        
+        // Pegar último dia da semana (sábado)
+        calendar.add(Calendar.DAY_OF_WEEK, 6)
+        val endDate = "${calendar.get(Calendar.YEAR)}-${String.format("%02d", calendar.get(Calendar.MONTH) + 1)}-${String.format("%02d", calendar.get(Calendar.DAY_OF_MONTH))}"
+        
+        // Voltar para domingo para criar os dias
+        calendar.add(Calendar.DAY_OF_WEEK, -6)
+        
+        val days = mutableListOf<DayCheckinDTO>()
+        for (i in 0..6) {
+            val date = "${calendar.get(Calendar.YEAR)}-${String.format("%02d", calendar.get(Calendar.MONTH) + 1)}-${String.format("%02d", calendar.get(Calendar.DAY_OF_MONTH))}"
+            days.add(DayCheckinDTO(date = date, hasCheckin = false))
+            calendar.add(Calendar.DAY_OF_MONTH, 1)
+        }
+        
+        return WeeklyCheckinDTO(
+            startDate = startDate,
+            endDate = endDate,
+            days = days
+        )
+    }
+    
     private fun loadFormsData() {
         viewModelScope.launch {
             getPendingForms()
@@ -313,6 +378,14 @@ class HomeViewModel @Inject constructor(
     
     fun refresh() {
         loadData()
+    }
+    
+    /**
+     * Força uma atualização dos dados semanais (para debug)
+     */
+    fun refreshWeeklyData() {
+        Log.d(TAG, "🔄 Forçando atualização dos dados semanais...")
+        loadWeeklyCheckinData()
     }
     
     /**

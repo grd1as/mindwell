@@ -51,4 +51,29 @@ data class CheckinAnswerDTO(
     
     @SerializedName("value")
     val value: String
+)
+
+/**
+ * DTO para dados de check-in de um dia específico
+ */
+data class DayCheckinDTO(
+    @SerializedName("date")
+    val date: String, // formato YYYY-MM-DD
+    
+    @SerializedName("hasCheckin")
+    val hasCheckin: Boolean
+)
+
+/**
+ * DTO para dados de check-in semanal (marcador diário)
+ */
+data class WeeklyCheckinDTO(
+    @SerializedName("startDate")
+    val startDate: String, // formato YYYY-MM-DD
+    
+    @SerializedName("endDate")
+    val endDate: String, // formato YYYY-MM-DD
+    
+    @SerializedName("days")
+    val days: List<DayCheckinDTO>
 ) 

@@ -77,6 +77,13 @@ interface ApiService {
     ): CheckinPageDTO
     
     /**
+     * Obtém os dados de check-in da semana atual para o marcador diário.
+     * @return Dados semanais com status de cada dia
+     */
+    @GET("checkins/weekly")
+    suspend fun get_weekly_checkins(): WeeklyCheckinDTO
+    
+    /**
      * Obtém as preferências do usuário.
      * @return Preferências atuais
      */
