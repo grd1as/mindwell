@@ -456,52 +456,6 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
                 
-                // DEBUG: Botão para testar dados semanais (remover em produção)
-                val showDebugPanel = true // Temporário para testes - remover em produção
-                if (showDebugPanel) {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color(0xFFFFEBEE)
-                        )
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp)
-                        ) {
-                            Text(
-                                text = "Debug - Dados Semanais",
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFFD32F2F)
-                            )
-                            
-                            Spacer(modifier = Modifier.height(8.dp))
-                            
-                            Button(
-                                onClick = { vm.refreshWeeklyData() },
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFFD32F2F)
-                                )
-                            ) {
-                                Text("Atualizar Dados Semanais", color = Color.White)
-                            }
-                            
-                            Spacer(modifier = Modifier.height(8.dp))
-                            
-                            Text(
-                                text = if (state.weeklyCheckins != null) {
-                                    "Dados carregados: ${state.weeklyCheckins?.startDate} até ${state.weeklyCheckins?.endDate}"
-                                } else {
-                                    "Nenhum dado carregado"
-                                },
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFFD32F2F)
-                            )
-                        }
-                    }
-                }
-                
                 // Dicas personalizadas
                 Card(
                     modifier = Modifier.fillMaxWidth(),

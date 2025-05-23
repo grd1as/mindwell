@@ -381,14 +381,6 @@ class HomeViewModel @Inject constructor(
     }
     
     /**
-     * Força uma atualização dos dados semanais (para debug)
-     */
-    fun refreshWeeklyData() {
-        Log.d(TAG, "🔄 Forçando atualização dos dados semanais...")
-        loadWeeklyCheckinData()
-    }
-    
-    /**
      * Obtém a lista de sentimentos carregados
      */
     fun getFeelingsList(): List<Feeling> {
