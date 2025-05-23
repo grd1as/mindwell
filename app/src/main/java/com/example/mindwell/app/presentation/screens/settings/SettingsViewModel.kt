@@ -19,8 +19,6 @@ import javax.inject.Inject
 
 data class SettingsState(
     val isLoading: Boolean = true,
-    val userName: String = "",
-    val email: String = "",
     val dailyReminder: Boolean = true,
     val notificationsEnabled: Boolean = true,
     val darkModeEnabled: Boolean = false,
@@ -51,8 +49,6 @@ class SettingsViewModel @Inject constructor(
             delay(500) // Simulando carregamento
             state = state.copy(
                 isLoading = false,
-                userName = "João Silva",
-                email = "joao.silva@gmail.com",
                 dailyReminder = true,
                 notificationsEnabled = true,
                 darkModeEnabled = false,
@@ -71,8 +67,6 @@ class SettingsViewModel @Inject constructor(
                         state = state.copy(
                             isLoading = false,
                             notificationsEnabled = preferences.notificationsEnabled,
-                            userName = state.userName,
-                            email = state.email,
                             dailyReminder = state.dailyReminder,
                             darkModeEnabled = state.darkModeEnabled,
                             privacyMode = state.privacyMode,
@@ -103,7 +97,6 @@ class SettingsViewModel @Inject constructor(
             try {
                 // Construindo o objeto Preference a partir do estado atual
                 val preference = Preference(
-                    name = state.userName,
                     notificationsEnabled = state.notificationsEnabled
                 )
                 

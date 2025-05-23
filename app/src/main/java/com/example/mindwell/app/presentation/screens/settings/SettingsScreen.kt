@@ -61,13 +61,28 @@ fun SettingsScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Perfil do usuário
-                ProfileSection(
-                    userName = state.userName,
-                    email = state.email
-                )
-                
-                Divider()
+                // Texto introdutório sobre anonimidade
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(
+                            text = "Privacidade Garantida",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "O MindWell preserva sua anonimidade. Seus dados são processados de forma privada e segura.",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
                 
                 // Seção de Notificações
                 Text(
@@ -196,48 +211,6 @@ fun SettingsScreen(
                 // Adiciona um espaço no final para não sobrepor com a bottom bar
                 Spacer(modifier = Modifier.height(80.dp))
             }
-        }
-    }
-}
-
-@Composable
-private fun ProfileSection(
-    userName: String,
-    email: String
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Avatar do usuário
-        Box(
-            modifier = Modifier
-                .size(64.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primaryContainer),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = userName.firstOrNull()?.toString() ?: "U",
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-        }
-        
-        Spacer(modifier = Modifier.width(16.dp))
-        
-        // Informações do usuário
-        Column {
-            Text(
-                text = userName,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = email,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
     }
 }

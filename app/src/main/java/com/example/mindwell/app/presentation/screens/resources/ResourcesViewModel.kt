@@ -18,6 +18,7 @@ class ResourcesViewModel @Inject constructor() : ViewModel() {
         private set
         
     private var navController: NavController? = null
+    private var allResources: List<Resource> = emptyList()
     
     init {
         loadResources()
@@ -27,39 +28,18 @@ class ResourcesViewModel @Inject constructor() : ViewModel() {
         this.navController = navController
     }
     
+    fun retry() {
+        loadResources()
+    }
+    
     private fun loadResources() {
         viewModelScope.launch {
-            // Simula o carregamento de recursos
-            // Em um cenário real, isso viria de um repositório
-            state = ResourcesState(
-                categories = listOf(
-                    ResourceCategory(
-                        id = "breathing",
-                        title = "Exercícios de Respiração",
-                        description = "Técnicas para acalmar a mente e reduzir a ansiedade"
-                    ),
-                    ResourceCategory(
-                        id = "meditation",
-                        title = "Meditação",
-                        description = "Guias para meditação mindfulness e relaxamento"
-                    ),
-                    ResourceCategory(
-                        id = "journaling",
-                        title = "Diário Reflexivo",
-                        description = "Prompts e técnicas para escrita terapêutica"
-                    ),
-                    ResourceCategory(
-                        id = "exercise",
-                        title = "Atividade Física",
-                        description = "Exercícios simples para melhorar o humor"
-                    ),
-                    ResourceCategory(
-                        id = "sleep",
-                        title = "Sono Saudável",
-                        description = "Dicas para melhorar a qualidade do sono"
-                    )
-                ),
-                featuredResources = listOf(
+            // Indica carregamento
+            state = state.copy(isLoading = true, error = null)
+            
+            try {
+                // Lista de recursos
+                allResources = listOf(
                     Resource(
                         id = "breathing_478",
                         title = "Técnica de Respiração 4-7-8",
@@ -80,20 +60,85 @@ class ResourcesViewModel @Inject constructor() : ViewModel() {
                         description = "Prática diária para focar nos aspectos positivos da vida e cultivar uma perspectiva otimista.",
                         categoryId = "journaling",
                         durationMinutes = 5
+                    ),
+                    Resource(
+                        id = "exercise_simple",
+                        title = "Exercícios Simples para Bem-Estar",
+                        description = "Pequenas atividades físicas que podem ser realizadas em qualquer lugar para melhorar o humor e a disposição.",
+                        categoryId = "exercise",
+                        durationMinutes = 15
+                    ),
+                    Resource(
+                        id = "sleep_routine",
+                        title = "Rotina para Qualidade do Sono",
+                        description = "Passos práticos para estabelecer uma rotina que promove melhor qualidade de sono e descanso.",
+                        categoryId = "sleep",
+                        durationMinutes = 7
                     )
                 )
-            )
+                
+                // Simula o carregamento de recursos
+                // Em um cenário real, isso viria de um repositório
+                state = ResourcesState(
+                    categories = listOf(
+                        ResourceCategory(
+                            id = "all",
+                            title = "Todos",
+                            description = "Todos os recursos disponíveis"
+                        ),
+                        ResourceCategory(
+                            id = "breathing",
+                            title = "Exercícios de Respiração",
+                            description = "Técnicas para acalmar a mente e reduzir a ansiedade"
+                        ),
+                        ResourceCategory(
+                            id = "meditation",
+                            title = "Meditação",
+                            description = "Guias para meditação mindfulness e relaxamento"
+                        ),
+                        ResourceCategory(
+                            id = "journaling",
+                            title = "Diário Reflexivo",
+                            description = "Prompts e técnicas para escrita terapêutica"
+                        ),
+                        ResourceCategory(
+                            id = "exercise",
+                            title = "Atividade Física",
+                            description = "Exercícios simples para melhorar o humor"
+                        ),
+                        ResourceCategory(
+                            id = "sleep",
+                            title = "Sono Saudável",
+                            description = "Dicas para melhorar a qualidade do sono"
+                        )
+                    ),
+                    featuredResources = allResources,  // Inicialmente mostra todos os recursos
+                    selectedCategoryId = "all"  // Inicia com "Todos" selecionado
+                )
+            } catch (e: Exception) {
+                state = state.copy(
+                    isLoading = false,
+                    error = "Não foi possível carregar os recursos. Verifique sua conexão e tente novamente."
+                )
+            }
         }
     }
     
     fun selectCategory(categoryId: String) {
-        // Ação para quando uma categoria é selecionada
-        // Filtra os recursos por categoria
-        val filteredResources = state.allResources.filter { it.categoryId == categoryId }
-        state = state.copy(
-            selectedCategoryId = categoryId,
-            featuredResources = filteredResources
-        )
+        if (categoryId == "all") {
+            // Se a categoria "Todos" for selecionada, mostrar todos os recursos
+            state = state.copy(
+                selectedCategoryId = categoryId,
+                featuredResources = allResources
+            )
+        } else {
+            // Filtra os recursos pela categoria selecionada
+            val filteredResources = allResources.filter { it.categoryId == categoryId }
+            state = state.copy(
+                selectedCategoryId = categoryId,
+                featuredResources = filteredResources
+            )
+        }
     }
     
     fun selectResource(resourceId: String) {
@@ -109,10 +154,7 @@ data class ResourcesState(
     val featuredResources: List<Resource> = emptyList(),
     val selectedCategoryId: String? = null,
     val selectedResourceId: String? = null
-) {
-    // Lista completa de recursos para filtrar
-    val allResources: List<Resource> = featuredResources
-}
+)
 
 data class ResourceCategory(
     val id: String,
