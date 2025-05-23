@@ -17,6 +17,8 @@ import com.example.mindwell.app.domain.usecases.feeling.GetFeelingsUseCase
 import com.example.mindwell.app.domain.entities.Checkin
 import com.example.mindwell.app.domain.entities.Form
 import com.example.mindwell.app.domain.entities.Feeling
+import com.example.mindwell.app.domain.entities.Answer
+import com.example.mindwell.app.domain.usecases.form.SubmitFormResponsesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
@@ -34,7 +36,8 @@ class HomeViewModel @Inject constructor(
     private val getLastCheckin: GetLastCheckinUseCase,
     private val getPendingForms: GetPendingFormsUseCase,
     private val getFeelings: GetFeelingsUseCase,
-    private val apiService: ApiService
+    private val apiService: ApiService,
+    private val submitFormResponsesUseCase: SubmitFormResponsesUseCase
 ) : ViewModel() {
     private val TAG = "HomeViewModel"
     
@@ -427,19 +430,54 @@ class HomeViewModel @Inject constructor(
         
         viewModelScope.launch {
             try {
-                // TODO: Implementar envio real para API
-                // Por enquanto apenas registra no log
-                Log.w(TAG, "⚠️ Envio de check-in não implementado - dados: emoji=$emoji, feeling=$feeling")
+                // Mapear feeling para option_id da primeira pergunta do formulário de check-in
+                val optionId = when (feeling.lowercase()) {
+                    "muito mal", "péssimo", "triste" -> 1
+                    "mal", "chateado" -> 2
+                    "neutro", "normal", "ok" -> 3
+                    "bem", "bom", "feliz" -> 4
+                    "muito bem", "ótimo", "excelente" -> 5
+                    else -> 3 // Valor padrão: neutro
+                }
                 
-                state = state.copy(
-                    checkInSuccess = false,
-                    checkInError = "Check-in não implementado ainda"
+                // Criar resposta para o formulário de check-in (ID = 1)
+                val answers = listOf(
+                    Answer(
+                        question_id = 1, // Primeira pergunta do formulário de check-in
+                        option_id = optionId
+                    )
                 )
+                
+                Log.d(TAG, "🔄 Enviando check-in como resposta do formulário 1, opção $optionId")
+                
+                // Usar o use case existente para envio de respostas
+                submitFormResponsesUseCase(1, answers).collect { result ->
+                    result.onSuccess { responseId ->
+                        Log.d(TAG, "✅ Check-in enviado com sucesso! Response ID: $responseId")
+                        state = state.copy(
+                            checkInSuccess = true,
+                            checkInError = null
+                        )
+                        
+                        // Recarregar dados da home para atualizar último check-in
+                        loadData()
+                    }
+                    
+                    result.onFailure { exception ->
+                        val errorMsg = exception.message ?: "Erro ao enviar check-in"
+                        Log.e(TAG, "❌ ERRO ao enviar check-in: $errorMsg", exception)
+                        state = state.copy(
+                            checkInSuccess = false,
+                            checkInError = errorMsg
+                        )
+                    }
+                }
+                
             } catch (e: Exception) {
-                Log.e(TAG, "❌ ERRO ao enviar check-in: ${e.message}", e)
+                Log.e(TAG, "❌ ERRO ao processar check-in: ${e.message}", e)
                 state = state.copy(
                     checkInSuccess = false,
-                    checkInError = "Erro ao enviar check-in: ${e.message}"
+                    checkInError = "Erro ao processar check-in: ${e.message}"
                 )
             }
         }
