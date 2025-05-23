@@ -39,7 +39,6 @@ import androidx.navigation.NavController
 import com.example.mindwell.app.common.navigation.AppDestinations
 import com.example.mindwell.app.data.model.WeeklyCheckinDTO
 import com.example.mindwell.app.data.model.DayCheckinDTO
-import com.example.mindwell.app.BuildConfig
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -458,7 +457,8 @@ fun HomeScreen(
                 )
                 
                 // DEBUG: Botão para testar dados semanais (remover em produção)
-                if (BuildConfig.DEBUG) {
+                val showDebugPanel = true // Temporário para testes - remover em produção
+                if (showDebugPanel) {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(
