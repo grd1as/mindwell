@@ -17,8 +17,8 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
     
-    // URL base da API - usando endereço do emulador Android para servidor local
-    private const val BASE_URL = "http://10.0.2.2:8080/"
+    // URL base da API - nova API do Softtek
+    private const val BASE_URL = "https://challenge-softtek.onrender.com/"
     private const val TIMEOUT = 30L
     
     @Provides
