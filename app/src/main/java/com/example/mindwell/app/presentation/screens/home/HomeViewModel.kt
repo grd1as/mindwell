@@ -35,9 +35,18 @@ class HomeViewModel @Inject constructor(
     // Eventos de navegação
     sealed class NavigationEvent {
         data class ToForm(val formId: Int) : NavigationEvent()
+        data class ToResource(val resourceId: String) : NavigationEvent()
         object ToForms : NavigationEvent()
         object Handled : NavigationEvent()
     }
+    
+    // Classe para representar uma dica personalizada
+    data class CustomTip(
+        val id: String,
+        val title: String,
+        val description: String,
+        val iconId: Int = 0
+    )
     
     // Estado da tela home
     data class HomeState(
@@ -55,7 +64,9 @@ class HomeViewModel @Inject constructor(
         val feedbackError: String? = null,
         val checkInSuccess: Boolean = false,
         val checkInError: String? = null,
-        val navigationEvent: NavigationEvent? = null
+        val navigationEvent: NavigationEvent? = null,
+        val activeTooltip: String? = null,
+        val customTips: List<CustomTip> = emptyList()
     )
     
     // Estado atual da tela
@@ -67,6 +78,7 @@ class HomeViewModel @Inject constructor(
     
     init {
         loadData()
+        loadCustomTips()
     }
     
     /**
@@ -115,6 +127,28 @@ class HomeViewModel @Inject constructor(
                 )
             }
         }
+    }
+    
+    /**
+     * Carrega dicas personalizadas para o usuário
+     */
+    private fun loadCustomTips() {
+        // Em um cenário real, essas dicas poderiam vir de uma API baseadas no perfil do usuário
+        // ou de um algoritmo de recomendação
+        state = state.copy(
+            customTips = listOf(
+                CustomTip(
+                    id = "breathing_478",
+                    title = "Técnica de Respiração 4-7-8",
+                    description = "Uma técnica simples e eficaz para reduzir ansiedade e promover relaxamento."
+                ),
+                CustomTip(
+                    id = "meditation_body_scan",
+                    title = "Meditação Body Scan",
+                    description = "Uma meditação guiada que ajuda a reconectar com o corpo e liberar tensões."
+                )
+            )
+        )
     }
     
     /**
@@ -328,6 +362,32 @@ class HomeViewModel @Inject constructor(
         if (code == "REPORT") {
             // Mostrar diálogo de feedback para relatório
             showFeedbackDialog()
+        }
+    }
+    
+    /**
+     * Mostra um tooltip específico
+     */
+    fun showTooltip(tooltipId: String) {
+        state = state.copy(activeTooltip = tooltipId)
+    }
+    
+    /**
+     * Esconde o tooltip atual
+     */
+    fun hideTooltip() {
+        state = state.copy(activeTooltip = null)
+    }
+    
+    /**
+     * Navega para a tela de recursos com base na dica selecionada
+     */
+    fun navigateToResource(resourceId: String) {
+        navController?.let {
+            it.navigate(AppDestinations.resourceDetail(resourceId))
+        } ?: run {
+            // Se não temos NavController, emitimos um evento para navegação
+            state = state.copy(navigationEvent = NavigationEvent.ToResource(resourceId))
         }
     }
 } 

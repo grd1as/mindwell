@@ -4,6 +4,7 @@ import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -15,18 +16,58 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
+import androidx.compose.ui.platform.LocalDensity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.mindwell.app.common.navigation.AppDestinations
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
+@Composable
+fun Tooltip(
+    modifier: Modifier = Modifier,
+    tooltipText: String,
+    showTooltip: Boolean,
+    onDismiss: () -> Unit
+) {
+    if (!showTooltip) return
+    
+    Popup(
+        alignment = Alignment.Center,
+        onDismissRequest = onDismiss,
+        properties = PopupProperties(
+            focusable = true,
+            dismissOnBackPress = true,
+            dismissOnClickOutside = true
+        )
+    ) {
+        Surface(
+            modifier = modifier
+                .padding(8.dp),
+            shape = RoundedCornerShape(8.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f),
+            shadowElevation = 4.dp
+        ) {
+            Text(
+                text = tooltipText,
+                modifier = Modifier.padding(12.dp),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,6 +102,12 @@ fun HomeScreen(
                     vm.handleNavigationEvent()
                 }
             }
+            is HomeViewModel.NavigationEvent.ToResource -> {
+                LaunchedEffect(event) {
+                    nav.navigate(AppDestinations.resourceDetail(event.resourceId))
+                    vm.handleNavigationEvent()
+                }
+            }
             is HomeViewModel.NavigationEvent.Handled -> {
                 // Já tratado
             }
@@ -89,13 +136,25 @@ fun HomeScreen(
     Scaffold(
         // FloatingActionButton para relatório
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { vm.selectReportForm("REPORT") },
-                containerColor = MaterialTheme.colorScheme.primaryContainer
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Warning, 
-                    contentDescription = "Enviar relatório"
+            Box {
+                FloatingActionButton(
+                    onClick = { vm.selectReportForm("REPORT") },
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    modifier = Modifier.combinedClickable(
+                        onClick = { vm.selectReportForm("REPORT") },
+                        onLongClick = { vm.showTooltip("report_fab") }
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Warning, 
+                        contentDescription = "Enviar relatório"
+                    )
+                }
+                
+                Tooltip(
+                    tooltipText = "Envie um relatório ou denúncia anônima",
+                    showTooltip = state.activeTooltip == "report_fab",
+                    onDismiss = { vm.hideTooltip() }
                 )
             }
         }
@@ -128,17 +187,29 @@ fun HomeScreen(
                     )
                     
                     // Ícone de configurações (sem dados do perfil)
-                    IconButton(
-                        onClick = { nav.navigate(AppDestinations.SETTINGS) },
-                        modifier = Modifier
-                            .size(44.dp)
-                            .clip(CircleShape)
-                            .background(Color.LightGray)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Configurações",
-                            tint = Color.White
+                    Box {
+                        IconButton(
+                            onClick = { nav.navigate(AppDestinations.SETTINGS) },
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(Color.LightGray)
+                                .combinedClickable(
+                                    onClick = { nav.navigate(AppDestinations.SETTINGS) },
+                                    onLongClick = { vm.showTooltip("settings") }
+                                )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = "Configurações",
+                                tint = Color.White
+                            )
+                        }
+                        
+                        Tooltip(
+                            tooltipText = "Acesse as configurações do aplicativo",
+                            showTooltip = state.activeTooltip == "settings",
+                            onDismiss = { vm.hideTooltip() }
                         )
                     }
                 }
@@ -152,11 +223,34 @@ fun HomeScreen(
                 )
                 
                 // First question - Emoji selection
-                Text(
-                    text = "Escolha o seu emoji de hoje!",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Escolha o seu emoji de hoje!",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    
+                    IconButton(
+                        onClick = { vm.showTooltip("emoji_help") }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "Ajuda",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    
+                    if (state.activeTooltip == "emoji_help") {
+                        Tooltip(
+                            tooltipText = "Escolha o emoji que melhor representa como você está se sentindo agora",
+                            showTooltip = true,
+                            onDismiss = { vm.hideTooltip() }
+                        )
+                    }
+                }
                 
                 // Emojis em uma única linha
                 Row(
@@ -210,11 +304,34 @@ fun HomeScreen(
                 }
                 
                 // Second question - Feeling dropdown
-                Text(
-                    text = "Como você se sente hoje?",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Como você se sente hoje?",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    
+                    IconButton(
+                        onClick = { vm.showTooltip("feeling_help") }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "Ajuda",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    
+                    if (state.activeTooltip == "feeling_help") {
+                        Tooltip(
+                            tooltipText = "Selecione a opção que melhor descreve seu estado emocional atual",
+                            showTooltip = true,
+                            onDismiss = { vm.hideTooltip() }
+                        )
+                    }
+                }
                 
                 // Dropdown para selecionar o sentimento
                 Box(
@@ -321,6 +438,58 @@ fun HomeScreen(
                     }
                 }
                 
+                // Dicas personalizadas
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFFE3F2FD)
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Dicas personalizadas para você",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = Color(0xFF1976D2)
+                            )
+                            
+                            IconButton(
+                                onClick = { vm.showTooltip("custom_tips_help") }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Info,
+                                    contentDescription = "Ajuda",
+                                    tint = Color(0xFF1976D2),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                        
+                        if (state.activeTooltip == "custom_tips_help") {
+                            Tooltip(
+                                tooltipText = "Dicas selecionadas especialmente para o seu perfil. Toque para ver mais detalhes.",
+                                showTooltip = true,
+                                onDismiss = { vm.hideTooltip() }
+                            )
+                        }
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        // Lista de dicas personalizadas
+                        state.customTips.forEach { tip ->
+                            CustomTipItem(
+                                tip = tip,
+                                onClick = { vm.navigateToResource(tip.id) }
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
+                }
+                
                 // Available questionnaires
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -331,11 +500,35 @@ fun HomeScreen(
                     Column(
                         modifier = Modifier.padding(16.dp)
                     ) {
-                        Text(
-                            text = "Questionários disponíveis",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color(0xFFFF9800)
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Questionários disponíveis",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = Color(0xFFFF9800)
+                            )
+                            
+                            IconButton(
+                                onClick = { vm.showTooltip("questionnaires_help") }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Info,
+                                    contentDescription = "Ajuda",
+                                    tint = Color(0xFFFF9800),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                        
+                        if (state.activeTooltip == "questionnaires_help") {
+                            Tooltip(
+                                tooltipText = "Responda estes questionários para nos ajudar a avaliar seu bem-estar",
+                                showTooltip = true,
+                                onDismiss = { vm.hideTooltip() }
+                            )
+                        }
+                        
                         Spacer(modifier = Modifier.height(8.dp))
                         
                         // Self Assessment questionnaire
@@ -343,7 +536,8 @@ fun HomeScreen(
                             title = "Auto-avaliação",
                             description = "Avalie como você está se sentindo hoje",
                             code = "SELF_ASSESS",
-                            onClick = { vm.startQuestionnaire("SELF_ASSESS") }
+                            onClick = { vm.startQuestionnaire("SELF_ASSESS") },
+                            viewModel = vm
                         )
                         
                         Spacer(modifier = Modifier.height(8.dp))
@@ -353,30 +547,8 @@ fun HomeScreen(
                             title = "Clima organizacional",
                             description = "Avalie o ambiente de trabalho",
                             code = "CLIMATE",
-                            onClick = { vm.startQuestionnaire("CLIMATE") }
-                        )
-                    }
-                }
-                
-                // Tips section - Restaurada
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFFFFF3E0)
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        Text(
-                            text = "Dicas",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color(0xFFFF9800)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Faça um intervalo de 5 minutos a cada hora para esticar o corpo e descansar a mente.",
-                            style = MaterialTheme.typography.bodyMedium
+                            onClick = { vm.startQuestionnaire("CLIMATE") },
+                            viewModel = vm
                         )
                     }
                 }
@@ -431,13 +603,19 @@ fun QuestionnaireItem(
     title: String,
     description: String,
     code: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    viewModel: HomeViewModel
 ) {
+    val tooltipId = "questionnaire_${code.lowercase()}"
+    
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
-            .clickable(onClick = onClick),
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = { viewModel.showTooltip(tooltipId) }
+            ),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         )
@@ -473,6 +651,14 @@ fun QuestionnaireItem(
                 imageVector = Icons.Default.ArrowForward,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary
+            )
+        }
+        
+        if (viewModel.state.activeTooltip == tooltipId) {
+            Tooltip(
+                tooltipText = "Toque para responder o questionário '$title'",
+                showTooltip = true,
+                onDismiss = { viewModel.hideTooltip() }
             )
         }
     }
@@ -643,6 +829,90 @@ fun FeedbackDialog(
                     }
                 }
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun Modifier.combinedClickable(
+    onClick: () -> Unit,
+    onLongClick: () -> Unit
+) = this.clickable(onClick = onClick)
+    .pointerInput(Unit) {
+        detectTapGestures(
+            onLongPress = { onLongClick() },
+            onTap = { onClick() }
+        )
+    }
+
+@Composable
+fun CustomTipItem(
+    tip: HomeViewModel.CustomTip,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 2.dp
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Ícone da dica
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = when {
+                        tip.id.contains("breathing") -> Icons.Default.Favorite
+                        tip.id.contains("meditation") -> Icons.Default.Star
+                        else -> Icons.Default.Favorite
+                    },
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+            
+            // Conteúdo da dica
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 16.dp)
+            ) {
+                Text(
+                    text = tip.title,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+                
+                Text(
+                    text = tip.description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            
+            // Ícone de seta
+            Icon(
+                imageVector = Icons.Default.ArrowForward,
+                contentDescription = "Ver mais",
+                tint = MaterialTheme.colorScheme.primary
+            )
         }
     }
 } 
