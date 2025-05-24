@@ -2,11 +2,13 @@ package com.example.mindwell.app.presentation.screens.login
 
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.mindwell.app.data.services.ReminderService
 import com.example.mindwell.app.domain.usecases.auth.LoginUseCase
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -24,8 +26,11 @@ import javax.inject.Singleton
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
-    private val googleSignInClient: GoogleSignInClient
+    private val googleSignInClient: GoogleSignInClient,
+    private val reminderService: ReminderService
 ) : ViewModel() {
+    
+    private val TAG = "LoginViewModel"
     
     // Estado de loading
     var isLoading by mutableStateOf(false)
@@ -85,6 +90,10 @@ class LoginViewModel @Inject constructor(
                     .collect { result ->
                         isLoading = false
                         if (result.isSuccess) {
+                            // Iniciar sistema de lembretes após login bem-sucedido
+                            Log.d(TAG, "✅ Login bem-sucedido, iniciando sistema de lembretes")
+                            reminderService.start_reminder_system()
+                            
                             onSuccess()
                         } else {
                             onError("Falha na autenticação: ${result.exceptionOrNull()?.message}")

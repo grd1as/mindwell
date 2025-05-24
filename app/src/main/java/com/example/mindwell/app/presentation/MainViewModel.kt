@@ -1,11 +1,13 @@
 package com.example.mindwell.app.presentation
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mindwell.app.common.navigation.AppDestinations
+import com.example.mindwell.app.data.services.ReminderService
 import com.example.mindwell.app.domain.usecases.auth.CheckAuthStatusUseCase
 import com.example.mindwell.app.domain.usecases.onboarding.GetOnboardingStateUseCase
 import com.example.mindwell.app.domain.usecases.onboarding.IsFirstTimeUseCase
@@ -30,8 +32,11 @@ sealed class NavigationState {
 class MainViewModel @Inject constructor(
     private val is_first_time_use_case: IsFirstTimeUseCase,
     private val get_onboarding_state_use_case: GetOnboardingStateUseCase,
-    private val check_auth_status_use_case: CheckAuthStatusUseCase
+    private val check_auth_status_use_case: CheckAuthStatusUseCase,
+    private val reminderService: ReminderService
 ) : ViewModel() {
+    
+    private val TAG = "MainViewModel"
     
     var navigation_state by mutableStateOf<NavigationState>(NavigationState.Loading)
         private set
@@ -74,6 +79,10 @@ class MainViewModel @Inject constructor(
                 val is_authenticated = auth_status_result.getOrNull() ?: false
                 
                 navigation_state = if (is_authenticated) {
+                    // Se usuário já está autenticado, iniciar sistema de lembretes
+                    Log.d(TAG, "✅ Usuário autenticado detectado, iniciando sistema de lembretes")
+                    reminderService.start_reminder_system()
+                    
                     NavigationState.Ready(AppDestinations.HOME)
                 } else {
                     NavigationState.Ready(AppDestinations.LOGIN)

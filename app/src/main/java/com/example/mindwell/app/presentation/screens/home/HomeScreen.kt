@@ -52,6 +52,7 @@ fun HomeScreen(
     // Atualizar a saudação sempre que a tela for mostrada
     LaunchedEffect(Unit) {
         vm.refreshGreeting()
+        vm.checkReminder() // Verificar se deve mostrar lembrete
     }
     
     // Observar eventos de navegação
@@ -136,28 +137,40 @@ fun HomeScreen(
                     modifier = Modifier.padding(top = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Check-in rápido
-                    ModernQuickCheckin(
-                        selectedEmoji = selectedEmoji,
-                        selectedFeeling = selectedFeeling,
-                        feelings = feelings,
-                        showFeelingDropdown = showFeelingDropdown,
-                        showSubmitSuccess = showSubmitSuccess,
-                        onEmojiSelected = { selectedEmoji = it },
-                        onFeelingSelected = { selectedFeeling = it },
-                        onDropdownToggle = { showFeelingDropdown = it },
-                        onSubmit = { 
-                            vm.submitCheckin(selectedEmoji, selectedFeeling)
-                            showSubmitSuccess = true
-                            coroutineScope.launch {
-                                delay(2000)
-                                showSubmitSuccess = false
-                            }
-                        },
-                        onTooltipRequest = { tooltipId -> vm.showTooltip(tooltipId) },
-                        activeTooltip = state.activeTooltip,
-                        onDismissTooltip = { vm.hideTooltip() }
-                    )
+                    // Check-in rápido ou Card de Cooldown
+                    if (state.hasCheckedInToday || !state.canCheckinNow) {
+                        // Mostrar card de cooldown se já fez check-in ou está em cooldown
+                        CheckinCooldownCard(
+                            timeRemaining = state.timeUntilNextCheckin,
+                            hasCheckedInToday = state.hasCheckedInToday,
+                            onRefresh = { vm.refreshCheckinStatus() }
+                        )
+                    } else {
+                        // Mostrar check-in normal se pode fazer check-in
+                        ModernQuickCheckin(
+                            selectedEmoji = selectedEmoji,
+                            selectedFeeling = selectedFeeling,
+                            feelings = feelings,
+                            showFeelingDropdown = showFeelingDropdown,
+                            showSubmitSuccess = showSubmitSuccess,
+                            onEmojiSelected = { selectedEmoji = it },
+                            onFeelingSelected = { selectedFeeling = it },
+                            onDropdownToggle = { showFeelingDropdown = it },
+                            onSubmit = { 
+                                vm.submitCheckin(selectedEmoji, selectedFeeling)
+                                showSubmitSuccess = true
+                                coroutineScope.launch {
+                                    delay(2000)
+                                    showSubmitSuccess = false
+                                    // Atualizar status após check-in
+                                    vm.refreshCheckinStatus()
+                                }
+                            },
+                            onTooltipRequest = { tooltipId -> vm.showTooltip(tooltipId) },
+                            activeTooltip = state.activeTooltip,
+                            onDismissTooltip = { vm.hideTooltip() }
+                        )
+                    }
                     
                     // Progress semanal moderno
                     ModernWeeklyProgress(

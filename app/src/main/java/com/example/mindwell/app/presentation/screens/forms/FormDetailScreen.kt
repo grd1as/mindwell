@@ -295,15 +295,27 @@ fun ModernOptionItem(
     val borderColor = if (isSelected) Color(0xFF6366F1) else Color(0xFFE0E0E0)
     val backgroundColor = if (isSelected) Color(0xFF6366F1).copy(alpha = 0.1f) else Color.White
     
-    // Emojis para as opções baseado no índice
-    val optionEmoji = when (index % 6) {
-        0 -> "🔵"
-        1 -> "🟢"
-        2 -> "🟡"
-        3 -> "🟠"
-        4 -> "🔴"
-        else -> "🟣"
-    }
+    // Descrições para cada nível
+    val descriptions = mapOf(
+        "1" to "Muito ruim - Precisa de atenção urgente",
+        "2" to "Ruim - Existem problemas significativos",
+        "3" to "Regular - Tem espaço para melhorias",
+        "4" to "Bom - Geralmente positivo",
+        "5" to "Excelente - Muito satisfeito"
+    )
+    
+    // Emojis para cada nível
+    val levelEmojis = mapOf(
+        "1" to "😢",
+        "2" to "😕",
+        "3" to "😐",
+        "4" to "🙂",
+        "5" to "😊"
+    )
+    
+    // Pegar o emoji e descrição baseado no valor da opção
+    val optionEmoji = levelEmojis[option.value] ?: "❓"
+    val description = descriptions[option.value]
     
     AnimatedVisibility(
         visible = true,
@@ -330,47 +342,66 @@ fun ModernOptionItem(
                 defaultElevation = if (isSelected) 4.dp else 1.dp
             )
         ) {
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(12.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(12.dp)
             ) {
-                // Emoji da opção
-                Text(
-                    text = optionEmoji,
-                    fontSize = 18.sp,
-                    modifier = Modifier.padding(end = 12.dp)
-                )
-                
-                Text(
-                    text = option.label,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                        fontSize = 14.sp
-                    ),
-                    color = if (isSelected) Color(0xFF6366F1) else Color(0xFF1A1A1A),
-                    modifier = Modifier.weight(1f)
-                )
-                
-                // Indicador de seleção
-                if (isSelected) {
-                    Icon(
-                        Icons.Default.CheckCircle,
-                        contentDescription = "Selecionado",
-                        tint = Color(0xFF6366F1),
-                        modifier = Modifier.size(20.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Emoji do nível
+                    Text(
+                        text = optionEmoji,
+                        fontSize = 24.sp,
+                        modifier = Modifier.padding(end = 12.dp)
                     )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .size(20.dp)
-                            .border(
-                                1.dp,
-                                Color(0xFFE0E0E0),
-                                CircleShape
+                    
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        // Número/Nível
+                        Text(
+                            text = "Nível ${option.value}",
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 16.sp
+                            ),
+                            color = if (isSelected) Color(0xFF6366F1) else Color(0xFF1A1A1A)
+                        )
+                        
+                        // Descrição do nível
+                        description?.let {
+                            Text(
+                                text = it,
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    fontSize = 14.sp
+                                ),
+                                color = Color(0xFF6B7280)
                             )
-                    )
+                        }
+                    }
+                    
+                    // Indicador de seleção
+                    if (isSelected) {
+                        Icon(
+                            Icons.Default.CheckCircle,
+                            contentDescription = "Selecionado",
+                            tint = Color(0xFF6366F1),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .border(
+                                    1.dp,
+                                    Color(0xFFE0E0E0),
+                                    CircleShape
+                                )
+                        )
+                    }
                 }
             }
         }

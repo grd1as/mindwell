@@ -9,8 +9,10 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.example.mindwell.app.common.navigation.AppDestinations
 import com.example.mindwell.app.data.model.*
+import com.example.mindwell.app.data.services.CheckinManager
 import com.example.mindwell.app.data.services.GeminiService
 import com.example.mindwell.app.data.services.PersonalizedTip
+import com.example.mindwell.app.data.services.ReminderDialogManager
 import com.example.mindwell.app.data.services.UserProfileData
 import com.example.mindwell.app.domain.entities.*
 import com.example.mindwell.app.domain.usecases.checkin.*
@@ -38,7 +40,9 @@ class HomeViewModel @Inject constructor(
     private val getFeelings: GetFeelingsUseCase,
     private val apiService: ApiService,
     private val submitFormResponsesUseCase: SubmitFormResponsesUseCase,
-    private val geminiService: GeminiService
+    private val geminiService: GeminiService,
+    private val checkinManager: CheckinManager,
+    private val reminderDialogManager: ReminderDialogManager
 ) : ViewModel() {
     private val TAG = "HomeViewModel"
     
@@ -83,7 +87,11 @@ class HomeViewModel @Inject constructor(
         val isLoadingTips: Boolean = false,
         val greeting: String = "",
         val greetingEmoji: String = "",
-        val feelings: List<Feeling> = emptyList()
+        val feelings: List<Feeling> = emptyList(),
+        // Campos para cooldown
+        val hasCheckedInToday: Boolean = false,
+        val canCheckinNow: Boolean = true,
+        val timeUntilNextCheckin: String = "Disponível agora"
     )
     
     // Estado atual da tela
@@ -97,6 +105,8 @@ class HomeViewModel @Inject constructor(
         loadData()
         loadPersonalizedTips()
         updateGreeting()
+        loadCheckinStatus() // Carregar status de check-in
+        checkAndShowReminderDialog() // Verificar se deve mostrar dialog de lembrete
     }
     
     /**
@@ -383,23 +393,51 @@ class HomeViewModel @Inject constructor(
      */
     private fun createDefaultWeeklyData(): WeeklyCheckinDTO {
         val calendar = Calendar.getInstance()
+        val today = calendar.time
         
-        // Pegar primeiro dia da semana (domingo)
+        // Ajustar para o domingo desta semana
         calendar.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        
         val startDate = "${calendar.get(Calendar.YEAR)}-${String.format("%02d", calendar.get(Calendar.MONTH) + 1)}-${String.format("%02d", calendar.get(Calendar.DAY_OF_MONTH))}"
         
-        // Pegar último dia da semana (sábado)
-        calendar.add(Calendar.DAY_OF_WEEK, 6)
-        val endDate = "${calendar.get(Calendar.YEAR)}-${String.format("%02d", calendar.get(Calendar.MONTH) + 1)}-${String.format("%02d", calendar.get(Calendar.DAY_OF_MONTH))}"
-        
-        // Voltar para domingo para criar os dias
-        calendar.add(Calendar.DAY_OF_WEEK, -6)
-        
+        // Criar lista de dias
         val days = mutableListOf<DayCheckinDTO>()
+        
+        // Adicionar cada dia da semana
         for (i in 0..6) {
             val date = "${calendar.get(Calendar.YEAR)}-${String.format("%02d", calendar.get(Calendar.MONTH) + 1)}-${String.format("%02d", calendar.get(Calendar.DAY_OF_MONTH))}"
-            days.add(DayCheckinDTO(date = date, hasCheckin = false))
+            
+            // Verificar se este dia é hoje
+            val isToday = calendar.time.let { day ->
+                day.year == today.year && 
+                day.month == today.month && 
+                day.date == today.date
+            }
+            
+            // Se for hoje, verificar se já fez check-in
+            val hasCheckin = if (isToday) {
+                checkinManager.has_checked_in_today()
+            } else {
+                false // Por padrão, dias anteriores como não feitos
+            }
+            
+            days.add(DayCheckinDTO(date = date, hasCheckin = hasCheckin))
             calendar.add(Calendar.DAY_OF_MONTH, 1)
+        }
+        
+        // Pegar a data final (sábado)
+        calendar.add(Calendar.DAY_OF_MONTH, -1) // Voltar um dia pois o loop adicionou um dia extra
+        val endDate = "${calendar.get(Calendar.YEAR)}-${String.format("%02d", calendar.get(Calendar.MONTH) + 1)}-${String.format("%02d", calendar.get(Calendar.DAY_OF_MONTH))}"
+        
+        Log.d(TAG, "📅 Criando dados padrão da semana:")
+        Log.d(TAG, "   Início: $startDate")
+        Log.d(TAG, "   Fim: $endDate")
+        days.forEachIndexed { index, day ->
+            Log.d(TAG, "   Dia ${index + 1}: ${day.date} - Check-in: ${if (day.hasCheckin) "✅" else "❌"}")
         }
         
         return WeeklyCheckinDTO(
@@ -463,6 +501,14 @@ class HomeViewModel @Inject constructor(
     
     fun refresh() {
         loadData()
+        checkAndShowReminderDialog() // Verificar lembrete ao atualizar
+    }
+    
+    /**
+     * Força uma nova verificação do dialog de lembrete
+     */
+    fun checkReminder() {
+        checkAndShowReminderDialog()
     }
     
     /**
@@ -657,10 +703,20 @@ class HomeViewModel @Inject constructor(
                 submitFormResponsesUseCase(1, answers).collect { result ->
                     result.onSuccess { responseId ->
                         Log.d(TAG, "✅ Check-in enviado com sucesso! Response ID: $responseId")
+                        
+                        // Atualizar o status de check-in imediatamente
+                        checkinManager.register_checkin() // Registra o check-in no CheckinManager
+                        
                         state = state.copy(
                             checkInSuccess = true,
-                            checkInError = null
+                            checkInError = null,
+                            // Atualizar estado imediatamente para mostrar cooldown
+                            hasCheckedInToday = true,
+                            canCheckinNow = false,
+                            timeUntilNextCheckin = checkinManager.get_formatted_time_until_next_checkin()
                         )
+                        
+                        Log.d(TAG, "🔄 Status atualizado: hasCheckedIn=true, canCheckin=false")
                         
                         // Atualizar otimisticamente os dados semanais
                         updateWeeklyDataOptimistically()
@@ -796,20 +852,37 @@ class HomeViewModel @Inject constructor(
     private fun updateWeeklyDataOptimistically() {
         val currentWeeklyData = state.weeklyCheckins
         if (currentWeeklyData != null) {
-            val today = java.time.LocalDate.now().toString() // Formato YYYY-MM-DD
+            val today = java.time.LocalDate.now()
+            val todayStr = today.toString() // Formato YYYY-MM-DD
             
-            val updatedDays = currentWeeklyData.days.map { day ->
-                if (day.date == today) {
-                    day.copy(hasCheckin = true)
-                } else {
-                    day
+            // Verificar se o dia está dentro da semana atual
+            val startDate = java.time.LocalDate.parse(currentWeeklyData.startDate)
+            val endDate = java.time.LocalDate.parse(currentWeeklyData.endDate)
+            
+            if (today.isEqual(startDate) || today.isEqual(endDate) || 
+                (today.isAfter(startDate) && today.isBefore(endDate))) {
+                
+                val updatedDays = currentWeeklyData.days.map { day ->
+                    if (day.date == todayStr) {
+                        day.copy(hasCheckin = true)
+                    } else {
+                        day
+                    }
                 }
+                
+                val updatedWeeklyData = currentWeeklyData.copy(days = updatedDays)
+                state = state.copy(weeklyCheckins = updatedWeeklyData)
+                
+                Log.d(TAG, "✨ Atualização otimística aplicada para o dia $todayStr")
+                Log.d(TAG, "📅 Semana: ${currentWeeklyData.startDate} até ${currentWeeklyData.endDate}")
+                updatedDays.forEachIndexed { index, day ->
+                    Log.d(TAG, "   Dia ${index + 1}: ${day.date} - Check-in: ${if (day.hasCheckin) "✅" else "❌"}")
+                }
+            } else {
+                Log.w(TAG, "⚠️ Data atual ($todayStr) fora do período da semana (${currentWeeklyData.startDate} - ${currentWeeklyData.endDate})")
+                // Recarregar dados da semana atual
+                loadWeeklyCheckinData()
             }
-            
-            val updatedWeeklyData = currentWeeklyData.copy(days = updatedDays)
-            state = state.copy(weeklyCheckins = updatedWeeklyData)
-            
-            Log.d(TAG, "✨ Atualização otimística aplicada para o dia $today")
         }
     }
     
@@ -825,6 +898,77 @@ class HomeViewModel @Inject constructor(
                 Log.e(TAG, "❌ ERRO ao atualizar dados semanais: ${e.message}", e)
                 // Se houver erro, manter a atualização otimística
                 Log.w(TAG, "🔧 Mantendo atualização otimística devido ao erro")
+            }
+        }
+    }
+    
+    /**
+     * Carrega o status atual de check-in e cooldown
+     */
+    private fun loadCheckinStatus() {
+        try {
+            val hasCheckedIn = checkinManager.has_checked_in_today()
+            val canCheckin = checkinManager.can_checkin_now()
+            val timeRemaining = checkinManager.get_formatted_time_until_next_checkin()
+            
+            state = state.copy(
+                hasCheckedInToday = hasCheckedIn,
+                canCheckinNow = canCheckin,
+                timeUntilNextCheckin = timeRemaining
+            )
+            
+            Log.d(TAG, "✅ Status de check-in atualizado: já fez=$hasCheckedIn, pode=$canCheckin, tempo=$timeRemaining")
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Erro ao carregar status de check-in: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Atualiza o status de cooldown (chamado periodicamente)
+     */
+    fun refreshCheckinStatus() {
+        loadCheckinStatus()
+    }
+    
+    /**
+     * Verifica se deve mostrar o dialog de lembrete automaticamente
+     */
+    private fun checkAndShowReminderDialog() {
+        viewModelScope.launch {
+            try {
+                // Aguardar um pouco para a tela carregar completamente
+                delay(1000)
+                
+                // Primeiro verificar se já fez check-in hoje
+                val hasCheckedToday = checkinManager.has_checked_in_today()
+                
+                if (hasCheckedToday) {
+                    Log.d(TAG, "✅ Já fez check-in hoje - atualizando cooldown sem mostrar dialog")
+                    // Atualizar estado para mostrar cooldown
+                    state = state.copy(
+                        hasCheckedInToday = true,
+                        canCheckinNow = false,
+                        timeUntilNextCheckin = checkinManager.get_formatted_time_until_next_checkin()
+                    )
+                    return@launch
+                }
+                
+                // Se não fez check-in hoje, verificar se pode fazer
+                val canCheckin = checkinManager.can_checkin_now()
+                
+                Log.d(TAG, "🔔 Verificando auto-reminder: canCheckin=$canCheckin, hasCheckedToday=$hasCheckedToday")
+                
+                // Mostrar dialog apenas se pode fazer check-in E não fez hoje
+                if (canCheckin && !hasCheckedToday) {
+                    Log.d(TAG, "✅ Mostrando dialog de lembrete automático")
+                    reminderDialogManager.show_reminder()
+                } else {
+                    Log.d(TAG, "⏭️ Não mostrando dialog: usuário já fez check-in ou está em cooldown")
+                }
+                
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ Erro ao verificar auto-reminder: ${e.message}", e)
             }
         }
     }

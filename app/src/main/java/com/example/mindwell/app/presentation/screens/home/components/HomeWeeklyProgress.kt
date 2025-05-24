@@ -211,7 +211,19 @@ fun ModernDayMarker(
     
     val dayOfWeek = try {
         val localDate = LocalDate.parse(date)
-        localDate.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault())
+        val dayNumber = localDate.dayOfWeek.value // 1 = Segunda, 7 = Domingo
+        
+        // Mapear para português brasileiro
+        when (dayNumber) {
+            1 -> "Seg"
+            2 -> "Ter"
+            3 -> "Qua"
+            4 -> "Qui"
+            5 -> "Sex"
+            6 -> "Sáb"
+            7 -> "Dom"
+            else -> "?"
+        }
     } catch (e: Exception) {
         "?"
     }

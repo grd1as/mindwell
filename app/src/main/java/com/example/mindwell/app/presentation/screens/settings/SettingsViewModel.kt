@@ -1,16 +1,21 @@
 package com.example.mindwell.app.presentation.screens.settings
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.mindwell.app.data.services.NotificationService
+import com.example.mindwell.app.data.services.ReminderDialogManager
+import com.example.mindwell.app.data.services.ReminderService
 import com.example.mindwell.app.domain.entities.Preference
 import com.example.mindwell.app.domain.usecases.auth.LogoutUseCase
 import com.example.mindwell.app.domain.usecases.preference.GetPreferencesUseCase
 import com.example.mindwell.app.domain.usecases.preference.UpdatePreferencesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -19,28 +24,34 @@ import javax.inject.Inject
 
 data class SettingsState(
     val isLoading: Boolean = true,
-    val dailyReminder: Boolean = true,
+    val dailyReminder: Boolean = false,
     val notificationsEnabled: Boolean = true,
     val darkModeEnabled: Boolean = false,
     val privacyMode: Boolean = false,
     val isSaving: Boolean = false,
     val saveSuccess: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val needsNotificationPermission: Boolean = false
 )
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val getPreferencesUseCase: GetPreferencesUseCase,
     private val updatePreferencesUseCase: UpdatePreferencesUseCase,
-    private val logoutUseCase: LogoutUseCase
+    private val logoutUseCase: LogoutUseCase,
+    private val reminder_dialog_manager: ReminderDialogManager,
+    private val reminder_service: ReminderService
 ) : ViewModel() {
     private val TAG = "SettingsViewModel"
+    private val notification_service = NotificationService(context)
     
     var state by mutableStateOf(SettingsState())
         private set
         
     init {
         loadPreferences()
+        // Removido a inicialização automática já que o padrão agora é false
     }
     
     fun loadPreferences() {
@@ -125,6 +136,36 @@ class SettingsViewModel @Inject constructor(
     
     fun toggleDailyReminder(enabled: Boolean) {
         state = state.copy(dailyReminder = enabled)
+        
+        if (enabled) {
+            // Verificar se temos permissão antes de iniciar
+            if (notification_service.has_notification_permission()) {
+                reminder_service.set_reminder_enabled(true)
+                Log.d(TAG, "🔔 Lembretes diários ATIVADOS - novo sistema de timing")
+            } else {
+                Log.w(TAG, "❌ Sem permissão para notificações. Solicitando...")
+                state = state.copy(needsNotificationPermission = true)
+            }
+        } else {
+            reminder_service.set_reminder_enabled(false)
+            Log.d(TAG, "🔕 Lembretes diários DESATIVADOS - sistema parado")
+        }
+    }
+    
+    fun onNotificationPermissionResult(granted: Boolean) {
+        state = state.copy(needsNotificationPermission = false)
+        
+        if (granted && state.dailyReminder) {
+            reminder_service.set_reminder_enabled(true)
+            Log.d(TAG, "🔔 Permissão concedida! Lembretes iniciados com novo sistema")
+        } else if (!granted) {
+            // Se não concedeu permissão, desligar o toggle
+            state = state.copy(
+                dailyReminder = false,
+                errorMessage = "Permissão de notificação necessária para lembretes"
+            )
+            Log.w(TAG, "❌ Permissão negada. Lembretes desativados.")
+        }
     }
     
     fun toggleNotifications(enabled: Boolean) {
