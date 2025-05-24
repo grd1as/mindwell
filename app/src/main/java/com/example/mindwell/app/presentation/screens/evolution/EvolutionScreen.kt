@@ -1781,7 +1781,13 @@ private fun getEmojiFromOptionId(optionId: Int): String {
         4 -> "😰" // ANSIOSO
         5 -> "😨" // MEDO
         6 -> "😡" // RAIVA
-        else -> "😐" // NEUTRO
+        7 -> "💪" // MOTIVADO
+        8 -> "😴" // CANSADO
+        9 -> "😟" // PREOCUPADO
+        10 -> "😫" // ESTRESSADO
+        11 -> "🎉" // ANIMADO
+        12 -> "🤗" // SATISFEITO
+        else -> "" // NEUTRO
     }
 }
 
