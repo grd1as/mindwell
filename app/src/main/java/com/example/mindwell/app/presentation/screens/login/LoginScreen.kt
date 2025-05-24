@@ -307,29 +307,7 @@ fun LoginScreen(
                                 )
                             }
                         }
-                        
-                        // Botão explorar
-                        OutlinedButton(
-                            onClick = {
-                                nav.navigate(AppDestinations.HOME) { popUpTo(0) }
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(60.dp),
-                            shape = RoundedCornerShape(30.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = MaterialTheme.colorScheme.onBackground
-                            )
-                        ) {
-                            Text(
-                                text = "Explorar sem conta",
-                                style = MaterialTheme.typography.bodyLarge.copy(
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                            )
-                        }
-                        
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
                         
                         // Texto de termos e políticas
                         Text(

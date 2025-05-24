@@ -350,7 +350,7 @@ fun ModernCheckinHistoryItem(checkin: CheckinHistoryItem) {
                 
                 // Emoção com texto
                 Text(
-                    text = "Emoção: ${checkin.note.ifEmpty { "Não informado" }}",
+                    text = "Sentimento: ${checkin.note.ifEmpty { "Não informado" }}",
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.Medium
                     ),
